@@ -13,8 +13,11 @@
 #include <inc/hw_types.h>
 #include <inc/hw_ints.h>
 #include <driverlib/rom.h>
+#if defined(CONFIG_SOC_SERIES_CC32XX)
 #include <driverlib/rom_map.h>
+#endif
 #include <driverlib/interrupt.h>
+
 
 /*
  * IRQ_CONNECT requires we know the ISR signature and argument
@@ -28,11 +31,6 @@ struct sl_isr_args
 	uintptr_t arg;
 };
 
-static struct sl_isr_args sl_UDMA_cb = {NULL, 0};
-static struct sl_isr_args sl_UDMAERR_cb = {NULL, 0};
-static struct sl_isr_args sl_NWPIC_cb = {NULL, 0};
-static struct sl_isr_args sl_LSPI_cb = {NULL, 0};
-
 static void sl_isr(void *isr_arg)
 {
 	HwiP_Fxn cb = ((struct sl_isr_args *)isr_arg)->cb;
@@ -43,6 +41,12 @@ static void sl_isr(void *isr_arg)
 		cb(arg);
 	}
 }
+
+#if defined(CONFIG_SOC_SERIES_CC32XX)
+static struct sl_isr_args sl_UDMA_cb = {NULL, 0};
+static struct sl_isr_args sl_UDMAERR_cb = {NULL, 0};
+static struct sl_isr_args sl_NWPIC_cb = {NULL, 0};
+static struct sl_isr_args sl_LSPI_cb = {NULL, 0};
 
 /* Must hardcode the IRQ for IRQ_CONNECT macro.	 Must be <= CONFIG_NUM_IRQS.*/
 #define EXCEPTION_UDMA		46	/* == INT_UDMA	(62) - 16 */
@@ -122,6 +126,59 @@ void HwiP_delete(HwiP_Handle handle)
 
 	irq_disable(interruptNum - 16);
 }
+#elif defined(CONFIG_SOC_SERIES_CC13X2_CC26X2)
+typedef struct _HwiP_Obj {
+    uint32_t intNum;
+} HwiP_Obj;
+
+static struct sl_isr_args sl_OSC_COMB_cb = {NULL, 0};
+static struct sl_isr_args sl_AUX_COMB_cb = {NULL, 0};
+
+/*
+ *  ======== HwiP_construct ========
+ */
+HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
+                           HwiP_Fxn hwiFxn, HwiP_Params *params)
+{
+	HwiP_Obj *obj = (HwiP_Obj *)handle;
+	uintptr_t arg = 0;
+	
+	if (handle == NULL) {
+		return NULL;
+	}
+
+	if (params) {
+		arg = params->arg;
+	}
+
+	/*
+	 * Currently only support INT_OSC_COMB and INT_AUX_COMB
+	 */
+	__ASSERT(INT_OSC_COMB == interruptNum || INT_AUX_COMB == interruptNum,
+		 "Unexpected interruptNum: %d\r\n",
+		 interruptNum);
+
+	switch(interruptNum) {
+	case INT_OSC_COMB:
+		sl_OSC_COMB_cb.cb = hwiFxn;
+		sl_OSC_COMB_cb.arg = arg;
+		IRQ_CONNECT(INT_OSC_COMB - 16, 6, sl_isr, &sl_OSC_COMB_cb, 0);
+		break;
+	case INT_AUX_COMB:
+		sl_AUX_COMB_cb.cb = hwiFxn;
+		sl_AUX_COMB_cb.arg = arg;
+		IRQ_CONNECT(INT_AUX_COMB - 16, 6, sl_isr, &sl_AUX_COMB_cb, 0);
+		break;
+	default:
+		return(NULL);
+	}
+	irq_enable(interruptNum - 16);
+	
+	obj->intNum = interruptNum;
+
+	return (HwiP_Handle)handle;
+}
+#endif
 
 void HwiP_Params_init(HwiP_Params *params)
 {
@@ -132,7 +189,11 @@ void HwiP_Params_init(HwiP_Params *params)
 /* Zephyr has no functions for clearing an interrupt, so use driverlib: */
 void HwiP_clearInterrupt(int interruptNum)
 {
+#if defined(CONFIG_SOC_SERIES_CC13X2_CC26X2)
+        IntPendClear((unsigned long)interruptNum);
+#elif defined(CONFIG_SOC_SERIES_CC32XX)
 	MAP_IntPendClear((unsigned long)interruptNum);
+#endif
 }
 
 void HwiP_enableInterrupt(int interruptNum)

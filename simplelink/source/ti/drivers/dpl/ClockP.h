@@ -65,14 +65,24 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
+#include <zephyr.h>
+
+/*!
+ *  @brief  Prototype for a ClockP function.
+ */
+typedef void (*ClockP_Fxn)(uintptr_t arg);
+
 /*!
  *  @brief    Number of bytes greater than or equal to the size of any RTOS
  *            ClockP object.
  *
  *  nortos:   32 (biggest of the HW-specific ClockP instance structs)
  *  SysBIOS:  36
+ *  Zephyr:   Modified to match size of ClockP_Obj
  */
-#define ClockP_STRUCT_SIZE   (36)
+#define ClockP_STRUCT_SIZE   (sizeof(struct k_timer) + \
+	sizeof(ClockP_Fxn) + sizeof(uintptr_t) + \
+	sizeof(uint32_t) * 2)
 
 /*!
  *  @brief    ClockP structure.
@@ -113,11 +123,6 @@ typedef  void *ClockP_Handle;
 #define ClockP_handle(x) ((ClockP_Handle)(x))
 
 extern uint32_t ClockP_tickPeriod;
-
-/*!
- *  @brief  Prototype for a ClockP function.
- */
-typedef void (*ClockP_Fxn)(uintptr_t arg);
 
 /*!
  *  @brief    Basic ClockP Parameters
