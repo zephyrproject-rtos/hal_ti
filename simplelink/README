@@ -14,11 +14,13 @@ The current version supported in Zephyr is the SimpleLink CC13x2 and CC26x2 SDK
 
 The driver library source is copied from the SDK, as follows:
 
-  EXT_DIR=$ZEPHYR_BASE/ext/hal/ti/simplelink/source/ti
+  EXT_DIR=$HOME/hal_ti/simplelink/source/ti
   pushd simplelink_cc13x2_26x2_sdk_3_10_00_53/source/ti
   find devices/cc13x2_cc26x2/{driverlib,inc,rf_patches} -depth -name '*.[c|h]' -print0 | cpio --null -pvdm $EXT_DIR
   find devices/cc13x2_cc26x2/startup_files -depth -name ccfg.c -print0 | cpio --null -pvd $EXT_DIR
+  cp -r drivers/power/* $EXT_DIR/drivers/power/.
   find $EXT_DIR/devices/cc13x2_cc26x2 -name '*.[c|h]' -exec dos2unix {} \;
+  find $EXT_DIR/drivers/power -name '*.[c|h]' -exec dos2unix {} \;
   popd
 
 The source file startup_files/ccfg.c has been modified to use the appropriate
@@ -40,7 +42,7 @@ The current version supported in Zephyr is the SimpleLink CC32xx SDK
 Source files from select subdirectories are copied from the
 source/ti/ subdirectory of the SDK installation, as follows:
 
-	EXT_DIR=$ZEPHYR_BASE/ext/hal/ti/simplelink/source/ti
+	EXT_DIR=$HOME/hal_ti/simplelink/source/ti
 	find devices -not -path '*/\.*' -name '*.[c|h]' | \
 		cpio -pdm $EXT_DIR
 	find drivers -name '*.[c|h]' | \
