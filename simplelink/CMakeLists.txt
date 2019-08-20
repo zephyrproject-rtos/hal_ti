@@ -5,6 +5,7 @@ if(CONFIG_SIMPLELINK_HOST_DRIVER)
     .
     source
     kernel/zephyr/dpl
+    source/ti/drivers/net/wifi/porting
     )
   zephyr_compile_definitions(
     SL_SUPPORT_IPV6
