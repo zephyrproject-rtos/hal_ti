@@ -15,4 +15,8 @@ zephyr_library_sources(
   driverlib/cpu.c
   # Required for RFCDoorbellSendTo which is not in ROM
   driverlib/rfc.c
+  # Required functions to support the TI Power module
+  driverlib/sys_ctrl.c
+  driverlib/osc.c
+  driverlib/driverlib_release.c
   )
