@@ -19,8 +19,12 @@ The driver library source is copied from the SDK, as follows:
   find devices/cc13x2_cc26x2/{driverlib,inc,rf_patches} -depth -name '*.[c|h]' -print0 | cpio --null -pvdm $EXT_DIR
   find devices/cc13x2_cc26x2/startup_files -depth -name ccfg.c -print0 | cpio --null -pvd $EXT_DIR
   cp -r drivers/power/* $EXT_DIR/drivers/power/.
+  mkdir $EXT_DIR/drivers/rf
+  cp drivers/rf/RF.h $EXT_DIR/drivers/rf/.
+  cp drivers/rf/RFCC26X2_multiMode.c $EXT_DIR/drivers/rf/.
   find $EXT_DIR/devices/cc13x2_cc26x2 -name '*.[c|h]' -exec dos2unix {} \;
   find $EXT_DIR/drivers/power -name '*.[c|h]' -exec dos2unix {} \;
+  find $EXT_DIR/drivers/rf -name '*.[c|h]' -exec dos2unix {} \;
   popd
 
 The source file startup_files/ccfg.c has been modified to use the appropriate
