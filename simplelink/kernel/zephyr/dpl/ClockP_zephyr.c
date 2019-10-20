@@ -9,6 +9,8 @@
 #include <kernel/zephyr/dpl/dpl.h>
 #include <ti/drivers/dpl/ClockP.h>
 
+#include "stubs.h"
+
 /* 
  * ClockP_STRUCT_SIZE in ClockP.h must be updated to match the size of this
  * struct
@@ -19,6 +21,7 @@ typedef struct _ClockP_Obj {
 	uintptr_t arg;
 	uint32_t timeout;
 	uint32_t period;
+	bool active;
 } ClockP_Obj;
 
 static void expiry_fxn(struct k_timer *timer_id)
@@ -44,6 +47,7 @@ ClockP_Handle ClockP_construct(ClockP_Struct *handle, ClockP_Fxn clockFxn,
 	obj->arg = params->arg;
 	obj->period = params->period * ClockP_getSystemTickPeriod() / 1000;
 	obj->timeout = timeout;
+	obj->active = false;
 	
 	k_timer_init(&obj->timer, expiry_fxn, NULL);
 	k_timer_user_data_set(&obj->timer, obj);
@@ -58,9 +62,10 @@ ClockP_Handle ClockP_construct(ClockP_Struct *handle, ClockP_Fxn clockFxn,
 /*
  *  ======== ClockP_getSystemTickPeriod ========
  */
+uint32_t ClockP_tickPeriod = (1000000 / CONFIG_SYS_CLOCK_TICKS_PER_SEC);
 uint32_t ClockP_getSystemTickPeriod()
 {
-	return (1000000 / CONFIG_SYS_CLOCK_TICKS_PER_SEC);
+   return ClockP_tickPeriod;
 }
 
 uint32_t ClockP_getSystemTicks()
@@ -99,6 +104,7 @@ void ClockP_start(ClockP_Handle handle)
 
 	k_timer_start(&obj->timer, obj->timeout * 1000 /
 		CONFIG_SYS_CLOCK_TICKS_PER_SEC, obj->period);
+    obj->active = true;
 }
 
 /*
@@ -109,9 +115,42 @@ void ClockP_stop(ClockP_Handle handle)
 	ClockP_Obj *obj = (ClockP_Obj *)handle;
 
 	k_timer_stop(&obj->timer);
+	obj->active = false;
 }
 
+/*
+ *  ======== ClockP_usleep ========
+ */
 void ClockP_usleep(uint32_t usec)
 {
 	k_sleep((s32_t)usec);
+}
+
+/*
+ *  ======== ClockP_getTimeout ========
+ */
+uint32_t ClockP_getTimeout(ClockP_Handle handle) {
+    ClockP_Obj *obj = (ClockP_Obj *)handle;
+    return k_timer_remaining_get(&obj->timer) * CONFIG_SYS_CLOCK_TICKS_PER_SEC / 1000;
+}
+
+/*
+ *  ======== ClockP_isActive ========
+ */
+bool ClockP_isActive(ClockP_Handle handle) {
+    ClockP_Obj *obj = (ClockP_Obj *)handle;
+    return obj->active;
+}
+
+void ClockP_destruct(ClockP_Struct *clockP)
+{
+	ClockP_Obj *obj = (ClockP_Obj *)clockP->data;
+
+	obj->clock_fxn = NULL;
+	obj->arg = 0;
+	obj->period = 0;
+	obj->timeout = 0;
+	obj->active = false;
+
+	k_timer_stop(&obj->timer);
 }
