@@ -82,7 +82,7 @@ typedef void (*ClockP_Fxn)(uintptr_t arg);
  */
 #define ClockP_STRUCT_SIZE   (sizeof(struct k_timer) + \
 	sizeof(ClockP_Fxn) + sizeof(uintptr_t) + \
-	sizeof(uint32_t) * 2)
+	sizeof(uint32_t) * 2) + sizeof(bool)
 
 /*!
  *  @brief    ClockP structure.

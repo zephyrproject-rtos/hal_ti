@@ -24,6 +24,12 @@ typedef struct _ClockP_Obj {
 	bool active;
 } ClockP_Obj;
 
+static ClockP_Params ClockP_defaultParams = {
+    .startFlag = false,
+    .period = 0,
+    .arg = 0,
+};
+
 static void expiry_fxn(struct k_timer *timer_id)
 {
 	ClockP_Obj *obj = (ClockP_Obj *)k_timer_user_data_get(timer_id);
@@ -41,6 +47,10 @@ ClockP_Handle ClockP_construct(ClockP_Struct *handle, ClockP_Fxn clockFxn,
 
 	if (handle == NULL) {
 		return NULL;
+	}
+
+	if (params == NULL) {
+		params = &ClockP_defaultParams;
 	}
 
 	obj->clock_fxn = clockFxn;
@@ -99,11 +109,36 @@ void ClockP_setTimeout(ClockP_Handle handle, uint32_t timeout)
 void ClockP_start(ClockP_Handle handle)
 {
 	ClockP_Obj *obj = (ClockP_Obj *)handle;
+	s32_t timeout;
+	s32_t period;
 
-	__ASSERT_NO_MSG(obj->timeout > (UINT32_MAX / 1000));
+	__ASSERT_NO_MSG(obj->timeout /
+		CONFIG_SYS_CLOCK_TICKS_PER_SEC <= UINT32_MAX / 1000);
+	__ASSERT_NO_MSG(obj->period /
+		CONFIG_SYS_CLOCK_TICKS_PER_SEC <= UINT32_MAX / 1000);
 
-	k_timer_start(&obj->timer, obj->timeout * 1000 /
-		CONFIG_SYS_CLOCK_TICKS_PER_SEC, obj->period);
+	/* Avoid overflow */
+	if (obj->timeout > UINT32_MAX / 1000) {
+		timeout = obj->timeout / CONFIG_SYS_CLOCK_TICKS_PER_SEC * 1000;
+	} else if ((obj->timeout != 0) &&
+		(obj->timeout < CONFIG_SYS_CLOCK_TICKS_PER_SEC / 1000)) {
+		/* For small timeouts we use 1 msec */
+		timeout = 1;		
+	} else {
+		timeout = obj->timeout * 1000 / CONFIG_SYS_CLOCK_TICKS_PER_SEC;
+	}
+
+	if (obj->period > UINT32_MAX / 1000) {
+		period = obj->period / CONFIG_SYS_CLOCK_TICKS_PER_SEC * 1000;
+	} else if ((obj->period != 0) &&
+		(obj->period < CONFIG_SYS_CLOCK_TICKS_PER_SEC / 1000)) {
+		period = 1;		
+	} else {
+		period = obj->period * 1000 / CONFIG_SYS_CLOCK_TICKS_PER_SEC;
+	}
+
+	k_timer_start(&obj->timer, timeout, period);
+			
     obj->active = true;
 }
 
