@@ -141,6 +141,8 @@ typedef struct _HwiP_Obj {
 
 static struct sl_isr_args sl_OSC_COMB_cb = {NULL, 0};
 static struct sl_isr_args sl_AUX_COMB_cb = {NULL, 0};
+static struct sl_isr_args sl_RFC_HW_COMB_cb = {NULL, 0};
+static struct sl_isr_args sl_RFC_CPE_0_cb = {NULL, 0};
 static struct sl_isr_args sl_SWEV0_cb = {NULL, 0};
 
 /*
@@ -166,6 +168,8 @@ HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
 	 * Currently only support INT_OSC_COMB, INT_AUX_COMB, INT_SWEV0
 	 */
 	__ASSERT(INT_OSC_COMB == interruptNum || INT_AUX_COMB == interruptNum
+		|| INT_RFC_HW_COMB == interruptNum
+		|| INT_RFC_CPE_0 == interruptNum
 		|| INT_SWEV0 == interruptNum,
 		 "Unexpected interruptNum: %d\r\n",
 		 interruptNum);
@@ -198,6 +202,18 @@ HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
 	priority = (priority >> 5) - 1;
 
 	switch(interruptNum) {
+	case INT_RFC_CPE_0:
+		sl_RFC_CPE_0_cb.cb = hwiFxn;
+		sl_RFC_CPE_0_cb.arg = arg;
+		obj->cb = &sl_RFC_CPE_0_cb;
+		IRQ_CONNECT(INT_RFC_CPE_0 - 16, priority, sl_isr, &sl_RFC_CPE_0_cb, 0);
+		break;
+	case INT_RFC_HW_COMB:
+		sl_RFC_HW_COMB_cb.cb = hwiFxn;
+		sl_RFC_HW_COMB_cb.arg = arg;
+		obj->cb = &sl_RFC_HW_COMB_cb;
+		IRQ_CONNECT(INT_RFC_HW_COMB - 16, priority, sl_isr, &sl_RFC_HW_COMB_cb, 0);
+		break;
 	case INT_OSC_COMB:
 		sl_OSC_COMB_cb.cb = hwiFxn;
 		sl_OSC_COMB_cb.arg = arg;
