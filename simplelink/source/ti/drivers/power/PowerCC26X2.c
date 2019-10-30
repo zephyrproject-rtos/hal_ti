@@ -857,7 +857,11 @@ int_fast16_t Power_sleep(uint_fast16_t sleepState)
             }
 
             /* 16. Re-enable interrupts */
-            CPUcpsie();
+            /* For Zephyr, post suspend hooks need to run with interrupts
+             * disabled after Power_sleep returns. So we need to leave
+             * interrupts disabled.
+             */ 
+            /* CPUcpsie(); */
 
             /*
              * 17. Signal all clients registered for late post-sleep
