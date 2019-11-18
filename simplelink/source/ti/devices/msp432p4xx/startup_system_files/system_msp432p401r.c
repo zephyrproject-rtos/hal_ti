@@ -44,7 +44,7 @@
 
 #include <stdint.h>
 #include <ti/devices/msp432p4xx/inc/msp.h>
-#include <generated_dts_board.h>
+#include <devicetree.h>
 
 /*--------------------- Configuration Instructions ----------------------------
    1. If you prefer to halt the Watchdog Timer, set __HALT_WDT to 1:
