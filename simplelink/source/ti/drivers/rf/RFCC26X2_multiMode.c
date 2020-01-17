@@ -1010,7 +1010,8 @@ static bool RF_ratDispatchTime(uint32_t* dispatchTimeClockTicks)
             else
             {
                 /* Decode the compareTime field. */
-                uint32_t compareTime = ((rfc_CMD_SET_RAT_CMP_t*)&ratCh->chCmd)->compareTime;
+                rfc_CMD_SET_RAT_CMP_t* cmd = (rfc_CMD_SET_RAT_CMP_t *)&ratCh->chCmd;
+                uint32_t compareTime = cmd->compareTime;
 
                 /* Calculate the remained time until this RAT event. The calculation takes
                    into account the minimum power cycle time. */
