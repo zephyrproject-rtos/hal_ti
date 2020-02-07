@@ -79,7 +79,7 @@ SemaphoreP_Handle SemaphoreP_create(unsigned int count,
 
 	sem = dpl_sem_pool_alloc();
 	if (sem) {
-		k_sem_init(sem, 0, limit);
+		k_sem_init(sem, count, limit);
 	}
 
 	return (SemaphoreP_Handle)sem;
@@ -154,7 +154,7 @@ SemaphoreP_Handle SemaphoreP_construct(SemaphoreP_Struct *handle,
 
     sem = (struct k_sem *)handle;
     if (sem) {
-        k_sem_init(sem, 0, limit);
+        k_sem_init(sem, count, limit);
     }
 
     return (SemaphoreP_Handle)sem;
