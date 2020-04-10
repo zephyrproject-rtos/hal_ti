@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,7 +70,7 @@
  *  The Camera driver interface defines a configuration data structure:
  *
  *  @code
- *  typedef struct Camera_Config_ {
+ *  typedef struct {
  *      Camera_FxnTable const  *fxnTablePtr;
  *      void                   *object;
  *      void            const  *hwAttrs;
@@ -172,12 +172,12 @@
 #ifndef ti_drivers_Camera__include
 #define ti_drivers_Camera__include
 
+#include <stdint.h>
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
-#include <stddef.h>
 
 /**
  *  @defgroup CAMERA_CONTROL Camera_control command and status codes
@@ -289,7 +289,7 @@ typedef void (*Camera_Callback) (Camera_Handle handle, void *buf,
  *  This enum defines the capture mode for the
  *  configured Camera.
  */
-typedef enum Camera_CaptureMode_ {
+typedef enum {
     /*!
       *  Uses a semaphore to block while data is being sent.  Context of
       *  the call must be a Task.
@@ -309,7 +309,7 @@ typedef enum Camera_CaptureMode_ {
  *
  *  This enum defines the polarity of the HSync signal.
  */
-typedef enum Camera_HSyncPolarity_ {
+typedef enum {
     Camera_HSYNC_POLARITY_HIGH = 0,
     Camera_HSYNC_POLARITY_LOW
 } Camera_HSyncPolarity;
@@ -319,7 +319,7 @@ typedef enum Camera_HSyncPolarity_ {
  *
  *  This enum defines the polarity of the VSync signal.
  */
-typedef enum Camera_VSyncPolarity_ {
+typedef enum {
     Camera_VSYNC_POLARITY_HIGH = 0,
     Camera_VSYNC_POLARITY_LOW
 } Camera_VSyncPolarity;
@@ -329,7 +329,7 @@ typedef enum Camera_VSyncPolarity_ {
  *
  *  This enum defines the pixel clock configuration.
  */
-typedef enum Camera_PixelClkConfig_ {
+typedef enum {
     Camera_PCLK_CONFIG_RISING_EDGE = 0,
     Camera_PCLK_CONFIG_FALLING_EDGE
 } Camera_PixelClkConfig;
@@ -345,7 +345,7 @@ typedef enum Camera_PixelClkConfig_ {
  *  In swap mode, the bytes are ordered as:
  *  | byte2 | byte3 | byte0 | byte1 |
  */
-typedef enum Camera_ByteOrder_ {
+typedef enum {
     Camera_BYTE_ORDER_NORMAL = 0,
     Camera_BYTE_ORDER_SWAP
 } Camera_ByteOrder;
@@ -356,7 +356,7 @@ typedef enum Camera_ByteOrder_ {
  *  This enum defines the sensor to camera interface synchronization
  *  configuration.
  */
-typedef enum Camera_IfSynchoronisation_ {
+typedef enum {
     Camera_INTERFACE_SYNC_OFF = 0,
     Camera_INTERFACE_SYNC_ON
 } Camera_IfSynchoronisation;
@@ -366,7 +366,7 @@ typedef enum Camera_IfSynchoronisation_ {
  *
  *  This enum defines the stop capture configuration.
  */
-typedef enum Camera_StopCaptureConfig_ {
+typedef enum {
     Camera_STOP_CAPTURE_IMMEDIATE = 0,
     Camera_STOP_CAPTURE_FRAME_END
 } Camera_StopCaptureConfig;
@@ -376,7 +376,7 @@ typedef enum Camera_StopCaptureConfig_ {
  *
  *  This enum defines the start capture configuration.
  */
-typedef enum Camera_StartCaptureConfig_ {
+typedef enum {
     Camera_START_CAPTURE_IMMEDIATE = 0,
     Camera_START_CAPTURE_FRAME_START
 } Camera_StartCaptureConfig;
@@ -396,7 +396,7 @@ typedef enum Camera_StartCaptureConfig_ {
  *
  *  @sa     Camera_Params_init()
  */
-typedef struct Camera_Params_ {
+typedef struct {
     /*!< Mode for camera capture */
     Camera_CaptureMode         captureMode;
 
@@ -473,7 +473,7 @@ typedef int_fast16_t (*Camera_CaptureFxn) (Camera_Handle handle, void *buffer,
  *              required set of functions to control a specific Camera driver
  *              implementation.
  */
-typedef struct Camera_FxnTable_ {
+typedef struct {
     /*! Function to close the specified peripheral */
     Camera_CloseFxn        closeFxn;
 

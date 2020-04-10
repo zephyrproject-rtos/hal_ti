@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,10 +58,6 @@
 #ifndef ti_drivers_uart_UARTCC32XX__include
 #define ti_drivers_uart_UARTCC32XX__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -73,6 +69,9 @@ extern "C" {
 #include <ti/drivers/UART.h>
 #include <ti/drivers/utils/RingBuf.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!
  * @brief Indicates a pin is not being used
@@ -217,7 +216,7 @@ extern const UART_FxnTable UARTCC32XX_fxnTable;
  *
  *  readIsrFxn:     The required ISR counterpart to readTaskFxn
  */
-typedef struct UARTCC32XX_FxnSet {
+typedef struct {
     bool (*readIsrFxn)  (UART_Handle handle);
     int  (*readTaskFxn) (UART_Handle handle);
 } UARTCC32XX_FxnSet;
@@ -290,7 +289,7 @@ typedef void (*UARTCC32XX_ErrorCallback) (UART_Handle handle, uint32_t error);
  *  };
  *  @endcode
  */
-typedef struct UARTCC32XX_HWAttrsV1 {
+typedef struct {
     /*! UART Peripheral's base address */
     unsigned int    baseAddr;
     /*! UART Peripheral's interrupt vector */
@@ -320,7 +319,7 @@ typedef struct UARTCC32XX_HWAttrsV1 {
  *
  *  The application must not access any member variables of this structure!
  */
-typedef struct UARTCC32XX_Object {
+typedef struct {
     /* UART state variable */
     struct {
         bool             opened:1;         /* Has the obj been opened */

@@ -75,12 +75,13 @@ extern "C" {
 #endif
 #define USEC_DELAY              (50)
 
-#define SL_DRV_PROTECTION_OBJ_UNLOCK()       LOCK_OK_CHECK(_SlDrvProtectionObjUnLock());
-#define SL_DRV_PROTECTION_OBJ_LOCK_FOREVER() LOCK_OK_CHECK(_SlDrvProtectionObjLockWaitForever());
-#define SL_DRV_OBJ_UNLOCK(pObj)              LOCK_OK_CHECK(_SlDrvObjUnLock(pObj));
-#define SL_DRV_OBJ_LOCK_FOREVER(pObj)        LOCK_OK_CHECK(_SlDrvObjLockWaitForever(pObj));
-#define SL_DRV_SYNC_OBJ_SIGNAL(pObj)         _SlDrvSyncObjSignal(pObj);
-#define SL_DRV_SYNC_OBJ_CLEAR(pObj)          sl_SyncObjWait(pObj,SL_OS_NO_WAIT);
+#define SL_DRV_PROTECTION_OBJ_UNLOCK()           LOCK_OK_CHECK(_SlDrvProtectionObjUnLock());
+#define SL_DRV_PROTECTION_OBJ_LOCK_FOREVER()     LOCK_OK_CHECK(_SlDrvProtectionObjLockWaitForever());
+#define SL_DRV_OBJ_UNLOCK(pObj)                  LOCK_OK_CHECK(_SlDrvObjUnLock(pObj));
+#define SL_DRV_OBJ_LOCK_FOREVER(pObj)            LOCK_OK_CHECK(_SlDrvObjLockWaitForever(pObj));
+#define SL_DRV_SYNC_OBJ_SIGNAL(pObj)             _SlDrvSyncObjSignal(pObj);
+#define SL_DRV_SYNC_OBJ_SIGNAL_FROM_IRQ(pObj)    sl_SyncObjSignalFromIRQ(pObj);
+#define SL_DRV_SYNC_OBJ_CLEAR(pObj)              sl_SyncObjWait(pObj,SL_OS_NO_WAIT);
 
 #define SL_DRV_SYNC_OBJ_WAIT_FOREVER(SyncObj) { \
 if (SL_API_ABORTED == _SlDrvSyncObjWaitForever(SyncObj)) \
@@ -126,6 +127,11 @@ if (retVal)         \
 #define SL_IS_DEVICE_START_IN_PROGRESS       (!!(g_SlDeviceStatus & _SL_DRV_STATUS_BIT_START_IN_PROGRESS))
 
 #define SL_IS_PROVISIONING_IN_PROGRESS       (!!(g_SlDeviceStatus & ( _SL_DEV_STATUS_BIT_PROVISIONING_USER_INITIATED | _SL_DEV_STATUS_BIT_PROVISIONING_ACTIVE)))
+
+#define SL_IS_WLAN_RX_STAT_IN_PROGRESS       (g_SlDeviceStatus & _SL_DRV_STATUS_BIT_RX_STAT_IN_PROGRESS) /* bit 13 indicates there is RX-statistics-start in progress  */
+#define SL_IS_DEVICE_STAT_IN_PROGRESS        (g_SlDeviceStatus & _SL_DRV_STATUS_BIT_DEVICE_STAT_IN_PROGRESS)    /* bit 14 indicates there is device-statistics-start in progress */
+
+
 /* Check the following conditions:
     1. Device started
     2. Restart device is not required
@@ -155,6 +161,19 @@ if (retVal)         \
 /* Start in progress */
 #define SL_SET_DEVICE_START_IN_PROGRESS    (g_SlDeviceStatus |= _SL_DRV_STATUS_BIT_START_IN_PROGRESS)    /* bit 11 indicates there is start in progress */
 #define SL_UNSET_DEVICE_START_IN_PROGRESS  (g_SlDeviceStatus &= (~_SL_DRV_STATUS_BIT_START_IN_PROGRESS)) /* bit 11 indicates there is start in progress */
+
+/* Statistics flags - Rx stat and device state cannot run in parallel */
+
+/* Rx statistics start in progress */
+#define SL_SET_WLAN_RX_STAT_IN_PROGRESS        (g_SlDeviceStatus |= _SL_DRV_STATUS_BIT_RX_STAT_IN_PROGRESS)    /* bit 13 indicates there is RX-statistics-start in progress  */
+#define SL_UNSET_WLAN_RX_STAT_IN_PROGRESS      (g_SlDeviceStatus &= (~_SL_DRV_STATUS_BIT_RX_STAT_IN_PROGRESS))    /* bit 13 indicates there is RX-statistics-start in progress  */
+
+/* Device statistics start in progress */
+#define SL_SET_DEVICE_STAT_IN_PROGRESS         (g_SlDeviceStatus |= _SL_DRV_STATUS_BIT_DEVICE_STAT_IN_PROGRESS)    /* bit 14 indicates there is device-statistics-start in progress*/
+#define SL_UNSET_DEVICE_STAT_IN_PROGRESS       (g_SlDeviceStatus &= (~_SL_DRV_STATUS_BIT_DEVICE_STAT_IN_PROGRESS))    /* bit 14 indicates there is device-statistics-start in progress */
+
+
+
 
 #define SL_SET_DEVICE_STATUS(x)          (g_SlDeviceStatus = ((g_SlDeviceStatus & 0xFF00) |  (_u16)x) ) /* bits 0-7 devStatus from NWP */
 
@@ -307,7 +326,7 @@ typedef struct SlSelectEntry_t
     _u32                        TimeStamp;
     _u16                        readlist;
     _u16                        writelist;
-    _u8                         ObjIdx;
+    _i16                         ObjIdx;
 }_SlSelectEntry_t;
 
 typedef struct _SlMultiSelectCB_t

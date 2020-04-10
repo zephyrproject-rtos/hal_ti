@@ -374,7 +374,8 @@ _i16 sl_NetUtilGet(const _u16 Option, const _u32 ObjID, _u8 *pValues, _u16 *pVal
                                     On output - provides the actual length of the received output-values
     \return     Zero on success, or negative error code on failure
     \sa         sl_NetUtilGet sl_NetUtilSet  
-    \note       The host driver API sl_NetUtilCmd is not valid for use with the CC3220R device.
+    \note       The host driver API sl_NetUtilCmd is not valid for use with the CC3220R device. \n
+                The SL_NETUTIL_CMD_ARP_LOOKUP cmd is only valid for the CC3235S/SF devices.
     \warning
     \par   Examples
 
@@ -494,7 +495,7 @@ _i16 sl_NetUtilGet(const _u16 Option, const _u32 ObjID, _u8 *pValues, _u16 *pVal
 
    \endcode
 
-                - SL_NETUTIL_CMD_ARP_LOOKUP, (Mapping MAC address to IPv4 or IPv6 address):
+                - SL_NETUTIL_CMD_ARP_LOOKUP, (Mapping MAC address to IPv4 or IPv6 address), CC3235S/SF devices only:
     \code
 
     NetUtilCmdArpLookupAttrib_t  arpAttr;

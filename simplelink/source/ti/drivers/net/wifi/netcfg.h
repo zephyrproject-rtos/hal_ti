@@ -292,9 +292,17 @@ typedef struct
     <br>
 
     - SL_NETCFG_ADDR_DHCP_LLA: <br>
-    Setting DHCP LLA will runs LLA mechanism in case DHCP fails to acquire an address
+    Setting DHCP LLA will runs LLA mechanism in case DHCP fails to acquire an address. It is optional to set the LLA timeout, default is 25 seconds.
     SL_NETCFG_DHCP_OPT_RELEASE_IP_BEFORE_DISCONNECT - If set, enables sending a DHCP release frame to the server if user issues a WLAN disconnect command.
     \code 
+        _u32 LLATimeout;
+        LLATimeout = 60;
+        sl_NetCfgSet(SL_NETCFG_IPV4_STA_ADDR_MODE,SL_NETCFG_ADDR_DHCP_LLA,sizeof(_u32),&LLATimeout);
+        sl_Stop(0);
+        sl_Start(NULL,NULL,NULL);
+    \endcode
+    <br>
+    \code
         sl_NetCfgSet(SL_NETCFG_IPV4_STA_ADDR_MODE,SL_NETCFG_ADDR_DHCP_LLA,0,0);
         sl_Stop(0);
         sl_Start(NULL,NULL,NULL);

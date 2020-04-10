@@ -118,8 +118,9 @@ void* sl_Task(void* pEntry)
 #if _SL_INCLUDE_FUNC(sl_Start)
 _i16 sl_Start(const void* pIfHdl, _i8*  pDevName, const P_INIT_CALLBACK pInitCallBack)
 {
-    _u8 ObjIdx = MAX_CONCURRENT_ACTIONS;
+    _i16 ObjIdx = MAX_CONCURRENT_ACTIONS;
     InitComplete_t  AsyncRsp;
+    int ret = 0;    // added for releasePoolObj
 
     _SlDrvMemZero(&AsyncRsp, sizeof(InitComplete_t));
 
@@ -150,9 +151,9 @@ _i16 sl_Start(const void* pIfHdl, _i8*  pDevName, const P_INIT_CALLBACK pInitCal
 
     ObjIdx = _SlDrvProtectAsyncRespSetting((_u8 *)&AsyncRsp, START_STOP_ID, SL_MAX_SOCKETS);
 
-    if (MAX_CONCURRENT_ACTIONS == ObjIdx)
+    if (ObjIdx < 0)
     {
-        return SL_POOL_IS_EMPTY;
+        return ObjIdx;
     }
 
     if( g_pCB->FD >= (_SlFd_t)0)
@@ -174,8 +175,7 @@ _i16 sl_Start(const void* pIfHdl, _i8*  pDevName, const P_INIT_CALLBACK pInitCal
         
         if (NULL == pInitCallBack)
         {
-
-            VERIFY_RET_OK(_SlDrvWaitForInternalAsyncEvent(ObjIdx, INIT_COMPLETE_TIMEOUT, SL_OPCODE_DEVICE_INITCOMPLETE));
+            ret = _SlDrvWaitForInternalAsyncEvent(ObjIdx, INIT_COMPLETE_TIMEOUT, SL_OPCODE_DEVICE_INITCOMPLETE);
 
             SL_UNSET_DEVICE_START_IN_PROGRESS;
 
@@ -183,7 +183,14 @@ _i16 sl_Start(const void* pIfHdl, _i8*  pDevName, const P_INIT_CALLBACK pInitCal
 
             /* release Pool Object */
             _SlDrvReleasePoolObj(g_pCB->FunctionParams.AsyncExt.ActionIndex);
-            return _SlDeviceGetStartResponseConvert(AsyncRsp.Status);
+            if(ret < 0)
+            {
+                return ret;
+            }
+            else
+            {
+                return _SlDeviceGetStartResponseConvert(AsyncRsp.Status);
+            }
         }
         else
         {
@@ -275,7 +282,7 @@ _i16 sl_Stop(const _u16 Timeout)
     _i16 RetVal=0;
     _SlStopMsg_u      Msg;
     _BasicResponse_t  AsyncRsp;
-    _u8 ObjIdx = MAX_CONCURRENT_ACTIONS;
+    _i16 ObjIdx = MAX_CONCURRENT_ACTIONS;
     _u8 ReleasePoolObject = FALSE;
     _u8 IsProvInProgress = FALSE;
 
@@ -299,9 +306,9 @@ _i16 sl_Stop(const _u16 Timeout)
         if (!IsProvInProgress)
         {
             ObjIdx = _SlDrvProtectAsyncRespSetting((_u8 *)&AsyncRsp, START_STOP_ID, SL_MAX_SOCKETS);
-            if (MAX_CONCURRENT_ACTIONS == ObjIdx)
+            if (ObjIdx < 0)
             {
-              return SL_POOL_IS_EMPTY;
+                return ObjIdx;
             }
 
             ReleasePoolObject = TRUE;
@@ -312,11 +319,13 @@ _i16 sl_Stop(const _u16 Timeout)
 
         VERIFY_RET_OK(_SlDrvCmdOp((_SlCmdCtrl_t *)&_SlStopCmdCtrl, &Msg, NULL));
 
+        int ret_pool = 0; // for _SlDrvReleasePoolObj
         /* Do not wait for stop async event if provisioning is in progress */
-       if((SL_OS_RET_CODE_OK == (_i16)Msg.Rsp.status) && (!(IsProvInProgress)))
-       {
+        if((SL_OS_RET_CODE_OK == (_i16)Msg.Rsp.status) && (!(IsProvInProgress)))
+        {
             /* Wait for sync object to be signaled */
-            VERIFY_RET_OK(_SlDrvWaitForInternalAsyncEvent(ObjIdx, STOP_DEVICE_TIMEOUT, SL_OPCODE_DEVICE_STOP_ASYNC_RESPONSE));
+            ret_pool = _SlDrvWaitForInternalAsyncEvent(ObjIdx, STOP_DEVICE_TIMEOUT, SL_OPCODE_DEVICE_STOP_ASYNC_RESPONSE);
+
             Msg.Rsp.status = AsyncRsp.status;
             RetVal = Msg.Rsp.status;
         }
@@ -325,6 +334,10 @@ _i16 sl_Stop(const _u16 Timeout)
         if (ReleasePoolObject == TRUE)
         {
             _SlDrvReleasePoolObj(ObjIdx);
+            if(ret_pool < 0)
+            {
+                return ret_pool;
+            }
         }
     
         /* This macro wait for the NWP to raise a ready for shutdown indication.
@@ -355,7 +368,7 @@ _i16 sl_Stop(const _u16 Timeout)
 #endif    
 
     /* Lock during stopping the interface */
-    SL_DRV_LOCK_GLOBAL_LOCK_FOREVER(GLOBAL_LOCK_FLAGS_NONE);
+    SL_DRV_OBJ_LOCK_FOREVER(&GlobalLockObj);
 
     sl_IfRegIntHdlr(NULL, NULL);
     sl_DeviceDisable();
@@ -369,7 +382,7 @@ _i16 sl_Stop(const _u16 Timeout)
     /* clear the device started flag */
     SL_UNSET_DEVICE_STARTED;
 
-    SL_DRV_LOCK_GLOBAL_UNLOCK(FALSE);
+    SL_DRV_OBJ_UNLOCK(&GlobalLockObj);
 
     return RetVal;
 }
@@ -697,6 +710,92 @@ void _SlDeviceHandleResetRequestInternally(void)
 }
 
 
+
+/******************************************************************************
+sl_DeviceStat
+******************************************************************************/
+
+_i16 sl_DeviceStatStart(const _u32 Flags) // start collecting the statistics
+{
+    SL_DRV_PROTECTION_OBJ_LOCK_FOREVER();
+    if(SL_IS_WLAN_RX_STAT_IN_PROGRESS)
+    {
+        SL_DRV_PROTECTION_OBJ_UNLOCK();
+        return SL_RET_CODE_WLAN_RX_STAT_IN_PROGRESS;
+    }
+    else
+    {
+       /* turn on flag indication for RX statistics is in progress
+        * to avoid parallel "starts" between
+        * Device statistics API and RX statistics API */
+        SL_SET_DEVICE_STAT_IN_PROGRESS;
+        SL_DRV_PROTECTION_OBJ_UNLOCK();
+       /* verify that this api is allowed. if not allowed then
+        ignore the API execution and return immediately with an error */
+        VERIFY_API_ALLOWED(SL_OPCODE_SILO_WLAN);
+        return _SlDrvBasicCmd(SL_OPCODE_WLAN_STARTRXSTATCOMMAND);
+    }
+
+}
+
+_i16 sl_DeviceStatGet(const _u16 ConfigId,_u16 length,void* buffer)
+{
+    _i16 RetVal = 0;
+    SL_DRV_PROTECTION_OBJ_LOCK_FOREVER();
+    /* Device statistics and Rx statistics cannot run parallel */
+    if(SL_IS_WLAN_RX_STAT_IN_PROGRESS)
+    {
+        SL_DRV_PROTECTION_OBJ_UNLOCK();
+        return SL_RET_CODE_WLAN_RX_STAT_IN_PROGRESS;
+    }
+    else
+    {
+        SL_DRV_PROTECTION_OBJ_UNLOCK();
+        if(SL_DEVICE_STAT_WLAN_RX == ConfigId )
+        {
+            /* In this case we use SL_OPCODE_WLAN_GETRXSTATCOMMAND even though we are at "Device" module -
+             * duo to the fact  we want  keep this API to call the exact same deprecated API which called from Wlan  */
+            _SlCmdCtrl_t CmdCtrl = {SL_OPCODE_WLAN_GETRXSTATCOMMAND, 0, (_SlArgSize_t)sizeof(SlDeviceGetStat_t)};
+
+            /* verify that this api is allowed. if not allowed then
+            ignore the API execution and return immediately with an error */
+            VERIFY_API_ALLOWED(SL_OPCODE_SILO_WLAN);
+
+            _SlDrvMemZero(buffer, (_u16)sizeof(SlDeviceGetStat_t));
+            VERIFY_RET_OK(_SlDrvCmdOp((_SlCmdCtrl_t *)&CmdCtrl, buffer, NULL));
+
+        }
+        else
+        {
+            _u8 configOpt = ConfigId;
+            RetVal = sl_DeviceGet(SL_DEVICE_GENERAL,&configOpt,&length,(_u8* )buffer);
+        }
+
+        return RetVal;
+    }
+}
+
+_i16 sl_DeviceStatStop(const _u32 Flags) //stop collecting the statistics
+{
+    SL_DRV_PROTECTION_OBJ_LOCK_FOREVER();
+    if(SL_IS_WLAN_RX_STAT_IN_PROGRESS)
+    {
+        SL_DRV_PROTECTION_OBJ_UNLOCK();
+        return SL_RET_CODE_WLAN_RX_STAT_IN_PROGRESS;
+    }
+    else
+    {
+        SL_UNSET_DEVICE_STAT_IN_PROGRESS;
+        SL_DRV_PROTECTION_OBJ_UNLOCK();
+        /* verify that this api is allowed. if not allowed then
+           ignore the API execution and return immediately with an error */
+        VERIFY_API_ALLOWED(SL_OPCODE_SILO_WLAN);
+
+        return _SlDrvBasicCmd(SL_OPCODE_WLAN_STOPRXSTATCOMMAND);
+
+    }
+
+}
 /******************************************************************************
 sl_DeviceUartSetMode 
 ******************************************************************************/

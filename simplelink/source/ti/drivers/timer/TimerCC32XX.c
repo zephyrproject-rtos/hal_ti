@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
+ * Copyright (c) 2017-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,6 +67,7 @@ int_fast16_t TimerCC32XX_control(Timer_Handle handle,
 uint32_t TimerCC32XX_getCount(Timer_Handle handle);
 void TimerCC32XX_init(Timer_Handle handle);
 Timer_Handle TimerCC32XX_open(Timer_Handle handle, Timer_Params *params);
+int32_t TimerCC32XX_setPeriod(Timer_Handle handle, Timer_PeriodUnits periodUnits, uint32_t period);
 int32_t TimerCC32XX_start(Timer_Handle handle);
 void TimerCC32XX_stop(Timer_Handle handle);
 
@@ -80,13 +81,14 @@ static void TimerCC32XX_hwiIntFunction(uintptr_t arg);
 
 /* Function table for TimerCC32XX implementation */
 const Timer_FxnTable TimerCC32XX_fxnTable = {
-    .closeFxn    = TimerCC32XX_close,
-    .openFxn     = TimerCC32XX_open,
-    .startFxn    = TimerCC32XX_start,
-    .stopFxn     = TimerCC32XX_stop,
-    .initFxn     = TimerCC32XX_init,
-    .getCountFxn = TimerCC32XX_getCount,
-    .controlFxn  = TimerCC32XX_control
+    .closeFxn     = TimerCC32XX_close,
+    .openFxn      = TimerCC32XX_open,
+    .startFxn     = TimerCC32XX_start,
+    .stopFxn      = TimerCC32XX_stop,
+    .initFxn      = TimerCC32XX_init,
+    .getCountFxn  = TimerCC32XX_getCount,
+    .controlFxn   = TimerCC32XX_control,
+    .setPeriodFxn = TimerCC32XX_setPeriod
 };
 
 /*
@@ -381,7 +383,7 @@ void TimerCC32XX_hwiIntFunction(uintptr_t arg)
     }
 
     if (object-> mode != Timer_ONESHOT_BLOCKING) {
-        object->callBack(handle);
+        object->callBack(handle, Timer_STATUS_SUCCESS);
     }
 }
 
@@ -515,6 +517,65 @@ Timer_Handle TimerCC32XX_open(Timer_Handle handle, Timer_Params *params)
     initHw(handle);
 
     return (handle);
+}
+
+/*
+ *  ======== TimerCC32XX_setPeriod =======
+  */
+int32_t TimerCC32XX_setPeriod(Timer_Handle handle, Timer_PeriodUnits periodUnits, uint32_t period)
+{
+    TimerCC32XX_HWAttrs const *hwAttrs= handle->hwAttrs;
+    TimerCC32XX_Object        *object = handle->object;
+    ClockP_FreqHz              clockFreq;
+
+    /* Formality; CC32XX System Clock fixed to 80.0 MHz */
+    ClockP_getCpuFreq(&clockFreq);
+
+    if (periodUnits == Timer_PERIOD_US) {
+
+        /* Checks if the calculated period will fit in 32-bits */
+        if (period >= ((uint32_t) ~0) / (clockFreq.lo / 1000000)) {
+
+            return (Timer_STATUS_ERROR);
+        }
+
+        period = period * (clockFreq.lo / 1000000);
+    }
+    else if (periodUnits == Timer_PERIOD_HZ) {
+
+        /* If period > clockFreq */
+        if ((period = clockFreq.lo / period) == 0) {
+
+            return (Timer_STATUS_ERROR);
+        }
+    }
+
+    /* If using a half timer */
+    if (hwAttrs->subTimer != TimerCC32XX_timer32) {
+
+        if (period > 0xFFFF) {
+
+            /* 24-bit resolution for the half timer */
+            if (period >= (1 << 24)) {
+
+                return (Timer_STATUS_ERROR);
+            }
+        }
+    }
+
+    object->period = period;
+
+    if (hwAttrs->subTimer != TimerCC32XX_timer32) {
+        getPrescaler(handle);
+    }
+
+    /* Writing the PSR Register has no effect for full width 32-bit mode */
+    TimerPrescaleSet(hwAttrs->baseAddress, object->timer, object->prescaler);
+    TimerLoadSet(hwAttrs->baseAddress, object->timer, object->period);
+
+    return (Timer_STATUS_SUCCESS);
+
+
 }
 
 /*

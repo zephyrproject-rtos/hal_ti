@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,8 @@
  *  the interrupt flag is still pending, a reset signal will be generated.
  *  To prevent a reset, Watchdog_clear() must be called to clear the interrupt
  *  flag.
+ *
+ *  @warning The watchdog peripheral does not support a Non-Maskable Interrupt (NMI).
  *
  *  The reload value from which the Watchdog Timer counts down may be changed
  *  during runtime using Watchdog_setReload().
@@ -108,13 +110,13 @@
 #ifndef ti_drivers_watchdog_WatchdogCC32XX__include
 #define ti_drivers_watchdog_WatchdogCC32XX__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <ti/drivers/Watchdog.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  *  @addtogroup Watchdog_STATUS
@@ -201,7 +203,7 @@ extern const Watchdog_FxnTable WatchdogCC32XX_fxnTable;
  *  interrupt priority in an OS specific way.  In the case of the SYS/BIOS
  *  port, intPriority is passed unmodified to Hwi_create().
  */
-typedef struct WatchdogCC32XX_HWAttrs {
+typedef struct {
     unsigned int baseAddr;       /*!< Base address for Watchdog */
     unsigned int intNum;         /*!< WDT interrupt number */
     unsigned int intPriority;    /*!< WDT interrupt priority */
@@ -213,7 +215,7 @@ typedef struct WatchdogCC32XX_HWAttrs {
  *
  *  Not to be accessed by the user.
  */
-typedef struct WatchdogCC32XX_Object {
+typedef struct {
     Power_NotifyObj     notifyObj;
     /*
      * The reload value can be set at runtime; therefore we can't rely

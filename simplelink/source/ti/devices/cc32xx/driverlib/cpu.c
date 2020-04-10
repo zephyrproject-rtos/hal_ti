@@ -115,6 +115,29 @@ CPUcpsid(void)
     return(0);
 }
 #endif
+#if defined(ticlang)
+unsigned long
+CPUcpsid(void)
+{
+    //
+    // Read PRIMASK and disable interrupts.
+    //
+    __asm("    mrs     r0, PRIMASK\n"
+          "    cpsid   i\n"
+          "    dsb      \n"
+          "    isb      \n"
+          "    bx      lr\n");
+
+    //
+    // The following keeps the compiler happy, because it wants to see a
+    // return value from this function.  It will generate code to return
+    // a zero.  However, the real return is the "bx lr" above, so the
+    // return(0) is never executed and the function returns with the value
+    // you expect in R0.
+    //
+    return(0);
+}
+#endif
 
 //*****************************************************************************
 //
@@ -163,6 +186,26 @@ CPUprimask(void)
 #pragma diag_default=Pe940
 #endif
 #if defined(ccs)
+unsigned long
+CPUprimask(void)
+{
+    //
+    // Read PRIMASK and disable interrupts.
+    //
+    __asm("    mrs     r0, PRIMASK\n"
+          "    bx      lr\n");
+
+    //
+    // The following keeps the compiler happy, because it wants to see a
+    // return value from this function.  It will generate code to return
+    // a zero.  However, the real return is the "bx lr" above, so the
+    // return(0) is never executed and the function returns with the value
+    // you expect in R0.
+    //
+    return(0);
+}
+#endif
+#if defined(ticlang)
 unsigned long
 CPUprimask(void)
 {
@@ -258,6 +301,29 @@ CPUcpsie(void)
     return(0);
 }
 #endif
+#if defined(ticlang)
+unsigned long
+CPUcpsie(void)
+{
+    //
+    // Read PRIMASK and enable interrupts.
+    //
+    __asm("    mrs     r0, PRIMASK\n"
+          "    cpsie   i\n"
+          "    dsb      \n"
+          "    isb      \n"
+          "    bx      lr\n");
+
+    //
+    // The following keeps the compiler happy, because it wants to see a
+    // return value from this function.  It will generate code to return
+    // a zero.  However, the real return is the "bx lr" above, so the
+    // return(0) is never executed and the function returns with the value
+    // you expect in R0.
+    //
+    return(0);
+}
+#endif
 
 //*****************************************************************************
 //
@@ -290,6 +356,18 @@ CPUwfi(void)
 }
 #endif
 #if defined(ccs)
+void
+CPUwfi(void)
+{
+    //
+    // Wait for the next interrupt.
+    //
+    __asm("    dsb      \n"
+          "    isb      \n"
+          "    wfi      \n");
+}
+#endif
+#if defined(ticlang)
 void
 CPUwfi(void)
 {
@@ -334,6 +412,18 @@ CPUbasepriSet(unsigned long ulNewBasepri)
 }
 #endif
 #if defined(ccs)
+void
+CPUbasepriSet(unsigned long ulNewBasepri)
+{
+    //
+    // Set the BASEPRI register
+    //
+    __asm("    msr     BASEPRI, r0\n"
+          "    dsb      \n"
+          "    isb      \n");
+}
+#endif
+#if defined(ticlang)
 void
 CPUbasepriSet(unsigned long ulNewBasepri)
 {
@@ -392,6 +482,26 @@ CPUbasepriGet(void)
 #pragma diag_default=Pe940
 #endif
 #if defined(ccs)
+unsigned long
+CPUbasepriGet(void)
+{
+    //
+    // Read BASEPRI
+    //
+    __asm("    mrs     r0, BASEPRI\n"
+          "    bx      lr\n");
+
+    //
+    // The following keeps the compiler happy, because it wants to see a
+    // return value from this function.  It will generate code to return
+    // a zero.  However, the real return is the "bx lr" above, so the
+    // return(0) is never executed and the function returns with the value
+    // you expect in R0.
+    //
+    return(0);
+}
+#endif
+#if defined(ticlang)
 unsigned long
 CPUbasepriGet(void)
 {

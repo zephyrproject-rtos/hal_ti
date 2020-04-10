@@ -51,7 +51,6 @@ extern "C" {
 
 typedef signed int _SlFd_t;
 
-#define SL_TIMESTAMP_TICKS_IN_10_MILLISECONDS     (_u32)(10)
 #define SL_TIMESTAMP_MAX_VALUE                    (_u32)(0xFFFFFFFF)
 
 /*!
@@ -1000,6 +999,16 @@ extern int dpl_set_errno(int err);
 
 
 /*!
+    \brief  This function return the thread ID
+
+    \return upon successful return the thread ID
+            Otherwise, return NULL
+    \note       belongs to \ref configuration_sec
+    \warning
+*/
+#define sl_GetThreadID()                  pthread_self()
+
+/*!
     \brief  This function unlock a locking object.
 
     \param  pLockObj    -   pointer to the locking object control block
@@ -1212,6 +1221,16 @@ extern  _i16 os_Spawn(P_OS_SPAWN_ENTRY pEntry, void *pValue, unsigned long flags
 #define sl_Spawn(pEntry,pValue,flags)       os_Spawn(pEntry,pValue,flags)
 #endif
 
+
+
+/*!
+    \brief  This function return the number of ticks in 10ms
+
+    \return Number of ticks in 10ms
+    \note
+    \warning
+*/
+#define SL_TIMESTAMP_TICKS_IN_10_MILLISECONDS     (10000/ClockP_getSystemTickPeriod())
 /*!
  *
  Close the Doxygen group.

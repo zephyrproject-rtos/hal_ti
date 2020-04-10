@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
+ * Copyright (c) 2017-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -887,25 +887,6 @@ static int_fast16_t extFlashSpiRead(uint8_t *buf, size_t len)
     SPI_Transaction masterTransaction;
 
     masterTransaction.txBuf = NULL;
-
-    /*
-     * Work around SPI transfer to address 0x0
-     * transfer first byte into local buffer
-     */
-    if (buf == NULL) {
-        uint8_t byte0;
-        masterTransaction.count  = 1;
-        masterTransaction.rxBuf  = (void*)&byte0;
-        if (!SPI_transfer(spiHandle, &masterTransaction)) {
-            return (NVS_STATUS_ERROR);
-        }
-        *buf++ = byte0;
-        len = len - 1;
-        if (len == 0) {
-            return (NVS_STATUS_SUCCESS);
-        }
-    }
-
     masterTransaction.count = len;
     masterTransaction.rxBuf = buf;
 
@@ -923,14 +904,7 @@ static int_fast16_t extFlashSpiRead(uint8_t *buf, size_t len)
 /*
  *  ======== NVSSPI25X_initSpiCs =======
  */
-#if defined(__IAR_SYSTEMS_ICC__)
-__weak void NVSSPI25X_initSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#elif defined(__GNUC__) && !defined(__ti__)
 void __attribute__((weak)) NVSSPI25X_initSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#else
-#pragma WEAK (NVSSPI25X_initSpiCs)
-void NVSSPI25X_initSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#endif
 {
     if (csId != NVSSPI25X_SPI_MANAGES_CS) {
         GPIO_init();
@@ -947,14 +921,7 @@ void NVSSPI25X_initSpiCs(NVS_Handle nvsHandle, uint16_t csId)
 /*
  *  ======== NVSSPI25X_deinitSpiCs =======
  */
-#if defined(__IAR_SYSTEMS_ICC__)
-__weak void NVSSPI25X_deinitSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#elif defined(__GNUC__) && !defined(__ti__)
 void __attribute__((weak)) NVSSPI25X_deinitSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#else
-#pragma WEAK (NVSSPI25X_deinitSpiCs)
-void NVSSPI25X_deinitSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#endif
 {
 }
 
@@ -962,14 +929,7 @@ void NVSSPI25X_deinitSpiCs(NVS_Handle nvsHandle, uint16_t csId)
  *  ======== NVSSPI25X_assertSpiCs =======
  *  Assert SPI flash /CS
  */
-#if defined(__IAR_SYSTEMS_ICC__)
-__weak void NVSSPI25X_assertSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#elif defined(__GNUC__) && !defined(__ti__)
 void __attribute__((weak)) NVSSPI25X_assertSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#else
-#pragma WEAK (NVSSPI25X_assertSpiCs)
-void NVSSPI25X_assertSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#endif
 {
     if (csId != NVSSPI25X_SPI_MANAGES_CS) {
         GPIO_write(csId, 0);
@@ -980,14 +940,7 @@ void NVSSPI25X_assertSpiCs(NVS_Handle nvsHandle, uint16_t csId)
  *  ======== NVSSPI25X_deassertSpiCs =======
  *  De-assert SPI flash /CS
  */
-#if defined(__IAR_SYSTEMS_ICC__)
-__weak void NVSSPI25X_deassertSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#elif defined(__GNUC__) && !defined(__ti__)
 void __attribute__((weak)) NVSSPI25X_deassertSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#else
-#pragma WEAK (NVSSPI25X_deassertSpiCs)
-void NVSSPI25X_deassertSpiCs(NVS_Handle nvsHandle, uint16_t csId)
-#endif
 {
     if (csId != NVSSPI25X_SPI_MANAGES_CS) {
         GPIO_write(csId, 1);

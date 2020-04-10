@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,13 +55,13 @@
 #ifndef ti_dpl_MutexP__include
 #define ti_dpl_MutexP__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!
  *  @brief    Number of bytes greater than or equal to the size of any RTOS
@@ -86,7 +86,7 @@ typedef union MutexP_Struct {
 /*!
  *  @brief    Status codes for MutexP APIs
  */
-typedef enum MutexP_Status {
+typedef enum {
     /*! API completed successfully */
     MutexP_OK = 0,
     /*! API failed */
@@ -111,7 +111,7 @@ typedef void *MutexP_Handle;
  *  sets the fields manually. The MutexP default parameters are noted in
  *  ::MutexP_Params_init.
  */
-typedef struct MutexP_Params {
+typedef struct {
     void (*callback)(void); /*!< Callback while waiting for mutex unlock */
 } MutexP_Params;
 

@@ -230,7 +230,7 @@ _i32 sl_WifiConfig()
         }
         else
         {
-            sl_NetAppStop(SL_NETAPP_HTTP_SERVER_ID);
+            sl_NetAppStop(SL_NETAPP_DHCP_SERVER_ID);
         }
         break;
     }

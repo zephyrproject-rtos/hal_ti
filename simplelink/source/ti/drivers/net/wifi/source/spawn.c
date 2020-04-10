@@ -96,7 +96,7 @@ void* _SlInternalSpawnTaskEntry()
     g_SlInternalSpawnCB.ThreadId = 0xFFFFFFFF;
 
 #ifdef SL_PLATFORM_MULTI_THREADED
-	g_SlInternalSpawnCB.ThreadId = (_i32)pthread_self();
+	g_SlInternalSpawnCB.ThreadId = (_i32)sl_GetThreadID();
 #endif
 
     g_SlInternalSpawnCB.IrqWriteCnt = 0;
@@ -115,13 +115,13 @@ _i16 _SlInternalSpawn(_SlSpawnEntryFunc_t pEntry , void* pValue , _u32 flags)
 {
     _i16 Res = 0;
 
-    /*  Increment the counter that specifies that async event has recived 
+    /*  Increment the counter that specifies that async event has received
         from interrupt context and should be handled by the internal spawn task */
     if ((flags & SL_SPAWN_FLAG_FROM_SL_IRQ_HANDLER) || (flags & SL_SPAWN_FLAG_FROM_CMD_CTX))
     {
         g_SlInternalSpawnCB.IrqWriteCnt++;
         g_SlInternalSpawnCB.pIrqFuncValue = pValue;
-        SL_DRV_SYNC_OBJ_SIGNAL(&g_SlInternalSpawnCB.SyncObj);
+        SL_DRV_SYNC_OBJ_SIGNAL_FROM_IRQ(&g_SlInternalSpawnCB.SyncObj);
         return Res;
     }
     else if (flags & SL_SPAWN_FLAG_FROM_CMD_PROCESS)

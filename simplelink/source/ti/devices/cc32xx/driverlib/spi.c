@@ -790,9 +790,9 @@ SPIConfigSetExpClk(unsigned long ulBase,unsigned long ulSPIClk,
                              MCSPI_CH0CONF_EPOL |
                              MCSPI_CH0CONF_POL  |
                              MCSPI_CH0CONF_PHA  |
-                             MCSPI_CH0CONF_TURBO ) |
-               MCSPI_CH0CONF_CLKG);
-
+                             MCSPI_CH0CONF_TURBO)
+               );
+  ulRegData = (ulRegData | MCSPI_CH0CONF_CLKG);
   //
   // Get the divider value
   //

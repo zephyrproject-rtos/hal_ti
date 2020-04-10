@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017, Texas Instruments Incorporated
+ * Copyright (c) 2016-2020, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,34 +29,28 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** ============================================================================
+/*!****************************************************************************
  *  @file       ADCCC32XX.h
- *
  *  @brief      ADC driver implementation for the ADC peripheral on CC32XX
  *
  *  This ADC driver implementation is designed to operate on a CC32XX ADC
- *  peripheral.  The ADCCC32XX header file should be included in an application
- *  as follows:
- *  @code
- *  #include <ti/drivers/ADC.h>
- *  #include <ti/drivers/ADCCC32XX.h>
- *  @endcode
+ *  peripheral.
  *
  *  Refer to @ref ADC.h for a complete description of APIs & example of use.
  *
- *  ============================================================================
+ ******************************************************************************
  */
-#ifndef ti_drivers_adc_ADCMSP432__include
-#define ti_drivers_adc_ADCMSP432__include
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef ti_drivers_adc_ADCCC32XX__include
+#define ti_drivers_adc_ADCCC32XX__include
 
 #include <stdint.h>
 #include <stdbool.h>
 
 #include <ti/drivers/ADC.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  *  The bits in the pin mode macros are as follows:
@@ -66,10 +60,14 @@ extern "C" {
  *  ulChannel parameter.
  */
 
-#define ADCCC32XX_PIN_57_CH_0  (ADC_CH_0 << 8) | 0x38 /*!< PIN 57 is used for ADC channel 0 */
-#define ADCCC32XX_PIN_58_CH_1  (ADC_CH_1 << 8) | 0x39 /*!< PIN 58 is used for ADC channel 1 */
-#define ADCCC32XX_PIN_59_CH_2  (ADC_CH_2 << 8) | 0x3a /*!< PIN 59 is used for ADC channel 2 */
-#define ADCCC32XX_PIN_60_CH_3  (ADC_CH_3 << 8) | 0x3b /*!< PIN 60 is used for ADC channel 3 */
+/*!< PIN 57 is used for ADC channel 0 */
+#define ADCCC32XX_PIN_57_CH_0  (ADC_CH_0 << 8) | 0x38
+/*!< PIN 58 is used for ADC channel 1 */
+#define ADCCC32XX_PIN_58_CH_1  (ADC_CH_1 << 8) | 0x39
+/*!< PIN 59 is used for ADC channel 2 */
+#define ADCCC32XX_PIN_59_CH_2  (ADC_CH_2 << 8) | 0x3a
+/*!< PIN 60 is used for ADC channel 3 */
+#define ADCCC32XX_PIN_60_CH_3  (ADC_CH_3 << 8) | 0x3b
 
 /* ADC function table pointer */
 extern const ADC_FxnTable ADCCC32XX_fxnTable;
@@ -83,14 +81,14 @@ extern const ADC_FxnTable ADCCC32XX_fxnTable;
  *
  *  A sample structure is shown below:
  *  @code
- *  const ADCCC32XX_HWAttrsV1 adcCC32XXHWAttrs[Board_ADCCHANNELCOUNT] = {
+ *  const ADCCC32XX_HWAttrsV1 adcCC32XXHWAttrs[1] = {
  *      {
  *          .adcPin = ADCCC32XX_PIN_57
  *      }
  *  };
  *  @endcode
  */
-typedef struct ADCCC32XX_HWAttrsV1 {
+typedef struct {
     uint_fast16_t adcPin;
 } ADCCC32XX_HWAttrsV1;
 
@@ -99,7 +97,7 @@ typedef struct ADCCC32XX_HWAttrsV1 {
  *
  *  The application must not access any member variables of this structure!
  */
-typedef struct ADCCC32XX_State {
+typedef struct {
     uint_fast32_t     baseAddr;
     uint_least8_t     numOpenChannels;
 } ADCCC32XX_State;
@@ -109,7 +107,7 @@ typedef struct ADCCC32XX_State {
  *
  *  The application must not access any member variables of this structure!
  */
-typedef struct ADCCC32XX_Object {
+typedef struct {
     bool              isOpen;
 } ADCCC32XX_Object;
 
@@ -117,4 +115,4 @@ typedef struct ADCCC32XX_Object {
 }
 #endif
 
-#endif /* ti_drivers_adc_ADCMSP432__include */
+#endif /* ti_drivers_adc_ADCCC32XX__include */

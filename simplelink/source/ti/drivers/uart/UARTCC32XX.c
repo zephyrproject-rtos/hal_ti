@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018, Texas Instruments Incorporated
+ * Copyright (c) 2014-2020, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -460,6 +460,9 @@ UART_Handle UARTCC32XX_open(UART_Handle handle, UART_Params *params)
      */
     Power_setDependency(object->powerMgrId);
 
+    /* Do a software reset of the peripheral */
+    PowerCC32XX_reset(object->powerMgrId);
+
     pin = (hwAttrs->rxPin) & 0xff;
     mode = (hwAttrs->rxPin >> 8) & 0xff;
 
@@ -698,7 +701,7 @@ int_fast32_t UARTCC32XX_write(UART_Handle handle, const void *buffer,
 
     key = HwiP_disable();
 
-    if (object->writeCount) {
+    if (object->writeCount || UARTBusy(hwAttrs->baseAddr)) {
         HwiP_restore(key);
         DebugP_log1("UART:(%p) Could not write data, uart in use.",
             hwAttrs->baseAddr);
@@ -1110,6 +1113,8 @@ static int readTaskBlocking(UART_Handle handle)
     unsigned char             *buffer = object->readBuf;
 
     object->state.bufTimeout = false;
+    object->state.callCallback = false;
+
     /*
      * It is possible for the object->timeoutClk and the callback function to
      * have posted the object->readSem Semaphore from the previous UART_read

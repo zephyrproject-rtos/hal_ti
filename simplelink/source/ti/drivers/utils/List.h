@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@
  *  onto a linked list. Generally it is the first field in the structure. For
  *  example:
  *  @code
- *  typedef struct MyStruct {
+ *  typedef struct {
  *      List_Elem elem;
  *      void *buffer;
  *  } MyStruct;
@@ -67,7 +67,7 @@
  *
  *  Initializing and adding an element to the tail and removing it
  *  @code
- *  typedef struct MyStruct {
+ *  typedef struct {
  *      List_Elem elem;
  *      void *buffer;
  *  } MyStruct;
@@ -115,20 +115,20 @@
 #ifndef ti_drivers_utils_List__include
 #define ti_drivers_utils_List__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct List_Elem {
-    struct List_Elem *next;
-    struct List_Elem *prev;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct List_Elem_ {
+    struct List_Elem_ *next;
+    struct List_Elem_ *prev;
 } List_Elem;
 
-typedef struct List_List {
+typedef struct {
     List_Elem *head;
     List_Elem *tail;
 } List_List;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017, Texas Instruments Incorporated
+ * Copyright (c) 2014-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,10 +60,6 @@
 #ifndef ti_drivers_uart_UARTCC32XXDMA__include
 #define ti_drivers_uart_UARTCC32XXDMA__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -76,6 +72,9 @@ extern "C" {
 #include <ti/drivers/UART.h>
 #include <ti/drivers/dma/UDMACC32XX.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!
  * @brief Indicates a pin is not being used
@@ -263,7 +262,7 @@ typedef void (*UARTCC32XXDMA_ErrorCallback) (UART_Handle handle, uint32_t error)
  *  };
  *  @endcode
  */
-typedef struct UARTCC32XXDMA_HWAttrsV1 {
+typedef struct {
     /*! UART Peripheral's base address */
     unsigned int baseAddr;
     /*! UART Peripheral's interrupt vector */
@@ -296,7 +295,7 @@ typedef struct UARTCC32XXDMA_HWAttrsV1 {
  *
  *  The application must not access any member variables of this structure!
  */
-typedef struct UARTCC32XXDMA_Object {
+typedef struct {
     /* UART control variables */
     bool                 opened;           /* Has the obj been opened */
     UART_Mode            readMode;         /* Mode for all read calls */

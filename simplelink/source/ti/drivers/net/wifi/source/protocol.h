@@ -130,11 +130,15 @@ typedef struct
 
 
 /* Internal driver bits status  (g_SlDeviceStatus) */
-#define _SL_DRV_STATUS_BIT_RESTART_REQUIRED       0x100   
-#define _SL_DRV_STATUS_BIT_DEVICE_STARTED         0x200
-#define _SL_DRV_STATUS_BIT_STOP_IN_PROGRESS       0x400 
-#define _SL_DRV_STATUS_BIT_START_IN_PROGRESS      0x800
-#define _SL_DRV_STATUS_BIT_GLOBAL_LOCK_INIT       0x1000
+#define _SL_DRV_STATUS_BIT_RESTART_REQUIRED          0x100
+#define _SL_DRV_STATUS_BIT_DEVICE_STARTED            0x200
+#define _SL_DRV_STATUS_BIT_STOP_IN_PROGRESS          0x400
+#define _SL_DRV_STATUS_BIT_START_IN_PROGRESS         0x800
+#define _SL_DRV_STATUS_BIT_GLOBAL_LOCK_INIT          0x1000
+#define _SL_DRV_STATUS_BIT_RX_STAT_IN_PROGRESS       0x2000
+#define _SL_DRV_STATUS_BIT_DEVICE_STAT_IN_PROGRESS   0x4000
+
+
 /****************************************************************************
 **  OPCODES
 ****************************************************************************/

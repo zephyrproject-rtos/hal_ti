@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2020, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,10 +29,10 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** ============================================================================
+/*!****************************************************************************
  *  @file       GPIO.h
  *
- *  @brief      GPIO driver
+ *  @brief      General Purpose I/O driver interface.
  *
  *  The GPIO header file should be included in an application as follows:
  *  @code
@@ -51,54 +51,114 @@
  *  specify a particular function table or object.
  *
  *  # Usage #
- *  The following code example demonstrates how
- *  to configure a GPIO pin to generate an interrupt and how to toggle an
- *  an LED on and off within the registered interrupt callback function.
+ *  This section provides a basic \ref ti_drivers_GPIO_Synopsis
+ *  "usage summary" and a set of \ref ti_drivers_GPIO_Examples "examples"
+ *  in the form of commented code fragments.  Detailed descriptions of the
+ *  GPIO APIs and their effect are provided in subsequent sections.
  *
+ *  @anchor ti_drivers_GPIO_Synopsis
+ *  ### Synopsis #
+ *  @anchor ti_drivers_GPIO_Synopsis_Code
  *  @code
- *  #include <stdint.h>
- *  #include <stddef.h>
- *
- *  // Driver Header file
+ *  // Import GPIO Driver definitions
  *  #include <ti/drivers/GPIO.h>
  *
- *  // Example/Board Header file
- *  #include "Board.h"
+ *  // Define names for GPIO pin indexes
+ *  #define BUTTON 0
+ *  #define LED    1
+ *
+ *  // One-time init of GPIO driver
+ *  GPIO_init();
+ *
+ *  // Read GPIO pin
+ *  unsigned int state = GPIO_read(BUTTON);
+ *
+ *  // Write to GPIO pin
+ *  GPIO_write(LED, state);
+ *  @endcode
+ *
+ *  @anchor ti_drivers_GPIO_Examples
+ *  ### Examples #
+ *  * @ref ti_drivers_GPIO_Example_callback "Creating an input callback"
+ *  * @ref ti_drivers_GPIO_Example_reconfigure "Runtime pin configuration"
+ *
+ *  @anchor ti_drivers_GPIO_Example_callback
+ *  **Creating an input callback**: The following example demonstrates how
+ *  to configure a GPIO pin to generate an interrupt and how to toggle an
+ *  an LED on and off within the registered interrupt callback function.
+ *  @code
+ *  // Driver header file
+ *  #include <ti/drivers/GPIO.h>
+ *
+ *  // TI Drivers Configuration
+ *  #include "ti_drivers_config.h"
+ *  // Board file
+ *  #include <ti/drivers/Board.h>
+ *
+ *  // GPIO button call back function
+ *  void gpioButton0Fxn(uint_least8_t index);
  *
  *  main()
  *  {
- *      // Call GPIO driver init function
+ *      // One-time Board initialization
+ *      Board_init();
+ *
+ *      // One-time init of GPIO driver
  *      GPIO_init();
  *
  *      // Turn on user LED
- *      GPIO_write(Board_GPIO_LED0, Board_GPIO_LED_ON);
+ *      GPIO_write(CONFIG_GPIO_LED0, CONFIG_GPIO_LED_ON);
  *
  *      // install Button callback
- *      GPIO_setCallback(Board_GPIO_BUTTON0, gpioButtonFxn0);
+ *      GPIO_setCallback(CONFIG_GPIO_BUTTON0, gpioButton0Fxn);
  *
  *      // Enable interrupts
- *      GPIO_enableInt(Board_GPIO_BUTTON0);
+ *      GPIO_enableInt(CONFIG_GPIO_BUTTON0);
  *  }
  *
  *  //
- *  //  ======== gpioButtonFxn0 ========
- *  //  Callback function for the GPIO interrupt on Board_GPIO_BUTTON0.
+ *  //  ======== gpioButton0Fxn ========
+ *  //  Callback function for the GPIO interrupt on CONFIG_GPIO_BUTTON0
  *  //
- *  void gpioButtonFxn0(uint_least8_t index)
+ *  //  Note: index is the GPIO id for the button which is not used here
+ *  //
+ *  void gpioButton0Fxn(uint_least8_t index)
  *  {
  *      // Toggle the LED
- *      GPIO_toggle(Board_GPIO_LED0);
+ *      GPIO_toggle(CONFIG_GPIO_LED0);
  *  }
- *
  *  @endcode
  *
- *  Details for the example code above are described in the following
- *  subsections.
+ *  @anchor ti_drivers_GPIO_Example_reconfigure
+ *  **Runtime pin configuration**: The following example demonstrates how
+ *  to (re)configure GPIO pins.
+ *  @code
+ *  // Driver header file
+ *  #include <ti/drivers/GPIO.h>
+ *
+ *  // TI Driver configuration
+ *  #include "ti_drivers_config.h"
+ *
+ *  #define LED    CONFIG_GPIO_LED0
+ *  #define BUTTON CONFIG_GPIO_BUTTON0
+ *
+ *  void main()
+ *  {
+ *      // One-time init of GPIO driver
+ *      GPIO_init();
+ *
+ *      // Configure a button input pin
+ *      GPIO_setConfig(BUTTON, GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING);
+ *
+ *      // Configure an LED output pin
+ *      GPIO_setConfig(LED, GPIO_CFG_OUT_STD | GPIO_CFG_OUT_LOW);
+ *  }
+ *  @endcode
  *
  *  ### GPIO Driver Configuration #
  *
  *  In order to use the GPIO APIs, the application is required
- *  to provide 3 structures in the Board.c file:
+ *  to provide 3 structures in the ti_drivers_config.c file:
  *  1.  An array of @ref GPIO_PinConfig elements that defines the
  *  initial configuration of each pin used by the application. A
  *  pin is referenced in the application by its corresponding index in this
@@ -110,11 +170,6 @@
  *  @code
  *  //
  *  // Array of Pin configurations
- *  // NOTE: The order of the pin configurations must coincide with what was
- *  //       defined in MSP_EXP432P401R.h
- *  // NOTE: Pins not used for interrupts should be placed at the end of the
- *  //       array.  Callback entries can be omitted from callbacks array to
- *  //       reduce memory usage.
  *  //
  *  GPIO_PinConfig gpioPinConfigs[] = {
  *      // Input pins
@@ -148,21 +203,17 @@
  *  GPIO_setCallback(). This allows the same callback function to be used
  *  for multiple GPIO interrupts, by using the index to identify the GPIO
  *  that caused the interrupt.
- *  Keep in mind that the callback functions will be called in the context of
- *  an interrupt service routine and should be designed accordingly.  When an
- *  interrupt is triggered, the interrupt status of all (interrupt enabled) pins
- *  on a port will be read, cleared, and the respective callbacks will be
- *  executed.  Callbacks will be called in order from least significant bit to
- *  most significant bit.
+ *  @remark Callback functions are called in the context of an interrupt
+ *  service routine and should be designed accordingly.
+ *
+ *  When an interrupt is triggered, the interrupt status of all
+ *  (interrupt enabled) pins on a port will be read, cleared, and the
+ *  respective callbacks will be executed. Callbacks will be called in order
+ *  from least significant bit to most significant bit.
  *  Below is an MSP432 device specific example of the GPIO_CallbackFxn array:
  *  @code
  *  //
  *  // Array of callback function pointers
- *  // NOTE: The order of the pin configurations must coincide with what was
- *  //       defined in MSP_EXP432P401R.h
- *  // NOTE: Pins not used for interrupts can be omitted from callbacks array
- *  //       to reduce memory usage (if placed at end of gpioPinConfigs
- *  //       array).
  *  //
  *  GPIO_CallbackFxn gpioCallbackFunctions[] = {
  *      // MSP_EXP432P401R_GPIO_S1
@@ -208,21 +259,24 @@
  *  Unlike most other TI-RTOS drivers, the GPIO driver has no generic function
  *  table with pointers to device-specific API implementations. All the generic
  *  GPIO APIs are implemented by the device-specific GPIO driver module.
- *  Additionally, there is no notion of an instance 'handle' with the GPIO driver.
- *  GPIO pins are referenced by their numeric index in the GPIO_PinConfig array.
- *  This design approach was used to enhance runtime and memory efficiency.
+ *  Additionally, there is no notion of an instance 'handle' with the GPIO
+ *  driver.
  *
- *  ============================================================================
+ *  GPIO pins are referenced by their numeric index in the GPIO_PinConfig
+ *  array.  This design approach was used to enhance runtime and memory
+ *  efficiency.
+ *
+ ******************************************************************************
  */
 
 #ifndef ti_drivers_GPIO__include
 #define ti_drivers_GPIO__include
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
 
 /**
  *  @name GPIO_STATUS_* macros are general status codes returned by GPIO driver APIs.

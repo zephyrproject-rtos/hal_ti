@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
+ * Copyright (c) 2017-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -100,11 +100,6 @@
 #ifndef ti_drivers_timer_TimerCC32XX__include
 #define ti_drivers_timer_TimerCC32XX__include
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -112,6 +107,11 @@ extern "C"
 #include <ti/drivers/Power.h>
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/dpl/SemaphoreP.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /*!
  *  @def    TimerCC32XX_SubTimer
@@ -124,7 +124,7 @@ extern "C"
  *  two half width timers per single timer peripheral. A 16-bit timer on this
  *  device has an 8-bit prescaler.
  */
-typedef enum TimerCC32XX_SubTimer_ {
+typedef enum {
     TimerCC32XX_timer16A = 0x0001,    /*!< Half width timer A */
     TimerCC32XX_timer16B = 0x0002,    /*!< Half width timer B */
     TimerCC32XX_timer32  = 0x0003,    /*!< Full width timer   */
@@ -163,7 +163,7 @@ extern const Timer_FxnTable TimerCC32XX_fxnTable;
  *  };
  *  @endcode
  */
-typedef struct TimerCC32XX_HWAttrs_ {
+typedef struct {
     /*! The base address of the timer peripheral. */
     uint32_t             baseAddress;
 
@@ -182,7 +182,7 @@ typedef struct TimerCC32XX_HWAttrs_ {
  *
  *  The application must not access any member variables of this structure!
  */
-typedef struct TimerCC32XX_Object_ {
+typedef struct {
     HwiP_Handle         hwiHandle;
     Power_NotifyObj     notifyObj;
     SemaphoreP_Handle   timerSem;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
+ * Copyright (c) 2017-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -292,7 +292,8 @@ extern const NVS_FxnTable NVSSPI25X_fxnTable;
  *  };
  *  @endcode
  */
-typedef struct NVSSPI25X_HWAttrs {
+typedef struct
+{
     size_t      regionBaseOffset;   /*!< Offset from base of SPI flash */
     size_t      regionSize;         /*!< The size of the region in bytes */
     size_t      sectorSize;         /*!< Erase sector size */
@@ -324,7 +325,8 @@ typedef struct NVSSPI25X_HWAttrs {
  *
  *  The application must not access any member variables of this structure!
  */
-typedef struct NVSSPI25X_Object {
+typedef struct
+{
     bool        opened;             /* Has this region been opened */
     SPI_Handle  spiHandle;
     size_t      sectorBaseMask;

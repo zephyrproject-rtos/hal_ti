@@ -165,8 +165,8 @@ Please see the rest of the page for more details about the different steps.
  \subsection     porting_step5   Step 5 - Choose your memory management model
 
  The SimpleLink driver support two memory models:
-     - Static (default)
-     - Dynamic
+     - Static 
+     - Dynamic (default)
 
  To enable the dynamic memory, the following pre-processor define should be set: \n
  #define SL_MEMORY_MGMT_DYNAMIC
@@ -279,11 +279,11 @@ extern "C"
 /*****************************************************************************/
 /* Macro declarations for Host Driver version                                */
 /*****************************************************************************/
-#define SL_DRIVER_VERSION   "3.0.1.46"
+#define SL_DRIVER_VERSION   "3.0.1.61"
 #define SL_MAJOR_VERSION_NUM    3L
 #define SL_MINOR_VERSION_NUM    0L
 #define SL_VERSION_NUM          1L
-#define SL_SUB_VERSION_NUM      46L
+#define SL_SUB_VERSION_NUM      61L
 
 /*****************************************************************************/
 /* Macro declarations for predefined configurations                          */

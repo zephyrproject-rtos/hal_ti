@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,11 +34,7 @@
  *
  *  @brief      Watchdog driver interface
  *
- *  The Watchdog header file should be included in an application as follows:
- *  @code
- *  #include <ti/drivers/Watchdog.h>
- *  @endcode
- *
+ *  @anchor ti_drivers_Watchdog_Overview
  *  # Overview #
  *
  *  A watchdog timer can be used to generate a reset signal if a system has
@@ -52,8 +48,6 @@
  *  The driver provides the ability to specify a user-provided callback
  *  function that is called when the watchdog causes an interrupt.
  *
- *  # Operation #
- *
  *  The Watchdog driver simplifies configuring and starting the Watchdog
  *  peripherals. The Watchdog can be set up to produce a reset signal after a
  *  timeout, or simply cause a hardware interrupt at a programmable interval.
@@ -64,13 +58,30 @@
  *  call Watchdog_clear() in order to clear the Watchdog and prevent a reset.
  *  Watchdog_clear() can be called at any time.
  *
+ *  @anchor ti_drivers_Watchdog_Usage
  *  # Usage #
+ *
+ *  This section will cover driver usage.
+ *  @anchor ti_drivers_Watchdog_Synopsis
+ *  ## Synopsis #
+ *
+ *  Open the driver with default settings:
+ *  @code
+ *  Watchdog_Handle watchdogHandle;
+ *
+ *  Watchdog_init();
+ *  watchdogHandle = Watchdog_open(WATCHDOG_INDEX, NULL);
+ *  if (watchdogHandle == NULL) {
+ *      // Spin forever
+ *      while(1);
+ *  }
+ *  @endcode
  *
  *  The Watchdog driver must be initialized by calling Watchdog_init(),
  *  before any other Watchdog APIs can be called.
  *  Once the watchdog is initialized, a Watchdog object can be created
  *  through the following steps:
- *  -   Create and initialize the Watchdog_Params structure.
+ *  -   Create and initialize the #Watchdog_Params structure.
  *  -   Assign desired values to parameters.
  *  -   Call Watchdog_open().
  *  -   Save the Watchdog_Handle returned by Watchdog_open(). This will be
@@ -81,56 +92,60 @@
  *  @code
  *    typedef void (*Watchdog_Callback)(uintptr_t);
  *  @endcode
- *  Then pass the function to Watchdog_open() through the Watchdog_Params
+ *  Then pass the function to Watchdog_open() through the #Watchdog_Params
  *  structure.
  *
  *  An example of the Watchdog creation process that uses a callback
  *  function:
+ *  @anchor ti_drivers_Watchdog_example_callback
  *  @code
- *    Watchdog_Params params;
- *    Watchdog_Handle watchdogHandle;
+ *  void UserCallbackFxn(Watchdog_Handle handle)
+ *  {
+ *      printf("Watchdog timer triggered!\n");
+ *      releaseResources();
+ *  }
  *
- *    Watchdog_init();
+ *  ...
  *
- *    Watchdog_Params_init(&params);
- *    params.resetMode = Watchdog_RESET_ON;
- *    params.callbackFxn = (Watchdog_Callback) UserCallbackFxn;
+ *  Watchdog_Params params;
+ *  Watchdog_Handle watchdogHandle;
  *
- *    watchdogHandle = Watchdog_open(Board_WATCHDOG0, &params);
- *    if (watchdogHandle == NULL) {
- *        // Error opening Watchdog
- *        while (1);
- *    }
+ *  Watchdog_init();
+ *
+ *  Watchdog_Params_init(&params);
+ *  params.resetMode = Watchdog_RESET_ON;
+ *  params.callbackFxn = (Watchdog_Callback) UserCallbackFxn;
+ *
+ *  watchdogHandle = Watchdog_open(CONFIG_WATCHDOG0, &params);
+ *  if (watchdogHandle == NULL) {
+ *     // Error opening Watchdog
+ *     while (1);
+ *  }
+ *
  *  @endcode
  *
- *  If no Watchdog_Params structure is passed to Watchdog_open(), the
+ *  If no #Watchdog_Params structure is passed to Watchdog_open(), the
  *  default values are used. By default, the Watchdog driver has resets
  *  turned on, no callback function specified, and stalls the timer at
  *  breakpoints during debugging.
  *
- *  Options for the resetMode parameter are Watchdog_RESET_ON and
- *  Watchdog_RESET_OFF. The latter allows the watchdog to be used like
- *  another timer interrupt. When resetMode is Watchdog_RESET_ON, it is up
+ *  Options for the resetMode parameter are #Watchdog_RESET_ON and
+ *  #Watchdog_RESET_OFF. The latter allows the watchdog to be used like
+ *  another timer interrupt. When resetMode is #Watchdog_RESET_ON, it is up
  *  to the application to call Watchdog_clear() to clear the Watchdog
  *  interrupt flag to prevent a reset. Watchdog_clear() can be called at
  *  any time.
  *
- *  # Implementation #
+ *  @anchor ti_drivers_Watchdog_Examples
+ *  # Examples
+ *  - @ref ti_drivers_Watchdog_Synopsis "Default Example"
+ *  - @ref ti_drivers_Watchdog_example_callback "Callback Function before watchdog reset"
  *
- *  This module serves as the main interface for TI-RTOS applications. Its
- *  purpose is to redirect the module's APIs to specific peripheral
- *  implementations which are specified using a pointer to a
- *  Watchdog_FxnTable.
+ *  @anchor ti_drivers_Watchdog_Configuration
+ *  # Configuration
  *
- *  The Watchdog driver interface module is joined (at link time)
- *  to a NULL-terminated array of Watchdog_Config data structures named
- *  *Watchdog_config*. *Watchdog_config* is implemented in the application with
- *  each entry being an instance of a Watchdog peripheral. Each entry in
- *  *Watchdog_config* contains a:
- *  - (Watchdog_FxnTable *) to a set of functions that implement a Watchdog
- *    peripheral
- *  - (void *) data object that is associated with the Watchdog_FxnTable
- *  - (void *) hardware attributes that are associated to the Watchdog_FxnTable
+ *  Refer to the @ref driver_configuration "Driver's Configuration" section
+ *  for more information.
  *
  *******************************************************************************
  */
@@ -138,11 +153,11 @@
 #ifndef ti_drivers_Watchdog__include
 #define ti_drivers_Watchdog__include
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
 
 /**
  *  @defgroup Watchdog_CONTROL Watchdog_control command and status codes
@@ -246,7 +261,7 @@ typedef struct Watchdog_Config_ *Watchdog_Handle;
  *  session is halted. To avoid unwanted resets, the Watchdog can be set to
  *  stall while the processor is stopped by the debugger.
  */
-typedef enum Watchdog_DebugMode_ {
+typedef enum {
     Watchdog_DEBUG_STALL_ON, /*!< Watchdog will be stalled at breakpoints */
     Watchdog_DEBUG_STALL_OFF /*!< Watchdog will keep running at breakpoints */
 } Watchdog_DebugMode;
@@ -258,7 +273,7 @@ typedef enum Watchdog_DebugMode_ {
  *  be configured to either generate a reset upon timeout or simply produce a
  *  periodic interrupt.
  */
-typedef enum Watchdog_ResetMode_ {
+typedef enum {
     Watchdog_RESET_OFF, /*!< Timeouts generate interrupts only */
     Watchdog_RESET_ON   /*!< Generates reset after timeout */
 } Watchdog_ResetMode;
@@ -267,8 +282,8 @@ typedef enum Watchdog_ResetMode_ {
  *  @brief      Watchdog callback pointer
  *
  *  This is the typedef for the function pointer that will allow a callback
- *  function to be specified in the Watchdog_Params structure. The function
- *  will take a Watchdog_Handle of the Watchdog causing the interrupt (cast as
+ *  function to be specified in the #Watchdog_Params structure. The function
+ *  will take a #Watchdog_Handle of the Watchdog causing the interrupt (cast as
  *  a uintptr_t) as an argument.
  */
 typedef void (*Watchdog_Callback)(uintptr_t handle);
@@ -281,7 +296,7 @@ typedef void (*Watchdog_Callback)(uintptr_t handle);
  *
  *  @sa         Watchdog_Params_init()
  */
-typedef struct Watchdog_Params_ {
+typedef struct {
     Watchdog_Callback   callbackFxn;    /*!< Pointer to callback. Not supported
                                              on all targets. */
     Watchdog_ResetMode  resetMode;      /*!< Mode to enable resets.
@@ -344,7 +359,7 @@ typedef uint32_t (*Watchdog_ConvertMsToTicksFxn)   (Watchdog_Handle handle,
  *              required set of functions to control a specific Watchdog driver
  *              implementation.
  */
-typedef struct Watchdog_FxnTable_ {
+typedef struct {
     Watchdog_ClearFxn             watchdogClear;
     Watchdog_CloseFxn             watchdogClose;
     Watchdog_ControlFxn           watchdogControl;
@@ -382,9 +397,9 @@ typedef struct Watchdog_Config_ {
  *  @brief      Clears the Watchdog
  *
  *  Clears the Watchdog to to prevent a reset signal from being generated if the
- *  module is in Watchdog_RESET_ON reset mode.
+ *  module is in #Watchdog_RESET_ON reset mode.
  *
- *  @param  handle      Watchdog Handle
+ *  @param  handle      A #Watchdog_Handle
  */
 extern void Watchdog_clear(Watchdog_Handle handle);
 
@@ -395,7 +410,7 @@ extern void Watchdog_clear(Watchdog_Handle handle);
  *
  *  @pre    Watchdog_open() has to be called first.
  *
- *  @param  handle      A Watchdog_Handle returned from Watchdog_open
+ *  @param  handle      A #Watchdog_Handle returned from Watchdog_open()
  *
  *  @sa     Watchdog_open()
  */
@@ -403,10 +418,10 @@ extern void Watchdog_close(Watchdog_Handle handle);
 
 /*!
  *  @brief  Function performs implementation specific features on a given
- *          Watchdog_Handle.
+ *          #Watchdog_Handle.
  *
  *  Commands for Watchdog_control can originate from Watchdog.h or from implementation
- *  specific Watchdog*.h (_WatchdogCC26XX.h_, _WatchdogMSP432.h_, etc.. ) files.
+ *  specific Watchdog*.h files.
  *  While commands from Watchdog.h are API portable across driver implementations,
  *  not all implementations may support all these commands.
  *  Conversely, commands from driver implementation specific Watchdog*.h files add
@@ -426,7 +441,7 @@ extern void Watchdog_close(Watchdog_Handle handle);
  *
  *  @pre    Watchdog_open() has to be called first.
  *
- *  @param  handle      A Watchdog handle returned from Watchdog_open()
+ *  @param  handle      A #Watchdog_Handle returned from Watchdog_open()
  *
  *  @param  cmd         Watchdog.h or Watchdog*.h commands.
  *
@@ -446,7 +461,7 @@ extern int_fast16_t Watchdog_control(Watchdog_Handle handle,
  *  @brief      Initializes the Watchdog module
  *
  *  The application-provided Watchdog_config must be present before the
- *  Watchdog_init function is called. The Watchdog_config must be persistent
+ *  Watchdog_init() function is called. The Watchdog_config must be persistent
  *  and not changed after Watchdog_init is called. This function must be called
  *  before any of the other Watchdog driver APIs.
  */
@@ -456,16 +471,16 @@ extern void Watchdog_init(void);
  *  @brief      Opens a Watchdog
  *
  *  Opens a Watchdog object with the index and parameters specified, and
- *  returns a Watchdog_Handle.
+ *  returns a #Watchdog_Handle.
  *
  *  @param  index         Logical peripheral number for the Watchdog indexed
  *                        into the Watchdog_config table
  *
- *  @param  params        Pointer to an parameter block, if NULL it will use
+ *  @param  params        Pointer to a #Watchdog_Params, if NULL it will use
  *                        default values. All the fields in this structure are
  *                        RO (read-only).
  *
- *  @return A Watchdog_Handle on success or a NULL on an error or if it has
+ *  @return A #Watchdog_Handle on success or a NULL on an error or if it has
  *          been opened already.
  *
  *  @sa     Watchdog_init()
@@ -474,15 +489,15 @@ extern void Watchdog_init(void);
 extern Watchdog_Handle Watchdog_open(uint_least8_t index, Watchdog_Params *params);
 
 /*!
- *  @brief  Function to initialize the Watchdog_Params structure to its defaults
+ *  @brief  Function to initialize the #Watchdog_Params structure to its defaults
  *
- *  @param  params      An pointer to Watchdog_Params structure for
+ *  @param  params      An pointer to #Watchdog_Params structure for
  *                      initialization
  *
  *  Default parameters:
  *      callbackFxn = NULL
- *      resetMode = Watchdog_RESET_ON
- *      debugStallMode = Watchdog_DEBUG_STALL_ON
+ *      resetMode = #Watchdog_RESET_ON
+ *      debugStallMode = #Watchdog_DEBUG_STALL_ON
  */
 extern void Watchdog_Params_init(Watchdog_Params *params);
 
@@ -499,12 +514,12 @@ extern void Watchdog_Params_init(Watchdog_Params *params);
  *  This API is not applicable for all platforms. See the page for your
  *  specific driver implementation for details.
  *
- *  @param      handle      Watchdog Handle
+ *  @param      handle      A #Watchdog_Handle
  *
  *  @param      ticks       Value to be loaded into Watchdog timer
  *                          Unit is in Watchdog clock ticks
  *
- *  @return Watchdog_STATUS_SUCCESS if successful, Watchdog_STATUS_UNSUPPORTED
+ *  @return #Watchdog_STATUS_SUCCESS on success, #Watchdog_STATUS_UNSUPPORTED
  *          if driver does not support this API.
  */
 extern int_fast16_t Watchdog_setReload(Watchdog_Handle handle, uint32_t ticks);
@@ -520,7 +535,7 @@ extern int_fast16_t Watchdog_setReload(Watchdog_Handle handle, uint32_t ticks);
  *  This API is not applicable for all platforms. See the page for your
  *  specific driver implementation for details.
  *
- *  @param      handle         Watchdog Handle
+ *  @param      handle         A #Watchdog_Handle
  *
  *  @param      milliseconds   Value to be converted
  *

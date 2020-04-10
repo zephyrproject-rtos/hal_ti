@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017, Texas Instruments Incorporated
+ * Copyright (c) 2016-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,110 +29,150 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** ============================================================================
+/*!****************************************************************************
  *  @file       ADC.h
+ *  @brief      Analog to Digital Conversion (ADC) Input Driver
  *
- *  @brief      ADC driver interface
+ *  @anchor ti_drivers_ADC_Overview
+ *  # Overview
  *
- *  The ADC header file should be included in an application as follows:
+ *  The ADC driver allows you to manage an Analog to Digital peripheral via
+ *  simple and portable APIs. This driver supports sampling and converting
+ *  raw values into microvolts.
+ *
+ *  <hr>
+ *  @anchor ti_drivers_ADC_Usage
+ *  # Usage
+ *
+ *  This documentation provides a basic @ref ti_drivers_ADC_Synopsis
+ *  "usage summary" and a set of @ref ti_drivers_ADC_Examples "examples"
+ *  in the form of commented code fragments. Detailed descriptions of the
+ *  APIs are provided in subsequent sections.
+ *
+ *  @anchor ti_drivers_ADC_Synopsis
+ *  ## Synopsis
+ *  @anchor ti_drivers_ADC_Synopsis_Code
  *  @code
+ *  // Import ADC Driver definitions
  *  #include <ti/drivers/ADC.h>
+ *
+ *  // Define name for ADC channel index
+ *  #define THERMOCOUPLE_OUT  0
+ *
+ *  // One-time init of ADC driver
+ *  ADC_init();
+ *
+ *  // initialize optional ADC parameters
+ *  ADC_Params params;
+ *  ADC_Params_init(&params);
+ *  params.isProtected = true;
+ *
+ *  // Open ADC channels for usage
+ *  ADC_Handle adcHandle = ADC_open(THERMOCOUPLE_OUT, &params);
+ *
+ *  // Sample the analog output from the Thermocouple
+ *  ADC_convert(adcHandle, &result);
+ *
+ *  // Convert the sample to microvolts
+ *  resultUv = ADC_convertToMicroVolts(adcHandle, result);
+ *
+ *  ADC_close(adcHandle);
  *  @endcode
  *
- *  # Operation #
- *  The ADC driver operates as a simplified ADC module with only single channel
- *  sampling support. It also operates on blocking only mode which means users
- *  have to wait the current sampling finished before starting another sampling.
- *  The sampling channel needs to be specified in the ADC_open() before calling
- *  ADC_convert().
+ *  <hr>
+ *  @anchor ti_drivers_ADC_Examples
+ *  # Examples
  *
- *  The APIs in this driver serve as an interface to a typical TI-RTOS
- *  application. The specific peripheral implementations are responsible to
- *  create all the SYS/BIOS specific primitives to allow for thread-safe
- *  operation.
- *  User can use the ADC driver or the ADCBuf driver that has more features.
- *  But both ADC and ADCBuf cannot be used together in an application.
+ *  @li @ref ti_drivers_ADC_Examples_open "Opening an ADC instance"
+ *  @li @ref ti_drivers_ADC_Examples_convert "Taking an ADC sample"
+ *  @li @ref ti_drivers_ADC_Examples_convert_microvolts "Converting a sample to microvolts"
  *
- *  ## Opening the driver #
+ *  @anchor ti_drivers_ADC_Examples_open
+ *  ## Opening an ADC instance
  *
  *  @code
  *  ADC_Handle adc;
  *  ADC_Params params;
  *
  *  ADC_Params_init(&params);
- *  adc = ADC_open(Board_ADC0, &params);
+ *
+ *  adc = ADC_open(0, &params);
  *  if (adc == NULL) {
  *      // ADC_open() failed
- *      while (1);
+ *      while (1) {}
  *  }
  *  @endcode
  *
- *  ## Converting #
- *  An ADC conversion with a ADC peripheral is started by calling ADC_convert().
- *  The result value is returned by ADC_convert() once the conversion is
- *  finished.
+ *  @anchor ti_drivers_ADC_Examples_convert
+ *  ## Taking an ADC sample
+ *
+ *  An ADC conversion with an ADC peripheral is started by calling
+ *  ADC_convert(). The result value is returned by ADC_convert()
+ *  once the conversion is finished.
  *
  *  @code
  *  int_fast16_t res;
  *  uint_fast16_t adcValue;
  *
  *  res = ADC_convert(adc, &adcValue);
- *  if (res == ADC_STATUS_SUCCESS) {
- *      //use adcValue
+ *  if (res == ADC_STATUS_SUCCESS)
+ *  {
+ *      print(adcValue);
  *  }
  *  @endcode
  *
- *  # Implementation #
+ *  @anchor ti_drivers_ADC_Examples_convert_microvolts
+ *  ## Converting a sample to microvolts
  *
- *  This module serves as the main interface for TI-RTOS
- *  applications. Its purpose is to redirect the module's APIs to specific
- *  peripheral implementations which are specified using a pointer to a
- *  ADC_FxnTable.
+ *  The result value returned by ADC_convert() is a raw value. The
+ *  following uses ADC_convertToMicroVolts() to convert the raw value
+ *  into microvolts.
+ *  @code
+ *  int_fast16_t res;
+ *  uint_fast16_t adcValue;
+ *  uint32_t adcValueUv;
  *
- *  The ADC driver interface module is joined (at link time) to a
- *  NULL-terminated array of ADC_Config data structures named *ADC_config*.
- *  *ADC_config* is implemented in the application with each entry being an
- *  instance of a ADC peripheral. Each entry in *ADC_config* contains a:
- *  - (ADC_FxnTable *) to a set of functions that implement a ADC peripheral
- *  - (void *) data object that is associated with the ADC_FxnTable
- *  - (void *) hardware attributes that are associated to the ADC_FxnTable
+ *  res = ADC_convert(adc, &adcValue);
+ *  if (res == ADC_STATUS_SUCCESS)
+ *  {
+ *      adcValueUv = ADC_convertToMicroVolts(adc, adcValue);
+ *  }
+ *  @endcode
  *
- *  # Instrumentation #
- *  The ADC driver interface produces log statements if instrumentation is
- *  enabled.
+ *  <hr>
+ *  @anchor ti_drivers_ADC_Configuration
+ *  # Configuration
  *
- *  Diagnostics Mask | Log details |
- *  ---------------- | ----------- |
- *  Diags_USER1      | basic operations performed |
- *  Diags_USER2      | detailed operations performed |
- *
- *  ============================================================================
+ *  Refer to the @ref driver_configuration "Driver's Configuration" section
+ *  for driver configuration information.
+ *  <hr>
+ ******************************************************************************
  */
 
 #ifndef ti_drivers_ADC__include
 #define ti_drivers_ADC__include
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdbool.h>
-#include <stdint.h>
-
-/**
- *  @brief Define to support deprecated API ADC_convertRawToMicroVolts.
- *
- *  It is succeeded by the generic ADC_convertToMicroVolts.
+/*!
+ *  @deprecated ADC_convertRawToMicroVolts() is succeeded by
+ *  ADC_convertToMicroVolts().
  */
 #define ADC_convertRawToMicroVolts ADC_convertToMicroVolts
 
-/**
+/*!
  *  @defgroup ADC_CONTROL ADC_control command and status codes
  *  These ADC macros are reservations for ADC.h
  *  @{
  */
 
 /*!
+ * @hideinitializer
  * Common ADC_control command code reservation offset.
  * ADC driver implementations should offset command codes with ADC_CMD_RESERVED
  * growing positively
@@ -146,6 +186,7 @@ extern "C" {
 #define ADC_CMD_RESERVED           (32)
 
 /*!
+ * @hideinitializer
  * Common ADC_control status code reservation offset.
  * ADC driver implementations should offset status codes with
  * ADC_STATUS_RESERVED growing negatively.
@@ -202,20 +243,19 @@ extern "C" {
 /** @}*/
 
 /*!
- *  @brief      A handle that is returned from a ADC_open() call.
+ *  @brief      A handle that is returned from an ADC_open() call.
  */
-typedef struct ADC_Config_    *ADC_Handle;
+typedef struct ADC_Config_ *ADC_Handle;
 
 /*!
- *  @brief  ADC Parameters
+ *  @brief  ADC Parameters used with ADC_open().
  *
- *  ADC parameters are used to with the ADC_open() call. Only custom argument
- *  is supported in the parameters. Default values for these parameters are
- *  set using ADC_Params_init().
+ *  ADC_Params_init() must be called prior to setting fields in
+ *  this structure.
  *
  *  @sa     ADC_Params_init()
  */
-typedef struct ADC_Params_ {
+typedef struct {
     void    *custom;        /*!< Custom argument used by driver
                                 implementation */
     bool    isProtected;    /*!< By default ADC uses a semaphore
@@ -228,12 +268,14 @@ typedef struct ADC_Params_ {
 } ADC_Params;
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver specific implementation of
  *              ADC_close().
  */
 typedef void (*ADC_CloseFxn) (ADC_Handle handle);
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver specific implementation of
  *              ADC_control().
  */
@@ -241,12 +283,14 @@ typedef int_fast16_t (*ADC_ControlFxn) (ADC_Handle handle, uint_fast16_t cmd,
     void *arg);
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver specific implementation of
  *              ADC_ConvertFxn().
  */
 typedef int_fast16_t (*ADC_ConvertFxn) (ADC_Handle handle, uint16_t *value);
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver specific implementation of
  *              ADC_convertToMicroVolts().
  */
@@ -254,30 +298,32 @@ typedef uint32_t (*ADC_ConvertToMicroVoltsFxn) (ADC_Handle handle,
     uint16_t adcValue);
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver specific implementation of
  *              ADC_init().
  */
 typedef void (*ADC_InitFxn) (ADC_Handle handle);
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver specific implementation of
  *              ADC_open().
  */
 typedef ADC_Handle (*ADC_OpenFxn) (ADC_Handle handle, ADC_Params *params);
 
 /*!
- *  @brief      The definition of a ADC function table that contains the
+ *  @brief      The definition of an ADC function table that contains the
  *              required set of functions to control a specific ADC driver
  *              implementation.
  */
-typedef struct ADC_FxnTable_ {
+typedef struct {
     /*! Function to close the specified peripheral */
     ADC_CloseFxn      closeFxn;
 
     /*! Function to perform implementation specific features */
     ADC_ControlFxn    controlFxn;
 
-    /*! Function to initiate a ADC single channel conversion */
+    /*! Function to initiate an ADC single channel conversion */
     ADC_ConvertFxn    convertFxn;
 
     /*! Function to convert ADC result to microvolts */
@@ -291,102 +337,97 @@ typedef struct ADC_FxnTable_ {
 } ADC_FxnTable;
 
 /*!
- *  @brief ADC Global configuration
- *
- *  The ADC_Config structure contains a set of pointers used to characterize
- *  the ADC driver implementation.
- *
- *  This structure needs to be defined before calling ADC_init() and it must
- *  not be changed thereafter.
+ *  @brief ADC driver's custom @ref driver_configuration "configuration"
+ *  structure.
  *
  *  @sa     ADC_init()
+ *  @sa     ADC_open()
  */
 typedef struct ADC_Config_ {
-    /*! Pointer to a table of driver-specific implementations of ADC APIs */
+    /*! Pointer to a @ref driver_function_table "function pointer table"
+     *  with driver-specific implementations of ADC APIs */
     ADC_FxnTable const *fxnTablePtr;
 
-    /*! Pointer to a driver specific data object */
+    /*! Pointer to a driver specific @ref driver_objects "data object". */
     void               *object;
 
-    /*! Pointer to a driver specific hardware attributes structure */
+    /*! Pointer to a driver specific @ref driver_hardware_attributes
+     *  "hardware attributes structure". */
     void         const *hwAttrs;
 } ADC_Config;
 
 /*!
- *  @brief  Function to close a ADC driver
+ *  @brief  Function to close an ADC driver instance
  *
- *  @pre    ADC_open() has to be called first.
+ *  @pre        ADC_open() has to be called first.
  *
- *  @param  handle An ADC handle returned from ADC_open()
- *
- *  @sa     ADC_open()
+ *  @param[in]  handle An #ADC_Handle returned from ADC_open()
  */
 extern void ADC_close(ADC_Handle handle);
 
 /*!
- *  @brief  Function performs implementation specific features on a given
- *          ADC_Handle.
+ *  @brief  Function performs implementation specific features on a
+ *          driver instance.
  *
  *  @pre    ADC_open() has to be called first.
  *
- *  @param  handle      A ADC handle returned from ADC_open()
+ *  @param[in]  handle   An #ADC_Handle returned from ADC_open()
  *
- *  @param  cmd         A command value defined by the driver specific
+ *  @param[in]  cmd     A command value defined by the device specific
  *                      implementation
  *
- *  @param  arg         An optional R/W (read/write) argument that is
- *                      accompanied with cmd
+ *  @param[in]  arg     An optional R/W (read/write) argument that is
+ *                      accompanied with @p cmd
  *
  *  @return Implementation specific return codes. Negative values indicate
  *          unsuccessful operations.
  *
- *  @sa     ADC_open()
+ *  @retval #ADC_STATUS_SUCCESS The call was successful.
+ *  @retval #ADC_STATUS_UNDEFINEDCMD The @p cmd value is not supported by
+ *                                   the device specific implementation.
  */
 extern int_fast16_t ADC_control(ADC_Handle handle, uint_fast16_t cmd,
     void *arg);
 
 /*!
- *  @brief  Function to perform ADC conversion
+ *  @brief  Function to perform an ADC conversion
  *
- *  Function to perform ADC single channel single sample conversion.
+ *  Function to perform a single channel sample conversion.
  *
  *  @pre    ADC_open() has been called
  *
- *  @param  handle        An ADC_Handle
- *  @param  value         A pointer to the conversion result
+ *  @param[in]      handle    An #ADC_Handle returned from ADC_open()
+ *  @param[in,out]  value     A pointer to a uint16_t to store the conversion
+ *                            result
  *
- *  @return The return value indicates the conversion is succeeded or
- *          failed. The value could be ADC_STATUS_SUCCESS or
- *          ADC_STATUS_ERROR.
+ *  @retval #ADC_STATUS_SUCCESS  The conversion was successful.
+ *  @retval #ADC_STATUS_ERROR    The conversion failed and @p value is
+ *                               invalid.
  *
- *  @sa     ADC_open()
- *  @sa     ADC_close()
+ *  @sa     ADC_convertToMicroVolts()
  */
 extern int_fast16_t ADC_convert(ADC_Handle handle, uint16_t *value);
 
 /*!
- *  @brief  Function performs conversion from ADC result to actual value in
- *          microvolts.
+ *  @brief  Function to convert a raw ADC sample into microvolts.
  *
- *  @pre    ADC_open() and ADC_convert() has to be called first.
+ *  @pre    ADC_convert() has to be called first.
  *
- *  @param  handle      A ADC handle returned from ADC_open()
+ *  @param[in]  handle      An #ADC_Handle returned from ADC_open()
  *
- *  @param  adcValue A sampling result return from ADC_convert()
+ *  @param[in]  adcValue    A sampling result return from ADC_convert()
  *
- *  @return The actual sampling result in micro volts unit.
+ *  @return @p adcValue converted into microvolts
  *
- *  @sa     ADC_open()
+ *  @sa     ADC_convert()
  */
 extern uint32_t ADC_convertToMicroVolts(ADC_Handle handle,
     uint16_t adcValue);
 
 /*!
- *  @brief  Function to initializes the ADC driver
+ *  @brief  Function to initialize the ADC driver.
  *
- *  @pre    The ADC_config structure must exist and be persistent before this
- *          function can be called. This function must also be called before
- *          any other ADC driver APIs.
+ *  This function must also be called before any other ADC driver APIs.
  */
 extern void ADC_init(void);
 
@@ -398,14 +439,11 @@ extern void ADC_init(void);
  *
  *  @pre    ADC_init() has been called
  *
- *  @param  index         Logical peripheral number for the ADC indexed into
- *                        the ADC_config table
- *  @param  params        Pointer to an parameter block, if NULL it will use
- *                        default values. All the fields in this structure are
- *                        RO (read-only).
+ *  @param[in]  index     Index in the @p ADC_Config[] array.
+ *  @param[in]  params    Pointer to an initialized #ADC_Params structure.
+ *                        If NULL, the default #ADC_Params values are used.
  *
- *  @return A ADC_Handle on success or a NULL on an error or if it has been
- *          opened already.
+ *  @return An #ADC_Handle on success or NULL on error.
  *
  *  @sa     ADC_init()
  *  @sa     ADC_close()
@@ -413,13 +451,13 @@ extern void ADC_init(void);
 extern ADC_Handle ADC_open(uint_least8_t index, ADC_Params *params);
 
 /*!
- *  @brief  Function to initialize the ADC_Params struct to its defaults
+ *  @brief  Initialize an #ADC_Params structure to its default values.
  *
- *  @param  params      An pointer to ADC_Params structure for
- *                      initialization
+ *  @param[in]  params  A pointer to an #ADC_Params structure.
  *
- *  Defaults values are:
- *      custom = NULL
+ *  Default values are:
+ *  @arg #ADC_Params.custom = NULL
+ *  @arg #ADC_Params.isProtected = true
  */
 extern void ADC_Params_init(ADC_Params *params);
 

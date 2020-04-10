@@ -76,7 +76,8 @@ static int maxbit(int n)
 /*
  *  ======== SwiP_Params_init ========
  */
-void SwiP_Params_init(SwiP_Params *params) {
+void SwiP_Params_init(SwiP_Params *params)
+{
     /* structure copy */
     *params = SwiP_defaultParams;
 }

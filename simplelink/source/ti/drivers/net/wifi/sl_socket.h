@@ -1020,7 +1020,7 @@ _i16 sl_Select(_i16 nfds, SlFdSet_t *readsds, SlFdSet_t *writesds, SlFdSet_t *ex
     \code
     
            SlSockNonblocking_t enableOption;
-           enableOption.NonblockingEnabled = 1;
+           enableOption.NonBlockingEnabled = 1;
            sl_SetSockOpt(SockID,SL_SOL_SOCKET,SL_SO_NONBLOCKING, (_u8 *)&enableOption,sizeof(enableOption)); // Enable/disable nonblocking mode
     \endcode
     <br>

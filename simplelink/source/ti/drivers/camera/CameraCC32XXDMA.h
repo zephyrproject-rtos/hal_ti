@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,15 +48,15 @@
 #ifndef ti_drivers_Camera_CameraCC32XXDMA__include
 #define ti_drivers_Camera_CameraCC32XXDMA__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <ti/drivers/Camera.h>
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/dpl/SemaphoreP.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  *  @addtogroup Camera_STATUS
@@ -121,7 +121,7 @@ extern const Camera_FxnTable CameraCC32XXDMA_fxnTable;
  *  };
  *  @endcode
  */
-typedef struct CameraCC32XXDMA_HWAttrs {
+typedef struct {
     /*! Camera Peripheral's base address */
     uint32_t     baseAddr;
     /*! Camera Peripheral's interrupt vector */
@@ -137,7 +137,7 @@ typedef struct CameraCC32XXDMA_HWAttrs {
  *
  *  The application must not access any member variables of this structure!
  */
-typedef struct CameraCC32XXDMA_Object {
+typedef struct {
     /* Camera control variables */
     bool                opened;            /* Has the obj been opened */
     Camera_CaptureMode  operationMode;     /* Mode of operation of Camera */
