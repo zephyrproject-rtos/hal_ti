@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2020, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,77 +31,92 @@
  */
 /*!****************************************************************************
  *  @file       I2C.h
- *  @brief      Inter-Integrated Circuit driver interface.
+ *  @brief      Inter-Integrated Circuit (I2C) Driver
  *
- *  The I2C header file should be included in an application as follows:
- *  @code
- *  #include <ti/drivers/I2C.h>
- *  @endcode
+ *  @anchor ti_drivers_I2C_Overview
+ *  # Overview
  *
- *  This module serves as the main interface for applications using an
- *  underlying I2C peripheral. Its purpose is to redirect the I2C APIs to
- *  device specific driver implementations which are specified using a pointer
- *  to a #I2C_FxnTable.
- *
- *  # Overview #
- *
- *  This section assumes that you have prior knowledge about the I2C protocol.
- *  For the full I2C-bus specification and user manual, view the \b UM10204
- *  document available online.
- *
- *  This I2C driver is designed to operate as an I2C master and will not
+ *  The I2C driver is designed to operate as an I2C master and will not
  *  function as an I2C slave. Multi-master arbitration is not supported;
  *  therefore, this driver assumes it is the only I2C master on the bus.
  *  This I2C driver's API set provides the ability to transmit and receive
  *  data over an I2C bus between the I2C master and I2C slave(s). The
  *  application is responsible for manipulating and interpreting the data.
  *
- *  # Thread Safety #
  *
- *  This driver has been designed to operate with a Real-Time Operating System
- *  (RTOS). All I2C APIs are globally thread safe.
+ *  <hr>
+ *  @anchor ti_drivers_I2C_Usage
+ *  # Usage
  *
- *  # I2C Driver Configuration #
+ *  This section provides a basic @ref ti_drivers_I2C_Synopsis
+ *  "usage summary" and a set of @ref ti_drivers_I2C_Examples "examples"
+ *  in the form of commented code fragments. Detailed descriptions of the
+ *  I2C APIs and their effect are provided in subsequent sections.
  *
- *  In order to use the I2C APIs, the application is required to provide
- *  device-specific I2C configuration in the Board.c file. The I2C driver
- *  interface defines a configuration data structure, #I2C_Config.
+ *  @anchor ti_drivers_I2C_Synopsis
+ *  ## Synopsis #
+ *  @anchor ti_drivers_I2C_Synopsis_Code
+ *  @code
+ *  // Import I2C Driver definitions
+ *  #include <ti/drivers/I2C.h>
  *
- *  The application must declare an array of #I2C_Config elements, named
- *  \p I2C_config[]. Each element of \p I2C_config[] is populated with
- *  pointers to a device specific I2C driver implementation's function
- *  table, driver object, and hardware attributes. The hardware attributes
- *  define properties such as the I2C peripheral's base address and
- *  pins. Each element in \p I2C_config[] corresponds to an I2C instance,
- *  and none of the elements should have \p NULL pointers.
+ *  // Define name for an index of an I2C bus
+ *  #define SENSORS 0
  *
- *  The I2C configuration is device dependent. You will need to check the
- *  device specific I2C driver documentation. There you will find a
- *  description of the I2C hardware attributes.
+ *  // Define the slave address of device on the SENSORS bus
+ *  #define OPT_ADDR 0x47
  *
- *  # Usage #
+ *  // One-time init of I2C driver
+ *  I2C_init();
  *
- *  For general usage, refer to the function documentation.
+ *  // initialize optional I2C bus parameters
+ *  I2C_Params params;
+ *  I2C_Params_init(&params);
+ *  params.bitRate = I2C_400kHz;
  *
- *  ## Initializing the I2C Driver ##
+ *  // Open I2C bus for usage
+ *  I2C_Handle i2cHandle = I2C_open(SENSORS, &params);
  *
- *  I2C_init() must be called before any other I2C API. This function
- *  calls the device specific implementation's I2C initialization function
- *  for each element of \p I2C_config[].
+ *  // Initialize slave address of transaction
+ *  I2C_Transaction transaction = {0};
+ *  transaction.slaveAddress = OPT_ADDR;
  *
- *  ## Opening the I2C Driver ##
+ *  // Read from I2C slave device
+ *  transaction.readBuf = data;
+ *  transaction.readCount = sizeof(data);
+ *  transaction.writeCount = 0;
+ *  I2C_transfer(i2cHandle, &transaction);
+ *
+ *  // Write to I2C slave device
+ *  transaction.writeBuf = command;
+ *  transaction.writeCount = sizeof(command);
+ *  transaction.readCount = 0;
+ *  I2C_transferTimeout(i2cHandle, &transaction, 5000);
+ *
+ *  // Close I2C
+ *  I2C_close(i2cHandle);
+ *  @endcode
+ *
+ *  @anchor ti_drivers_I2C_Examples
+ *  ## Examples
+ *
+ *  @li @ref ti_drivers_I2C_Example_open "Getting an I2C bus handle"
+ *  @li @ref ti_drivers_I2C_Example_write3bytes "Sending 3 bytes"
+ *  @li @ref ti_drivers_I2C_Example_read5bytes "Reading 5 bytes"
+ *  @li @ref ti_drivers_I2C_Example_writeread "Writing then reading in a single transaction"
+ *  @li @ref ti_drivers_I2C_Example_callback "Using Callback mode"
+ *
+ *  @anchor ti_drivers_I2C_Example_open
+ *  ## Opening the I2C Driver
  *
  *  After calling I2C_init(), the application can open an I2C instance by
- *  calling I2C_open(). This function takes an index into the \p I2C_config[]
- *  array and an #I2C_Params structure. The #I2C_Handle returned from the
- *  I2C_open() is then associated with that index into the \p I2C_config[]
- *  array. The following code example opens an I2C instance with default
- *  parameters by passing \p NULL for the #I2C_Params argument.
+ *  calling I2C_open().The following code example opens an I2C instance with
+ *  default parameters by passing @p NULL for the #I2C_Params argument.
  *
  *  @code
  *  I2C_Handle i2cHandle;
  *
- *  i2cHandle = I2C_open(Board_I2C0, NULL);
+ *  i2cHandle = I2C_open(0, NULL);
  *
  *  if (i2cHandle == NULL) {
  *      // Error opening I2C
@@ -109,62 +124,11 @@
  *  }
  *  @endcode
  *
- *  \note Each I2C index can only be opened exclusively. Calling I2C_open()
- *  multiple times with the same index will result in an error. The index can
- *  be re-used if I2C_close() is called first.
- *
- *  This example shows opening an I2C driver instance in #I2C_MODE_CALLBACK
- *  with a bit rate of #I2C_400kHz.
+ *  @anchor ti_drivers_I2C_Example_write3bytes
+ *  ## Sending three bytes of data.
  *
  *  @code
- *  void myCallbackFxn(I2C_Handle handle, I2C_Transaction *msg, bool status)
- *  {
- *      if (status == false) {
- *          //transfer failed
- *      }
- *  }
- *  @endcode
- *
- *  @code
- *  I2C_Handle i2cHandle;
- *  I2C_Params i2cParams;
- *
- *  I2C_Params_init(&i2cParams);
- *
- *  i2cParams.transferMode = I2C_MODE_CALLBACK;
- *  i2cParams.transferCallbackFxn = myCallbackFxn;
- *  i2cParams.bitRate = I2C_400kHz;
- *
- *  i2cHandle = I2C_open(Board_I2C0, &i2cParams);
- *
- *  if (i2cHandle == NULL) {
- *      // Error opening I2C
- *      while (1);
- *  }
- *  @endcode
- *
- *  ## Transferring data ##
- *
- *  An I2C data transfer is performed using the I2C_transfer() function. Three
- *  types of transactions are supported: write, read, and write + read. The
- *  details of each transaction are specified with an #I2C_Transaction
- *  structure. Each transfer is completed before another transfer is initiated.
- *
- *  For write + read transactions, the specified data is first written to the
- *  peripheral, then a repeated start is sent by the driver, which initiates
- *  the read operation. This type of transfer is useful if an I2C peripheral
- *  has a pointer register that needs to be adjusted prior to reading from
- *  the referenced data register.
- *
- *  The following examples assume an I2C instance has been opened in
- *  #I2C_MODE_BLOCKING mode.
- *
- * ---------------------------------------------------------------------------
- *
- *  Sending three bytes of data.
- *
- *  @code
- *  I2C_Transaction i2cTransaction;
+ *  I2C_Transaction i2cTransaction = {0};
  *  uint8_t writeBuffer[3];
  *
  *  writeBuffer[0] = 0xAB;
@@ -181,13 +145,17 @@
  *
  *  if (status == false) {
  *      // Unsuccessful I2C transfer
+ *      if (i2cTransaction.status == I2C_STATUS_ADDR_NACK) {
+ *          // I2C slave address not acknowledged
+ *      }
  *  }
  *  @endcode
  *
- *  Reading five bytes of data.
+ *  @anchor ti_drivers_I2C_Example_read5bytes
+ *  ## Reading five bytes of data.
  *
  *  @code
- *  I2C_Transaction i2cTransaction;
+ *  I2C_Transaction i2cTransaction = {0};
  *  uint8_t readBuffer[5];
  *
  *  i2cTransaction.slaveAddress = 0x50;
@@ -199,14 +167,17 @@
  *  status = I2C_transfer(i2cHandle, &i2cTransaction);
  *
  *  if (status == false) {
- *      // Unsuccessful I2C transfer
+ *      if (i2cTransaction.status == I2C_STATUS_ADDR_NACK) {
+ *          // I2C slave address not acknowledged
+ *      }
  *  }
  *  @endcode
  *
- *  Writing two bytes and reading four bytes in a single transaction.
+ *  @anchor ti_drivers_I2C_Example_writeread
+ *  ## Writing two bytes and reading four bytes in a single transaction.
  *
  *  @code
- *  I2C_Transaction i2cTransaction;
+ *  I2C_Transaction i2cTransaction = {0};
  *  uint8_t readBuffer[4];
  *  uint8_t writeBuffer[2];
  *
@@ -222,35 +193,43 @@
  *  status = I2C_transfer(i2cHandle, &i2cTransaction);
  *
  *  if (status == false) {
- *      // Unsuccessful I2C transfer
+*       if (i2cTransaction->status == I2C_STATUS_ADDR_NACK) {
+*           // slave address not acknowledged
+*       }
  *  }
  *  @endcode
  *
- * ---------------------------------------------------------------------------
- *
+ *  @anchor ti_drivers_I2C_Example_callback
+ *  ## Using callback mode
  *  This final example shows usage of #I2C_MODE_CALLBACK, with queuing
  *  of multiple transactions. Because multiple transactions are simultaneously
  *  queued, separate #I2C_Transaction structures must be used. Each
  *  #I2C_Transaction will contain a custom application argument of a
  *  semaphore handle. The #I2C_Transaction.arg will point to the semaphore
  *  handle. When the callback function is called, the #I2C_Transaction.arg is
- *  checked for \p NULL. If this value is not \p NULL, then it can be assumed
- *  the \p arg is pointing to a valid semaphore handle. The semaphore handle
- *  is then used to call \p sem_post(). Hypothetically, this can be used to
+ *  checked for @p NULL. If this value is not @p NULL, then it can be assumed
+ *  the @p arg is pointing to a valid semaphore handle. The semaphore handle
+ *  is then used to call @p sem_post(). Hypothetically, this can be used to
  *  signal transaction completion to the task(s) that queued the
  *  transaction(s).
  *
  *  @code
  *  void callbackFxn(I2C_Handle handle, I2C_Transaction *msg, bool status)
  *  {
- *
+ *      // if transaction failed
  *      if (status == false) {
- *          //transaction failed
+ *          if (msg->status == I2C_STATUS_ADDR_NACK) {
+ *              // slave address not acknowledged
+ *          }
+ *          else if (msg->status == I2C_STATUS_CANCEL) {
+ *              // transaction canceled by I2C_cancel()
+ *          }
  *      }
  *
- *      // Check for a semaphore handle
+ *      // Check for a custom argument
  *      if (msg->arg != NULL) {
  *
+ *          // In this example, the custom argument is a semaphore handle
  *          // Perform a semaphore post
  *          sem_post((sem_t *) (msg->arg));
  *      }
@@ -259,22 +238,22 @@
  *
  *  Snippets of the thread code that initiates the transactions are shown below.
  *  Note the use of multiple #I2C_Transaction structures. The handle of the
- *  semaphore to be posted is specified via \p i2cTransaction2.arg.
+ *  semaphore to be posted is specified via @p i2cTransaction2.arg.
  *  I2C_transfer() is called three times to initiate each transaction.
  *  Since callback mode is used, these functions return immediately. After
  *  the transactions have been queued, other work can be done. Eventually,
- *  \p sem_wait() is called causing the thread to block until the transaction
+ *  @p sem_wait() is called causing the thread to block until the transaction
  *  completes. When the transaction completes, the application's callback
- *  function, \p callbackFxn will be called. Once \p callbackFxn posts the
+ *  function, @p callbackFxn will be called. Once #I2C_CallbackFxn posts the
  *  semaphore, the thread will be unblocked and can resume execution.
  *
  *  @code
  *  void thread(arg0, arg1)
  *  {
  *
- *      I2C_Transaction i2cTransaction0;
- *      I2C_Transaction i2cTransaction1;
- *      I2C_Transaction i2cTransaction2;
+ *      I2C_Transaction i2cTransaction0 = {0};
+ *      I2C_Transaction i2cTransaction1 = {0};
+ *      I2C_Transaction i2cTransaction2 = {0};
  *
  *      // ...
  *
@@ -294,60 +273,38 @@
  *  }
  *  @endcode
  *
- *  # Implementation #
+ *  <hr>
+ *  @anchor ti_drivers_I2C_Configuration
+ *  # Configuration
  *
- *  This top-level I2C module serves as the main interface for RTOS
- *  applications. Its purpose is to redirect the module's APIs to specific
- *  peripheral implementations which are specified using a pointer to an
- *  #I2C_FxnTable.
- *
- *  The I2C driver interface module is joined (at link time) to an
- *  array of #I2C_Config data structures named \p I2C_config.
- *  \p I2C_config is typically defined in the Board.c file used for the
- *  application. If there are multiple instances of I2C peripherals on the
- *  device, there will typically be multiple #I2C_Config structures defined in
- *  the board file in the form of an array. Each entry in \p I2C_config
- *  contains a:
- *  - #I2C_FxnTable pointer to a set of functions that implement an I2C
- *    peripheral.
- *  - (\p void *) data object that is associated with the #I2C_FxnTable
- *  - (\p void *) hardware attributes that are associated to the #I2C_FxnTable
- *
- *
+ *  Refer to the @ref driver_configuration "Driver's Configuration" section
+ *  for driver configuration information.
+ *  <hr>
  ******************************************************************************
  */
 
 #ifndef ti_drivers_I2C__include
 #define ti_drivers_I2C__include
 
+/*! @cond */
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+/*! @endcond */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
 /**
- *  @defgroup I2C_CONTROL I2C_control command and status codes
- *  These I2C macros are reservations for I2C.h
+ *  @defgroup I2C_STATUS I2C Status codes
+ *  These macros are reservations for I2C.h
  *  @{
  */
 
+/*! @cond */
 /*!
- * Common I2C_control command code reservation offset.
- * I2C driver implementations should offset command codes with
- * #I2C_CMD_RESERVED growing positively
- *
- * Example implementation specific command codes:
- * @code
- * #define I2CXYZ_CMD_COMMAND0      I2C_CMD_RESERVED + 0
- * #define I2CXYZ_CMD_COMMAND1      I2C_CMD_RESERVED + 1
- * @endcode
- */
-#define I2C_CMD_RESERVED           (32)
-
-/*!
+ * @private
  * Common I2C_control status code reservation offset.
  * I2C driver implementations should offset status codes with
  * #I2C_STATUS_RESERVED growing negatively.
@@ -360,53 +317,84 @@ extern "C" {
  * @endcode
  */
 #define I2C_STATUS_RESERVED        (-32)
-
-/**
- *  @defgroup I2C_STATUS Status Codes
- *  I2C_STATUS_* macros are general status codes returned by I2C_control()
- *  @{
- *  @ingroup I2C_CONTROL
- */
+/*! @endcond */
 
 /*!
- * @brief   Successful status code returned by I2C_control().
- *
- * I2C_control() returns #I2C_STATUS_SUCCESS if the control code was executed
- * successfully.
+ * @brief  I2C transaction is queued but has not started
+ */
+#define I2C_STATUS_QUEUED          (1)
+
+/*!
+ * @brief  Successful status code returned by I2C API.
  */
 #define I2C_STATUS_SUCCESS         (0)
 
 /*!
- * @brief   Generic error status code returned by I2C_control().
- *
- * I2C_control() returns #I2C_STATUS_ERROR if the control code was not executed
- * successfully.
+ * @brief  Generic error status code returned by I2C API.
  */
 #define I2C_STATUS_ERROR           (-1)
 
 /*!
- * @brief   An error status code returned by I2C_control() for undefined
+ * @brief  An error status code returned by I2C_control() for undefined
  * command codes.
- *
- * I2C_control() returns #I2C_STATUS_UNDEFINEDCMD if the control code is not
- * recognized by the driver implementation.
  */
 #define I2C_STATUS_UNDEFINEDCMD    (-2)
-/** @}*/
 
-/**
- *  @defgroup I2C_CMD Command Codes
- *  I2C_CMD_* macros are general command codes for I2C_control(). Not all I2C
- *  driver implementations support these command codes.
- *  @{
- *  @ingroup I2C_CONTROL
+/*!
+ * @brief  I2C operation timed-out
  */
+#define I2C_STATUS_TIMEOUT         (-3)
 
-/* Add I2C_CMD_<commands> here */
+/*!
+ * @brief  I2C serial clock line timeout
+ */
+#define I2C_STATUS_CLOCK_TIMEOUT   (-4)
 
-/** @} end I2C commands */
+/*!
+ * @brief  I2C slave address not acknowledged
+ */
+#define I2C_STATUS_ADDR_NACK       (-5)
 
-/** @} end I2C_CONTROL group */
+/*!
+ * @brief  I2C data byte not acknowledged
+ */
+#define I2C_STATUS_DATA_NACK       (-6)
+
+/*!
+ * @brief  I2C multi-master arbitration lost
+ */
+#define I2C_STATUS_ARB_LOST        (-7)
+
+/*!
+ * @brief  I2C transaction is in progress or returned without completing
+ */
+#define I2C_STATUS_INCOMPLETE      (-8)
+
+/*!
+ * @brief  I2C bus already in use by another controller. The I2C transaction
+ * was therefore unable to start.
+ */
+#define I2C_STATUS_BUS_BUSY        (-9)
+
+/*!
+ * @brief  I2C transaction canceled by I2C_cancel()
+ */
+#define I2C_STATUS_CANCEL          (-10)
+
+/*!
+ * @brief  I2C transaction is invalid. This may occur if:
+ *   1. The #I2C_Transaction.readCount and #I2C_Transaction.writeCount are
+ *      both set to 0.
+ *   2. A call to I2C_transfer() is made from a #I2C_CallbackFxn while queued
+ *      transactions are being canceled. See also: I2C_cancel()
+ */
+#define I2C_STATUS_INVALID_TRANS   (-11)
+/** @} */
+
+/*!
+ *  @brief  Wait forever define used to specify timeouts.
+ */
+#define I2C_WAIT_FOREVER           (~(0U))
 
 /*!
  *  @brief      A handle that is returned from an I2C_open() call.
@@ -414,103 +402,173 @@ extern "C" {
 typedef struct I2C_Config_ *I2C_Handle;
 
 /*!
- *  @brief    Structure used to perform I2C bus transfers.
+ *  @brief  Defines a transaction to be used with I2C_transfer() or
+ *          I2C_transferTimeout()
  *
- *  The application is responsible for allocating and initializing an
- *  I2C_Transaction structure prior to passing it to I2C_Transfer(). This
- *  structure must persist in memory unmodified until the transfer is complete.
- *  This driver will always perform write operations first. Transmission of the
- *  I2C slave address with the appropriate read/write bit is handled internally
- *  by this driver.
+ *  After a call to I2C_transfer(), the #I2C_Transaction.status reflects
+ *  the current transfer status.
  *
- *  \note #I2C_Transaction structures cannot be re-used until the previous
- *        transaction has completed.
- *
- *  @sa I2C_transfer()
+ *  @sa I2C_transfer(), I2C_transferTimeout()
  */
-typedef struct I2C_Transaction_ {
-    /*! Pointer to a buffer of at least \p writeCount bytes. If \p writeCount
-     *  is 0, this pointer may remain uninitialized. */
+typedef struct {
+    /*!
+     *  Pointer to a buffer of at least #I2C_Transaction.writeCount bytes.
+     *  If #I2C_Transaction.writeCount is 0, this pointer is not used.
+     */
     void         *writeBuf;
-    /*! Number of bytes to write to the I2C slave device. A value of 0
-     *  indicates no data will be written to the slave device. */
+
+    /*!
+     *  Number of bytes to write to the I2C slave device. A value of 0
+     *  indicates no data will be written to the slave device and only a read
+     *  will occur. If this value
+     *  is not 0, the driver will always perform the write transfer first.
+     *  The data written to the I2C bus is preceded by the
+     *  #I2C_Transaction.slaveAddress with the write bit set. If
+     *  @p writeCount bytes are successfully sent and
+     *  acknowledged, the transfer will complete or perform a read--depending
+     *  on #I2C_Transaction.readCount.
+     *
+     *  @note Both #I2C_Transaction.writeCount and #I2C_Transaction.readCount
+     *  can not be 0.
+     */
     size_t        writeCount;
-    /*! Pointer to a buffer of at least \p readCount bytes. If \p readCount
-     *  is 0, this pointer may remain uninitialized. */
+
+    /*!
+     *  Pointer to a buffer of at least #I2C_Transaction.readCount bytes.
+     *  If #I2C_Transaction.readCount is 0, this pointer is not used.
+     */
     void         *readBuf;
-    /*! Number of bytes to read from the I2C slave device. A value of 0
-     *  indicates no data will be read from the slave device. */
+
+    /*!
+     *  Number of bytes to read from the I2C slave device. A value of 0
+     *  indicates no data will be read and only a write will occur. If
+     *  #I2C_Transaction.writeCount is not 0, this driver will perform the
+     *  write first, followed by the read. The data read from the bus is
+     *  preceded by the #I2C_Transaction.slaveAddress with the read bit set.
+     *  After @p readCount bytes are successfully read, the transfer will
+     *  complete.
+     *
+     *  @note Both #I2C_Transaction.writeCount and #I2C_Transaction.readCount
+     *  can not be 0.
+     */
     size_t        readCount;
-    /*! I2C slave address of the slave device */
-    uint_least8_t slaveAddress;
-    /*! Optional application argument. This argument will be passed to the
-     *  callback function specified by #I2C_Params.transferCallbackFxn when
-     *  using #I2C_MODE_CALLBACK. */
+
+    /*!
+     * Pointer to a custom argument to be passed to the #I2C_CallbackFxn
+     * function via the #I2C_Transaction structure.
+     *
+     * @note The #I2C_CallbackFxn function is only called when operating in
+     * #I2C_MODE_CALLBACK.
+     *
+     * @sa  #I2C_MODE_CALLBACK
+     * @sa  #I2C_CallbackFxn
+     */
     void         *arg;
-    /*! This is reserved for use by the driver and must never be modified by
-     *  the application. */
+
+    /*!
+     *  I2C status of the current transaction. The status may be used to
+     *  determine why a transaction failed. Potential codes are:
+     *      @li #I2C_STATUS_SUCCESS
+     *      @li #I2C_STATUS_ERROR
+     *      @li #I2C_STATUS_TIMEOUT
+     *      @li #I2C_STATUS_CLOCK_TIMEOUT
+     *      @li #I2C_STATUS_ADDR_NACK
+     *      @li #I2C_STATUS_DATA_NACK
+     *      @li #I2C_STATUS_ARB_LOST
+     *      @li #I2C_STATUS_INCOMPLETE
+     *      @li #I2C_STATUS_BUS_BUSY
+     *      @li #I2C_STATUS_CANCEL
+     *      @li #I2C_STATUS_INVALID_TRANS
+     *
+     *  This status may also be used to determine if a transaction is queued
+     *  (#I2C_STATUS_QUEUED) or in progress (#I2C_STATUS_INCOMPLETE).
+     */
+    volatile int_fast16_t status;
+
+    /*!
+     *  I2C slave address used for the transaction. The slave address is
+     *  the first byte transmitted during an I2C transfer. The read/write bit
+     *  is automatically set based upon the #I2C_Transaction.writeCount and
+     *  #I2C_Transaction.readCount.
+     */
+    uint_least8_t slaveAddress;
+
+    /*!
+     *  @private This is reserved for use by the driver and must never be
+     *  modified by the application.
+     */
     void         *nextPtr;
 } I2C_Transaction;
 
 /*!
- *  @brief    Specifies the behavior of I2C_Transfer().
+ *  @brief    Return behavior of I2C_Transfer() specified in the #I2C_Params.
  *
- *  The I2C_TransferMode is specified using the #I2C_Params.transferMode field.
+ *  This enumeration defines the return behaviors for a call to I2C_transfer().
+ *
+ *  @sa  #I2C_Params
  */
-typedef enum I2C_TransferMode_ {
-    /*! In blocking mode, a thread calling I2C_transfer() is blocked until the
-     *  #I2C_Transaction completes. Other threads requesting I2C transactions
-     *  while a transaction is in progress are also placed into a blocked state.
-     *  If multiple threads are blocked, the thread with the highest priority
-     *  will be unblocked first. This implies that queued blocked transactions
-     *  will not be executed in chronological order. */
+typedef enum {
+    /*!
+     *  In #I2C_MODE_BLOCKING, calls to I2C_transfer() block until the
+     *  #I2C_Transaction completes. Other threads calling I2C_transfer()
+     *  while a transaction is in progress are also placed into a blocked
+     *  state. If multiple threads are blocked, the thread with the highest
+     *  priority will be unblocked first. This implies that arbitration
+     *  will not be executed in chronological order.
+     *
+     *  @note When using #I2C_MODE_BLOCKING, I2C_transfer() must be called
+     *  from a thread context.
+     */
     I2C_MODE_BLOCKING,
-    /*! In callback mode, a thread calling I2C_transfer() is not blocked. The
+
+    /*!
+     *  In #I2C_MODE_CALLBACK, calls to I2C_transfer() return immediately. The
      *  application's callback function, #I2C_Params.transferCallbackFxn, is
-     *  called when the transaction is complete. The callback function will be
-     *  called from either a hardware or software interrupt context. This
-     *  depends on the device specific driver implementation. Sequential calls
-     *  to I2C_transfer() will place #I2C_Transaction structures into an
+     *  called when the transaction is complete. Sequential calls to
+     *  I2C_transfer() will place #I2C_Transaction structures into an
      *  internal queue. Queued transactions are automatically started after the
      *  previous transaction has completed. This queuing occurs regardless of
      *  any error state from previous transactions. The transactions are
      *  always executed in chronological order. The
-     *  #I2C_Params.transferCallbackFxn function will be called as each
-     *  transaction is completed. */
+     *  #I2C_Params.transferCallbackFxn function will be called asynchronously
+     *  as each transaction is completed.
+     */
     I2C_MODE_CALLBACK
 } I2C_TransferMode;
 
 /*!
- *  @brief    I2C callback function prototype.
+ *  @brief  The definition of a callback function.
  *
- *  The application is responsible for declaring a callback function when
- *  #I2C_Params.transferMode is #I2C_MODE_CALLBACK. The callback function is
- *  specified using the #I2C_Params.transferCallbackFxn parameter. The
- *  callback function will be called from either a hardware or software
- *  interrupt context.
+ *  When operating in #I2C_MODE_CALLBACK, the callback function is called
+ *  when an I2C_transfer() completes. The application is responsible for
+ *  declaring an #I2C_CallbackFxn function and providing a pointer
+ *  in #I2C_Params.transferCallbackFxn.
  *
- *  @param  handle              #I2C_Handle to the I2C instance that called the
- *                              I2C_transfer().
+ *  @warning  The callback function is called from an interrupt context.
  *
- *  @param  transaction         Pointer to the #I2C_Transaction that just
- *                              completed.
+ *  @param[out]  handle    #I2C_Handle used with the initial call to
+ *  I2C_transfer()
  *
- *  @param  transferStatus      Boolean indicating if the I2C transaction was
- *                              successful. False indicates the transaction did
- *                              not complete.
+ *  @param[out]  transaction    Pointer to the #I2C_Transaction structure used
+ *  with the initial call to I2C_transfer(). This structure contains the
+ *  custom argument specified by @p transaction.arg and the transaction status.
+ *
+ *  @param[out]  transferStatus    Boolean indicating if the I2C transaction
+ *  was successful. If @p true, the transaction was successful. If @p false,
+ *  the transaction failed.
  */
 typedef void (*I2C_CallbackFxn)(I2C_Handle handle, I2C_Transaction *transaction,
     bool transferStatus);
 
 /*!
- *  @brief    Specifies the standard I2C bus bit rate.
+ *  @brief  Bit rate for an I2C driver instance specified in the #I2C_Params.
  *
- *  The I2C_BitRate is specified using the #I2C_Params.bitRate parameter.
- *  You must check that the device specific implementation supports the
+ *  This enumeration defines the bit rates used with an I2C_transfer().
+ *
+ *  @note You must check that the device specific implementation supports the
  *  desired #I2C_BitRate.
  */
-typedef enum I2C_BitRate_ {
-
+typedef enum {
     I2C_100kHz     = 0,    /*!< I2C Standard-mode. Up to 100 kbit/s. */
     I2C_400kHz     = 1,    /*!< I2C Fast-mode. Up to 400 kbit/s. */
     I2C_1000kHz    = 2,    /*!< I2C Fast-mode Plus. Up to 1Mbit/s. */
@@ -519,43 +577,49 @@ typedef enum I2C_BitRate_ {
 } I2C_BitRate;
 
 /*!
- *  @brief  I2C Parameters
+ *  @brief I2C parameters used with I2C_open().
  *
- *  I2C parameters are used with the I2C_open() call. Default values for
- *  these parameters are set using I2C_Params_init().
+ *  I2C_Params_init() must be called prior to setting fields in
+ *  this structure.
  *
- *  \note The I2C_Params for a #I2C_Handle cannot be changed after I2C_open()
- *        has been called. The #I2C_Handle can be closed and re-opened with
- *        new parameters. See I2C_open() and I2C_close().
- *
- *  @sa     I2C_open()
- *  @sa     I2C_Params_init()
+ *  @sa  I2C_Params_init()
  */
-typedef struct I2C_Params_ {
-    /*! Specifies the #I2C_TransferMode. Default is blocking. */
+typedef struct {
+    /*! #I2C_TransferMode for all I2C transfers. */
     I2C_TransferMode transferMode;
-    /*! #I2C_CallbackFxn pointer used when #I2C_TransferMode is
-     *  #I2C_MODE_CALLBACK. */
+
+    /*!
+     *  Pointer to a #I2C_CallbackFxn to be invoked after a
+     *  I2C_transfer() completes when operating in #I2C_MODE_CALLBACK.
+     */
     I2C_CallbackFxn transferCallbackFxn;
-    /*! #I2C_BitRate. Default is #I2C_100kHz.*/
+
+    /*!
+     * A #I2C_BitRate specifying the frequency at which the I2C peripheral
+     * will transmit data during a I2C_transfer().
+     */
     I2C_BitRate bitRate;
-    /*! Custom argument used by device specific driver implementations. */
+
+    /*! Pointer to a device specific extension of the #I2C_Params */
     void *custom;
 } I2C_Params;
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver-specific implementation of
  *              I2C_cancel().
  */
 typedef void (*I2C_CancelFxn) (I2C_Handle handle);
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver-specific implementation of
  *              I2C_close().
  */
 typedef void (*I2C_CloseFxn) (I2C_Handle handle);
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver-specific implementation of
  *              I2C_control().
  */
@@ -563,30 +627,33 @@ typedef int_fast16_t (*I2C_ControlFxn) (I2C_Handle handle, uint_fast16_t cmd,
     void *controlArg);
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver-specific implementation of
  *              I2C_init().
  */
 typedef void (*I2C_InitFxn) (I2C_Handle handle);
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver-specific implementation of
  *              I2C_open().
  */
 typedef I2C_Handle (*I2C_OpenFxn) (I2C_Handle handle, I2C_Params *params);
 
 /*!
+ *  @private
  *  @brief      A function pointer to a driver-specific implementation of
  *              I2C_transfer().
  */
-typedef bool (*I2C_TransferFxn) (I2C_Handle handle,
-    I2C_Transaction *transaction);
+typedef int_fast16_t (*I2C_TransferFxn) (I2C_Handle handle,
+                      I2C_Transaction *transaction, uint32_t timeout);
 
 /*!
  *  @brief      The definition of an I2C function table that contains the
  *              required set of functions to control a specific I2C driver
  *              implementation.
  */
-typedef struct I2C_FxnTable_ {
+typedef struct {
     I2C_CancelFxn   cancelFxn;
     I2C_CloseFxn    closeFxn;
     I2C_ControlFxn  controlFxn;
@@ -596,123 +663,115 @@ typedef struct I2C_FxnTable_ {
 } I2C_FxnTable;
 
 /*!
- *  @brief  I2C global configuration
- *
- *  The #I2C_Config structure contains a set of pointers used to characterize
- *  the I2C driver implementation.
- *
- *  This structure needs to be defined before calling I2C_init() and it must
- *  not be changed thereafter.
+ *  @brief I2C driver's custom @ref driver_configuration "configuration"
+ *  structure.
  *
  *  @sa     I2C_init()
+ *  @sa     I2C_open()
  */
 typedef struct I2C_Config_ {
-    /*! Pointer to a table of driver-specific implementations of I2C APIs */
+    /*! Pointer to a @ref driver_function_table "function pointer table"
+     *  with driver-specific implementations of I2C APIs */
     I2C_FxnTable const *fxnTablePtr;
 
-    /*! Pointer to a driver-specific data object */
+    /*! Pointer to a driver specific @ref driver_objects "data object". */
     void               *object;
 
-    /*! Pointer to a driver-specific hardware attributes structure */
+    /*! Pointer to a driver specific @ref driver_hardware_attributes
+     *  "hardware attributes structure". */
     void         const *hwAttrs;
 } I2C_Config;
 
 /*!
  *  @brief  Cancels all I2C transfers
  *
- *  This function will cancel asynchronous I2C_transfer() operations, and is
- *  applicable only for #I2C_MODE_CALLBACK mode. The in progress transfer, as
+ *  This function will cancel asynchronous I2C_transfer() operations by
+ *  generating a STOP condition on the I2C bus.
+ *
+ *  Calls to I2C_cancel() return immediately; however, the transaction
+ *  may not yet be canceled.
+ *
+ *  For #I2C_MODE_BLOCKING, the current transaction is canceled.
+ *
+ *  For #I2C_MODE_CALLBACK mode, the in progress transfer, as
  *  well as any queued transfers, will be canceled. The individual callback
  *  functions for each transfer will be called in chronological order. The
- *  callback functions are called in the same context as the I2C_cancel().
+ *  callback functions are called in an interrupt context. Additional calls
+ *  to I2C_transfer() invoked from the callback function of a canceled
+ *  transaction will always fail. In such cases, the #I2C_Transaction.status
+ *  will indicate #I2C_STATUS_INVALID_TRANS.
+ *
+ *  A canceled transaction may be identified when the #I2C_Transaction.status
+ *  is set to #I2C_STATUS_CANCEL.
+ *
+ *  @note This API may not handle cases where the I2C slave holds the clock
+ *  line indefinitely.
  *
  *  @pre    I2C_Transfer() has been called.
  *
- *  @param  handle  An #I2C_Handle returned from I2C_open()
+ *  @param[in]  handle  An #I2C_Handle returned from I2C_open()
  *
  *  @note   Different I2C slave devices will behave differently when an
- *          in-progress transfer fails and needs to be canceled.  The slave
+ *          in-progress transfer fails and needs to be canceled. The slave
  *          may need to be reset, or there may be other slave-specific
  *          steps that can be used to successfully resume communication.
  *
- *  @sa     I2C_transfer()
+ *  @sa  I2C_transfer()
+ *  @sa  #I2C_MODE_CALLBACK
  */
 extern void I2C_cancel(I2C_Handle handle);
 
 /*!
- *  @brief  Close an I2C driver instance specified by an #I2C_Handle
+ *  @brief  Function to close an I2C driver instance
  *
- *  @pre    I2C_open() has been called.
+ *  @pre  I2C_open() has been called.
  *
- *  @param  handle  An #I2C_Handle returned from I2C_open()
- *
- *  @sa     I2C_open()
+ *  @param[in]  handle  An #I2C_Handle returned from I2C_open()
  */
 extern void I2C_close(I2C_Handle handle);
 
 /*!
- *  @brief  Perform implementation-specific features on a given
- *          #I2C_Handle.
- *
- *  Commands for I2C_control() can originate from I2C.h or from device specific
- *  implementations files.
- *  While commands from I2C.h are API portable across driver implementations,
- *  not all implementations may support all these commands.
- *  Conversely, commands from driver implementation specific I2C*.h files add
- *  unique driver capabilities but are not API portable across all I2C driver
- *  implementations.
- *
- *  Commands supported by I2C.h follow a I2C_CMD_\<cmd\> naming
- *  convention.<br>
- *  Commands supported by I2C.h follow a I2C_CMD_\<cmd\> naming
- *  convention.<br>
- *  Each control command defines @b arg differently. The types of @b arg are
- *  documented with each command.
- *
- *  See \ref I2C_CONTROL "I2C_control command codes" for command codes.
- *
- *  See \ref I2C_STATUS "I2C_control return status codes" for status codes.
+ *  @brief  Function performs implementation specific features on a
+ *          driver instance.
  *
  *  @pre    I2C_open() has to be called first.
  *
- *  @param  handle      An #I2C_Handle returned from I2C_open()
+ *  @param[in]  handle   An #I2C_Handle returned from I2C_open()
  *
- *  @param  cmd         \ref I2C_CONTROL command.
+ *  @param[in]  cmd     A command value defined by the device specific
+ *                      implementation
  *
- *  @param  controlArg  An optional R/W (read/write) command argument
- *                      accompanied with cmd
+ *  @param[in]  controlArg    An optional R/W (read/write) argument that is
+ *                            accompanied with @p cmd
  *
- *  @return Implementation-specific return codes. Negative values indicate
+ *  @return Implementation specific return codes. Negative values indicate
  *          unsuccessful operations.
  *
- *  @sa     I2C_open()
+ *  @retval #I2C_STATUS_SUCCESS The call was successful.
+ *  @retval #I2C_STATUS_UNDEFINEDCMD The @p cmd value is not supported by
+ *                                   the device specific implementation.
  */
 extern int_fast16_t I2C_control(I2C_Handle handle, uint_fast16_t cmd,
     void *controlArg);
 
 /*!
- *  @brief  Initializes the I2C module
+ *  @brief  Function to initialize the I2C driver.
  *
- *  @pre    The \p I2C_config structure must exist and be persistent before this
- *          function can be called. This function must also be called before
- *          any other I2C driver APIs. This function call does not modify any
- *          peripheral registers.
+ *  This function must also be called before any otherI2C driver APIs.
  */
 extern void I2C_init(void);
 
 /*!
- *  @brief  Open an I2C instance
- *
- * Initialize a given I2C driver instance as identified by an index value.
+ *  @brief  Open an I2C driver instance.
  *
  *  @pre    I2C_init() has been called.
  *
- *  @param  index         Indexed into the I2C_config table
+ *  @param[in]  index    Index in the @p I2C_Config[] array.
  *
- *  @param  params        Pointer to a parameter block. Default values will be
- *                        used if \p NULL is specified for \p params.
+ *  @param[in]  params    Pointer to an initialized #I2C_Params structure.
+ *                        If NULL, the default #I2C_Params values are used.
  *
- *  @return An #I2C_Handle on success, or \p NULL on an error.
+ *  @return An #I2C_Handle on success, or @p NULL on an error.
  *
  *  @sa     I2C_init()
  *  @sa     I2C_close()
@@ -722,14 +781,14 @@ extern I2C_Handle I2C_open(uint_least8_t index, I2C_Params *params);
 /*!
  *  @brief  Initialize an #I2C_Params structure to its default values.
  *
- *  @param  params      A pointer to #I2C_Params structure for
- *                      initialization.
+ *  @param[in]  params    A pointer to #I2C_Params structure for
+ *                        initialization.
  *
  *  Defaults values are:
- *    - #I2C_Params.transferMode = #I2C_MODE_BLOCKING
- *    - #I2C_Params.transferCallbackFxn = \p NULL
- *    - #I2C_Params.bitRate = #I2C_100kHz
- *    - #I2C_Params.custom = \p NULL
+ *  @arg #I2C_Params.transferMode = #I2C_MODE_BLOCKING
+ *  @arg #I2C_Params.transferCallbackFxn = @p NULL
+ *  @arg #I2C_Params.bitRate = #I2C_100kHz
+ *  @arg #I2C_Params.custom = @p NULL
  */
 extern void I2C_Params_init(I2C_Params *params);
 
@@ -739,46 +798,89 @@ extern void I2C_Params_init(I2C_Params *params);
  *  This function will perform an I2C transfer, as specified by an
  *  #I2C_Transaction structure.
  *
- *  The data written to the peripheral is preceded with the peripheral's 7-bit
- *  I2C slave address (with the Write bit set).
- *  After all the data has been transmitted, the driver will evaluate if any
- *  data needs to be read from the device.
- *  If yes, another START bit is sent, along with the same 7-bit I2C slave
- *  address (with the Read bit). After the specified number of bytes have been
- *  read, the transfer is ended with a NACK and a STOP bit.  Otherwise, if
- *  no data is to be read, the transfer is concluded with a STOP bit.
+ *  @note When using #I2C_MODE_BLOCKING, this must be called from a thread
+ *  context.
  *
- *  In #I2C_MODE_BLOCKING, I2C_transfer() will block thread execution until the
- *  transaction completes. When using blocking mode, this function must be
- *  called from a thread context.
+ *  @param[in]  handle      An #I2C_Handle returned from I2C_open()
  *
- *  In #I2C_MODE_CALLBACK, the I2C_transfer() call does not block thread
- *  execution. Success or failure of the transaction is reported
- *  via the #I2C_CallbackFxn \b bool argument. If a transfer is already in
- *  progress, the new transaction is put on an internal queue. The driver
- *  services the queue in a first come first served basis. When using callback
- *  mode, this function can be called from any context.
+ *  @param[in]  transaction  A pointer to an #I2C_Transaction. The application
+ *  is responsible for allocating and initializing an #I2C_Transaction
+ *  structure prior to passing it to I2C_Transfer(). This
+ *  structure must persist in memory unmodified until the transfer is complete.
  *
- *  @param  handle      An #I2C_Handle
+ *  @note #I2C_Transaction structures cannot be re-used until the previous
+ *  transaction has completed. Upon the completion of a transaction, the
+ *  #I2C_Transaction.status may be used for error handling.
  *
- *  @param  transaction A pointer to an #I2C_Transaction. All of the fields
- *                      within the transaction structure should be considered
- *                      write only, unless otherwise noted in the driver
- *                      implementation.
- *
- *  @note The #I2C_Transaction structure must persist unmodified until the
- *  corresponding call to I2C_transfer() has completed.
- *
- *  @return In #I2C_MODE_BLOCKING: \p true for a successful transfer; \p false
+ *  @return In #I2C_MODE_BLOCKING: @p true for a successful transfer; @p false
  *          for an error (for example, an I2C bus fault (NACK)).
  *
- *  @return In #I2C_MODE_CALLBACK: always \p true. The #I2C_CallbackFxn \p bool
- *          argument will be \p true to indicate success, and \p false to
+ *  @return In #I2C_MODE_CALLBACK: always @p true. The #I2C_CallbackFxn @p bool
+ *          argument will be @p true to indicate success, and @p false to
  *          indicate an error.
  *
- *  @sa     I2C_open()
+ *  @pre I2C_open() has been called.
+ *
+ *  @sa  I2C_open(), I2C_transferTimeout()
+ *  @sa  I2C_Transaction
  */
 extern bool I2C_transfer(I2C_Handle handle, I2C_Transaction *transaction);
+
+/*!
+ *  @brief  Perform an I2C transaction with an I2C slave peripheral.
+ *
+ *  This function will perform an I2C transfer, as specified by an
+ *  #I2C_Transaction structure. If the timeout is exceeded, then the
+ *  I2C transaction is canceled.
+ *
+ *  @note When using #I2C_MODE_BLOCKING, this must be called from a thread
+ *  context.
+ *
+ *  @note  The timeout restriction is only applied when using
+ *  #I2C_MODE_BLOCKING. If using #I2C_MODE_CALLBACK, the application should
+ *  manage timeouts using I2C_cancel(). Additionally, this timeout may not
+ *  handle cases where the I2C slave holds the clock line indefinitely.
+ *
+ *  @param[in]  handle    An #I2C_Handle returned from I2C_open()
+ *
+ *  @param[in]  transaction  A pointer to an #I2C_Transaction. The application
+ *  is responsible for allocating and initializing an #I2C_Transaction
+ *  structure prior to passing it to I2C_TransferTimeout(). This
+ *  structure must persist in memory unmodified until the transfer is complete.
+ *
+ *  @param[in]  timeout    The time in system ticks to wait for the transaction
+ *  to complete. Passing I2C_WAIT_FOREVER into this parameter will cause
+ *  I2C_transferTimeout() to behave the same as I2C_transfer() but with a
+ *  more detailed return status.
+ *
+ *  @note #I2C_Transaction structures cannot be re-used until the previous
+ *  transaction has completed. Upon the completion of a transaction, the
+ *  #I2C_Transaction.status may be used for error handling.
+ *
+ *  @return  In #I2C_MODE_CALLBACK: always @p I2C_STATUS_SUCCESS.
+ *           The #I2C_CallbackFxn @p transferStatus argument will be @p true
+ *           to indicate success, and @p false to indicate an error.
+ *
+ *  @return  In #I2C_MODE_BLOCKING: Possible return values include:
+ *            @li #I2C_STATUS_SUCCESS
+ *            @li #I2C_STATUS_ERROR
+ *            @li #I2C_STATUS_TIMEOUT
+ *            @li #I2C_STATUS_CLOCK_TIMEOUT
+ *            @li #I2C_STATUS_ADDR_NACK
+ *            @li #I2C_STATUS_DATA_NACK
+ *            @li #I2C_STATUS_ARB_LOST
+ *            @li #I2C_STATUS_INCOMPLETE
+ *            @li #I2C_STATUS_BUS_BUSY
+ *            @li #I2C_STATUS_CANCEL
+ *            @li #I2C_STATUS_INVALID_TRANS
+ *
+ *  @pre I2C_open() has been called.
+ *
+ *  @sa  I2C_open(), I2C_transfer()
+ *  @sa  I2C_Transaction
+ */
+extern int_fast16_t I2C_transferTimeout(I2C_Handle handle,
+    I2C_Transaction *transaction, uint32_t timeout);
 
 #ifdef __cplusplus
 }

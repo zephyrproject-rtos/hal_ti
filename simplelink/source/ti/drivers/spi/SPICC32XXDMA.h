@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,9 +79,9 @@
  *
  *  ## SPI data frames #
  *  SPI data frames can be any size from 4-bits to 32-bits.  The SPI data
- *  frame size is set in ::SPI_Params.dataSize passed to SPI_open.
+ *  frame size is set in #SPI_Params.dataSize passed to SPI_open.
  *  The SPICC32XXDMA driver implementation makes assumptions on the element
- *  size of the ::SPI_Transaction txBuf and rxBuf arrays, based on the data
+ *  size of the #SPI_Transaction txBuf and rxBuf arrays, based on the data
  *  frame size.  If the data frame size is less than or equal to 8 bits,
  *  txBuf and rxBuf are assumed to be arrays of 8-bit uint8_t elements.
  *  If the data frame size is greater than 8 bits, but less than or equal
@@ -107,6 +107,44 @@
  *  generates an interrupt on the perpheral's interrupt vector. This
  *  implementation automatically installs a DMA aware hardware ISR to service
  *  the assigned micro DMA channels.
+ *
+ *  ## DMA and Queueing
+ *  This driver utilizes DMA channels in ping pong mode (see device TRM) in
+ *  order to overcome the 1024 item DMA channel limit. This means the driver
+ *  can execute multi kilo-item transactions without pausing to reconfigure the
+ *  DMA and causing gaps in transmission. In addition, the driver also allows
+ *  the user to queue up transfers when opened in #SPI_MODE_CALLBACK by calling
+ *  SPI_transfer() multiple times. Note that each transaction's
+ *  #SPI_Transaction struct must still be persistent and unmodified until that
+ *  transaction is complete.
+ *
+ *  @anchor ti_drivers_spi_SPICC32XXDMA_example_queueing
+ *  Below is an example of queueing three transactions
+ *  @code
+ *  // SPI already opened in callback mode
+ *  SPI_Transaction t0, t1, t2;
+ *
+ *  t0.txBuf = txBuff0;
+ *  t0.rxBuf = rxBuff0;
+ *  t0.count = 2000;
+ *
+ *  t1.txBuf = txBuff1;
+ *  t1.rxBuf = rxBuff1;
+ *  t1.count = 1000;
+ *
+ *  t2.txBuf = txBuff2;
+ *  t2.rxBuf = NULL;
+ *  t2.count = 1000;
+ *
+ *  bool transferOk = false;
+ *
+ *  if (SPI_transfer(spiHandle, &t0)) {
+ *      if (SPI_transfer(spiHandle, &t1)) {
+ *              transferOk = SPI_transfer(spiHandle, &t2);
+ *          }
+ *      }
+ *  }
+ *  @endcode
  *
  *  ## DMA accessible memory #
  *  As this driver uses uDMA to transfer data/from data buffers, it is the
@@ -138,15 +176,15 @@
 #ifndef ti_drivers_spi_SPICC32XXDMA__include
 #define ti_drivers_spi_SPICC32XXDMA__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/dpl/SemaphoreP.h>
 #include <ti/drivers/Power.h>
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/dma/UDMACC32XX.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  *  @addtogroup SPI_STATUS
@@ -174,6 +212,7 @@ extern "C" {
 
 /* Add SPICC32XXDMA_CMD_* macros here */
 
+
 /** @}*/
 
 /*
@@ -190,6 +229,7 @@ extern "C" {
  *  as PIN_62 doesn't have an assigned SPI function yet the SD BoosterPack
  *  has it tied to the CS signal.
  */
+/*! @cond HIDDEN_DEFINES */
 #define SPICC32XXDMA_PIN_05_CLK     0x0704 /*!< PIN 5 is used for SPI CLK */
 #define SPICC32XXDMA_PIN_06_MISO    0x0705 /*!< PIN 6 is used for MISO */
 #define SPICC32XXDMA_PIN_07_MOSI    0x0706 /*!< PIN 7 is used for MOSI */
@@ -198,6 +238,8 @@ extern "C" {
 #define SPICC32XXDMA_PIN_50_CS      0x0931 /*!< PIN 50 is used for CS */
 #define SPICC32XXDMA_PIN_52_MOSI    0x0833 /*!< PIN 52 is used for MOSI */
 #define SPICC32XXDMA_PIN_53_MISO    0x0734 /*!< PIN 53 is used for MISO */
+
+/*! @endcond*/
 
 /*!
  * @brief Indicates a pin is not to be configured by the SPICC32XXDMA driver.
@@ -264,9 +306,10 @@ extern const SPI_FxnTable SPICC32XXDMA_fxnTable;
  *  };
  *  @endcode
  */
-typedef struct SPICC32XXDMA_HWAttrsV1 {
+typedef struct {
     /*! SPICC32XXDMA Peripheral's base address */
     uint32_t   baseAddr;
+
 
     /*! SPICC32XXDMA Peripheral's interrupt vector */
     uint32_t   intNum;
@@ -321,7 +364,7 @@ typedef struct SPICC32XXDMA_HWAttrsV1 {
  *
  *  The application must not access any member variables of this structure!
  */
-typedef struct SPICC32XXDMA_Object {
+typedef struct {
     HwiP_Handle        hwiHandle;
     Power_NotifyObj    notifyObj;
     SemaphoreP_Handle  transferComplete;

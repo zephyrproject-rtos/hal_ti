@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017, Texas Instruments Incorporated
+ * Copyright (c) 2016-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -124,6 +124,14 @@ void Timer_Params_init(Timer_Params *params)
 {
     *params = defaultParams;
 }
+
+/*
+ *  ======== Timer_setPeriod ========
+ */
+int32_t Timer_setPeriod(Timer_Handle handle, Timer_PeriodUnits periodUnits, uint32_t period)
+ {
+    return handle->fxnTablePtr->setPeriodFxn(handle, periodUnits, period);
+ }
 
 /*
  *  ======== Timer_start ========

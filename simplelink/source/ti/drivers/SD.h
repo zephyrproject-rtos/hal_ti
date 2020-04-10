@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017, Texas Instruments Incorporated
+ * Copyright (c) 2016-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,69 +30,87 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** ============================================================================
+/*!***************************************************************************
  *  @file       SD.h
+ *  @brief      Secure Digital (SD) Driver
  *
- *  @brief      SD driver interface
- *
- *  The SD header file should be included in an application as follows:
- *  @code
- *  #include <ti/drivers/SD.h>
- *  @endcode
- *
- *  # Operation #
+ *  @anchor ti_drivers_SD_Overview
+ *  # Overview
  *
  *  The SD driver is designed to serve as an interface to perform basic
  *  transfers directly to the SD card.
  *
- *  ## Opening the driver #
+ *  <hr>
+ *  @anchor ti_drivers_SD_Usage
+ *  # Usage
+ *  This section will cover driver usage.
  *
+ *  @anchor ti_drivers_SD_Synopsis
+ *  ## Synopsis
+ *  @anchor ti_drivers_SD_Synopsis_Code
  *  @code
  *  SD_Handle handle;
+ *  uint16_t status;
  *
- *  handle = SD_open(Board_SD0, NULL);
- *  if (handle == NULL) {
+ *  SD_init();
+ *
+ *  // Open SD and initialize card
+ *  handle = SD_open(CONFIG_SD0, NULL);
+ *  status = SD_initialize(handle);
+ *  if (handle == NULL || status != SD_STATUS_SUCCESS) {
  *      //Error opening SD driver
  *      while (1);
  *  }
+ *
+ *  // Write and read back the first sector
+ *  status = SD_write(handle, sendBuffer, 0, 1);
+ *  if (status == SD_STATUS_SUCCESS) {
+ *      status = SD_read(handle, readBuffer, 0 , 1);
+ *  }
+ *
+ *  SD_close(handle);
  *  @endcode
  *
- *  # Implementation #
+ *  @anchor ti_drivers_SD_Examples
+ *  # Examples
+ *  - @ref ti_drivers_SD_Synopsis "Overview"
+ *  - @ref ti_drivers_SD_Example_getCardSpace "Get SD card size"
  *
- *  This module serves as the main interface for TI-RTOS applications. Its
- *  purpose is to redirect the module's APIs to specific peripheral
- *  implementations which are specified using a pointer to a
- *  SD_FxnTable.
+ *  Get total capacity of an SD card:
+ *  @anchor ti_drivers_SD_Example_getCardSpace
+ *  @code
+ *  SD_Handle handle;
+ *  Display_Handle display;
+ *  uint_fast32_t sectorSize, sectorCount;
  *
- *  The SD driver interface module is joined (at link time) to a
- *  NULL-terminated array of SD_Config data structures named *SD_config*.
- *  *SD_config* is implemented in the application with each entry being an
- *  instance of a SD peripheral. Each entry in *SD_config* contains a:
- *  - (SD_FxnTable *) to a set of functions that implement a SD peripheral
- *  - (uintptr_t) data object that is associated with the SD_FxnTable
- *  - (uintptr_t) hardware attributes that are associated to the SD_FxnTable
+ *  // Init, open, etc
+ *  ...
  *
- *  # Instrumentation #
+ *  sectorSize = SD_getSectorSize(handle);
+ *  sectorCount = SD_getNumSectors(handle);
  *
- *  The SD driver interface produces log statements if
- *  instrumentation is enabled.
+ *  Display_printf(display, 0, 0,"SD card total capacity is %lu bytes.",
+ *                 sectorSize * sectorCount);
+ *  @endcode
  *
- *  Diagnostics Mask | Log details                   |
- *  ---------------- | -----------                   |
- *  Diags_USER1      | basic operations performed    |
- *  Diags_USER2      | detailed operations performed |
+ *  <hr>
+ *  @anchor ti_drivers_SD_Configuration
+ *  # Configuration
+ *  Refer to the @ref driver_configuration "Driver's Configuration"
+ *  section for driver configuration information.
  *
- *  ============================================================================
+ *  <hr>
+ ******************************************************************************
  */
 
 #ifndef ti_drivers_SD__include
 #define ti_drivers_SD__include
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
 
 /**
  *  @defgroup SD_CONTROL SD_control command and status codes
@@ -100,7 +118,7 @@ extern "C" {
  */
 
 /*!
- * Common SD_control command code reservation offset.
+ * Common SD_control() command code reservation offset.
  * SD driver implementations should offset command codes with
  * SD_CMD_RESERVED growing positively.
  *
@@ -176,7 +194,7 @@ extern "C" {
 /*!
  *  @brief  SD Card type inserted
  */
-typedef enum SD_CardType_ {
+typedef enum {
     SD_NOCARD = 0, /*!< Unrecognized Card */
     SD_MMC = 1,    /*!< Multi-media Memory Card (MMC) */
     SD_SDSC = 2,   /*!< Standard SDCard (SDSC) */
@@ -198,7 +216,7 @@ typedef struct SD_Config_ *SD_Handle;
  */
 
 /* SD Parameters */
-typedef struct SD_Params_ {
+typedef struct {
     void   *custom;  /*!< Custom argument used by driver implementation */
 } SD_Params;
 
@@ -264,7 +282,7 @@ typedef int_fast16_t (*SD_WriteFxn) (SD_Handle handle, const void *buf,
  *         required set of functions to control a specific SD driver
  *         implementation.
  */
-typedef struct SD_FxnTable_ {
+typedef struct {
     /*! Function to close the specified peripheral */
     SD_CloseFxn             closeFxn;
     /*! Function to implementation specific control function */
@@ -312,7 +330,7 @@ typedef struct SD_Config_ {
  *
  *  @pre SD_open() had to be called first.
  *
- *  @param handle A SD handle returned from SD_open
+ *  @param handle A #SD_Handle returned from SD_open()
  *
  *  @sa SD_open()
  */
@@ -320,10 +338,10 @@ extern void SD_close(SD_Handle handle);
 
 /*!
  *  @brief  Function performs implementation specific features on a given
- *          SD_Handle.
+ *          #SD_Handle.
  *
  *  Commands for SD_control can originate from SD.h or from implementation
- *  specific SD*.h (SDHostCC32XX.h etc.. ) files.
+ *  specific SD*.h files.
  *  While commands from SD.h are API portable across driver implementations,
  *  not all implementations may support all these commands.
  *  Conversely, commands from driver implementation specific SD*.h files add
@@ -344,7 +362,7 @@ extern void SD_close(SD_Handle handle);
  *
  *  @pre SD_open() has to be called first.
  *
- *  @param handle A SD handle returned from SD_open().
+ *  @param handle A #SD_Handle returned from SD_open().
  *
  *  @param cmd SD.h or SD*.h commands.
  *
@@ -365,7 +383,7 @@ extern int_fast16_t SD_control(SD_Handle handle, uint_fast16_t cmd, void *arg);
  *
  *  @pre SD Card has been initialized using SD_initialize().
  *
- *  @param  handle A SD handle returned from SD_open().
+ *  @param  handle A #SD_Handle returned from SD_open().
  *
  *  @return The total number of sectors on the SD card,
  *          or 0 if an error occurred.
@@ -379,7 +397,7 @@ extern uint_fast32_t SD_getNumSectors(SD_Handle handle);
  *
  *  @pre SD Card has been initialized using SD_initialize().
  *
- *  @param handle A SD handle returned from SD_open().
+ *  @param handle A #SD_Handle returned from SD_open().
  *
  *  @return The sector size set for use during SD card read/write operations.
  *
@@ -390,7 +408,7 @@ extern uint_fast32_t SD_getSectorSize(SD_Handle handle);
 /*!
  *  @brief This function initializes the SD driver.
  *
- *  @pre The SD_config structure must exist and be persistent before this
+ *  @pre The SD_config[] array must exist and be persistent before this
  *       function can be called. This function must also be called before
  *       any other SD driver APIs. This function call does not modify any
  *       peripheral registers.
@@ -398,9 +416,9 @@ extern uint_fast32_t SD_getSectorSize(SD_Handle handle);
 extern void SD_init(void);
 
 /*!
- *  @brief Function to initialize the SD_Params struct to its defaults.
+ *  @brief Function to initialize the #SD_Params struct to its defaults.
  *
- *  @param params A pointer to SD_Params structure for initialization.
+ *  @param params A pointer to #SD_Params structure for initialization.
  */
 extern void SD_Params_init(SD_Params *params);
 
@@ -410,10 +428,10 @@ extern void SD_Params_init(SD_Params *params);
  *
  *  @pre    SD controller has been opened by calling SD_open().
  *
- *  @param  handle A SD handle returned from SD_open().
+ *  @param  handle A #SD_Handle returned from SD_open().
  *
- *  @return SD_STATUS_SUCCESS if no errors occurred during the initialization,
- *          SD_STATUS_ERROR otherwise.
+ *  @return #SD_STATUS_SUCCESS if no errors occurred during the initialization,
+ *          #SD_STATUS_ERROR otherwise.
  */
 extern int_fast16_t SD_initialize(SD_Handle handle);
 
@@ -424,13 +442,13 @@ extern int_fast16_t SD_initialize(SD_Handle handle);
  *  @pre SD controller has been initialized using SD_init().
  *
  *  @param index  Logical peripheral number for the SD indexed into
- *                the SD_config table.
+ *                the SD_config[] table.
  *
  *  @param params Pointer to a parameter block, if NULL it will use
  *                default values. All the fields in this structure are
  *                RO (read-only).
  *
- *  @return A SD_Handle on success or a NULL on an error or if it has been
+ *  @return A #SD_Handle on success or a NULL on an error or if it has been
  *          opened already.
  *
  *  @sa SD_init()
@@ -445,7 +463,7 @@ extern SD_Handle SD_open(uint_least8_t index, SD_Params *params);
  *  @pre SD controller has been opened and initialized by calling SD_open()
  *       followed by SD_initialize().
  *
- *  @param handle A SD handle returned from SD_open().
+ *  @param handle A #SD_Handle returned from SD_open().
  *
  *  @param buf Pointer to a buffer to read data into.
  *
@@ -453,8 +471,8 @@ extern SD_Handle SD_open(uint_least8_t index, SD_Params *params);
  *
  *  @param secCount Number of sectors to be read.
  *
- *  @return SD_STATUS_SUCCESS if no errors occurred during the write,
- *          SD_STATUS_ERROR otherwise.
+ *  @return #SD_STATUS_SUCCESS if no errors occurred during the write,
+ *          #SD_STATUS_ERROR otherwise.
  *
  *  @sa SD_initialize()
  */
@@ -468,7 +486,7 @@ extern int_fast16_t SD_read(SD_Handle handle, void *buf,
  *  @pre SD controller has been opened and initialized by calling SD_open()
  *       followed by SD_initialize().
  *
- *  @param  handle A SD handle returned from SD_open().
+ *  @param  handle A #SD_Handle returned from SD_open().
  *
  *  @param  buf Pointer to a buffer containing data to write to disk.
  *
@@ -476,8 +494,8 @@ extern int_fast16_t SD_read(SD_Handle handle, void *buf,
  *
  *  @param  secCount Number of sectors to be written.
  *
- *  @return SD_STATUS_SUCCESS if no errors occurred during the write,
- *          SD_STATUS_ERROR otherwise.
+ *  @return #SD_STATUS_SUCCESS if no errors occurred during the write,
+ *          #SD_STATUS_ERROR otherwise.
  *
  *  @sa     SD_initialize()
  */

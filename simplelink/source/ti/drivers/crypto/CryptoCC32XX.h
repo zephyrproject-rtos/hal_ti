@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -114,17 +114,15 @@
 #ifndef ti_drivers_crypto_CryptoCC32XX__include
 #define ti_drivers_crypto_CryptoCC32XX__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/dpl/SemaphoreP.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define CryptoCC32XX_CMD_RESERVED             32
 
@@ -344,27 +342,6 @@ typedef struct
 }CryptoCC32XX_HmacParams;
 
 /*!
- *  @brief      A handle that is returned from a CryptoCC32XX_open() call.
- */
-typedef struct CryptoCC32XX_Config    *CryptoCC32XX_Handle;
-
-
-/*!
- *  @brief  CryptoCC32XX Object
- *
- *  The application must not access any member variables of this structure!
- */
-typedef struct CryptoCC32XX_Object {
-    /*! Interrupt handles */
-    HwiP_Handle     hwiHandle[CryptoCC32XX_MAX_TYPES];
-    /*! flag to indicate module is open */
-    bool            isOpen;
-    /*! Semaphore handles */
-    SemaphoreP_Handle   sem[CryptoCC32XX_MAX_TYPES];
-} CryptoCC32XX_Object;
-
-
-/*!
  *  @brief  Crypto Global configuration
  *
  *  The CryptoCC32XX_Config structure contains a set of pointers used to characterize
@@ -375,13 +352,31 @@ typedef struct CryptoCC32XX_Object {
  *
  *  @sa     CryptoCC32XX_init()
  */
-typedef struct CryptoCC32XX_Config {
+typedef struct {
 
     /*! Pointer to a driver specific data object */
     void               *object;
 
 } CryptoCC32XX_Config;
 
+/*!
+ *  @brief      A handle that is returned from a CryptoCC32XX_open() call.
+ */
+typedef  CryptoCC32XX_Config *CryptoCC32XX_Handle;
+
+/*!
+ *  @brief  CryptoCC32XX Object
+ *
+ *  The application must not access any member variables of this structure!
+ */
+typedef struct {
+    /*! Interrupt handles */
+    HwiP_Handle     hwiHandle[CryptoCC32XX_MAX_TYPES];
+    /*! flag to indicate module is open */
+    bool            isOpen;
+    /*! Semaphore handles */
+    SemaphoreP_Handle   sem[CryptoCC32XX_MAX_TYPES];
+} CryptoCC32XX_Object;
 
 /*!
  *  @brief  Function to close a given Crypto peripheral specified by the Crypto

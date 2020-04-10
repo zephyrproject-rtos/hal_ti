@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Texas Instruments Incorporated
+ * Copyright (c) 2017-2020, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -86,14 +86,13 @@ static inline void assertCS(SDSPI_HWAttrs const *hwAttrs);
 static inline void deassertCS(SDSPI_HWAttrs const *hwAttrs);
 static bool recvDataBlock(SPI_Handle handle, void *buf, uint32_t count);
 static uint8_t sendCmd(SPI_Handle handle, uint8_t cmd, uint32_t arg);
-static int_fast16_t sendInitialClockTrain(SPI_Handle handle);
 static int_fast16_t spiTransfer(SPI_Handle handle, void *rxBuf,
     void *txBuf, size_t count);
 static bool waitUntilReady(SPI_Handle handle);
 static bool transmitDataBlock(SPI_Handle handle, void *buf, uint32_t count,
     uint8_t token);
 
-/* SDSPI function table for SDSPIMSP432 implementation */
+/* SDSPI function table for SDSPI implementation */
 const SD_FxnTable SDSPI_fxnTable = {
     SDSPI_close,
     SDSPI_control,
@@ -130,8 +129,7 @@ void SDSPI_close(SD_Handle handle)
 /*
  *  ======== SDSPI_control ========
  */
-int_fast16_t SDSPI_control(SD_Handle handle, uint_fast16_t cmd,
-    void *arg)
+int_fast16_t SDSPI_control(SD_Handle handle, uint_fast16_t cmd, void *arg)
 {
     return (SD_STATUS_UNDEFINEDCMD);
 }
@@ -203,7 +201,8 @@ int_fast16_t SDSPI_initialize(SD_Handle handle)
     SD_CardType          cardType = SD_NOCARD;
     uint8_t              i;
     uint8_t              ocr[4];
-    uint8_t              txDummy[4] = {0xFF, 0xFF, 0xFF, 0xFF};
+    uint8_t              txDummy[10] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                       0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     int_fast16_t         status;
     uint32_t             currentTime;
     uint32_t             startTime;
@@ -215,127 +214,143 @@ int_fast16_t SDSPI_initialize(SD_Handle handle)
     SemaphoreP_pend(object->lockSem, SemaphoreP_WAIT_FOREVER);
 
     /*
-     * Part of the process to initialize the SD Card to SPI mode - Do not
-     * assert CS during this time
+     * The CS line should not be asserted when attempting to put the
+     * SD card into SPI mode.
      */
-    sendInitialClockTrain(object->spiHandle);
+    deassertCS(hwAttrs);
+
+    /*
+     * To put the SD card in SPI mode we must keep the TX line high while
+     * toggling the clock line several times. To do this we transmit 0xFF
+     * 10 times. Do not assert CS during this time
+     */
+    status = spiTransfer(object->spiHandle, NULL, &txDummy, 10);
+    if (status != SD_STATUS_SUCCESS) {
+        SemaphoreP_post(object->lockSem);
+        return (status);
+    }
 
     /* Now select the SD Card's chip select to send CMD0 command */
     assertCS(hwAttrs);
 
     /*
-     * Send CMD0 to put the SD card in idle SPI mode.  Some SD cards may not
-     * respond correctly to CMD0 on the first attempt; so we will try for up
-     * to 10 attempts (cards will usually respond correctly on the 3rd or 4th
-     * attempt). Failure is returned if the card does not return the correct
-     * response with the 10 attempts.
+     * Send CMD0 to put the SD card in idle mode. Depending on the previous
+     * state of the SD card, this may take up to a couple hundred milliseconds.
+     * Rather than delay between attempts, we try up to 255 attempts.
+     * Failure is returned if the card does not respond will a valid byte
+     * within 255 attempts. When the card will respond with 0x1 when its
+     * in idle mode.
      */
-    i = 10;
-    do {
+    for (i = 255, status = 0xFF; i > 0 && status != 0x1; i--) {
         status = sendCmd(object->spiHandle, CMD0, 0);
-    } while ((status != 1) && (--i));
+    }
 
-    /* Proceed with initialization only if SD Card is in "Idle" state */
-    if (status == 1) {
-        /*
-         * Determine what SD Card version we are dealing with
-         * Depending on which SD Card version, we need to send different SD
-         * commands to the SD Card, which will have different response fields.
-         */
-        if (sendCmd(object->spiHandle, CMD8, 0x1AA) == 1) {
-            /* SD Version 2.0 or higher */
-            status = spiTransfer(object->spiHandle, &ocr, &txDummy, 4);
-            if (status == SD_STATUS_SUCCESS) {
+    /* If the card never transitioned into idle mode */
+    if (status != 0x1) {
+        deassertCS(hwAttrs);
+        SemaphoreP_post(object->lockSem);
+        return (SD_STATUS_ERROR);
+    }
+
+    /*
+     * Proceed with initialization since the SD Card is in the idle state
+     * Determine what SD Card version we are dealing with
+     * Depending on which SD Card version, we need to send different SD
+     * commands to the SD Card, which will have different response fields.
+     */
+    if (sendCmd(object->spiHandle, CMD8, 0x1AA) == 1) {
+        /* SD Version 2.0 or higher */
+        status = spiTransfer(object->spiHandle, &ocr, &txDummy, 4);
+        if (status == SD_STATUS_SUCCESS) {
+            /*
+             * Ensure that the card's voltage range is valid
+             * The card can work at VDD range of 2.7-3.6V
+             */
+            if ((ocr[2] == 0x01) && (ocr[3] == 0xAA)) {
                 /*
-                 * Ensure that the card's voltage range is valid
-                 * The card can work at VDD range of 2.7-3.6V
+                 * Wait for data packet in timeout of 1s - status used to
+                 * indicate if a timeout occurred before operation
+                 * completed.
                  */
-                if ((ocr[2] == 0x01) && (ocr[3] == 0xAA)) {
-                    /*
-                     * Wait for data packet in timeout of 1s - status used to
-                     * indicate if a timeout occurred before operation
-                     * completed.
-                     */
-                    status = SD_STATUS_ERROR;
-                    timeout = 1000000/ClockP_getSystemTickPeriod();
-                    startTime = ClockP_getSystemTicks();
+                status = SD_STATUS_ERROR;
+                timeout = 1000000/ClockP_getSystemTickPeriod();
+                startTime = ClockP_getSystemTicks();
 
-                    do {
-                        /* ACMD41 with HCS bit */
-                        if ((sendCmd(object->spiHandle, CMD55, 0) <= 1) &&
-                            (sendCmd(object->spiHandle, CMD41, 1UL << 30) == 0)) {
-                            status = SD_STATUS_SUCCESS;
-                            break;
-                        }
-                        currentTime = ClockP_getSystemTicks();
-                    } while ((currentTime - startTime) < timeout);
-
-                    /*
-                     * Check CCS bit to determine which type of capacity we are
-                     * dealing with
-                     */
-                    if ((status == SD_STATUS_SUCCESS) &&
-                        sendCmd(object->spiHandle, CMD58, 0) == 0) {
-                        status = spiTransfer(object->spiHandle, &ocr, &txDummy, 4);
-                        if (status == SD_STATUS_SUCCESS) {
-                            cardType = (ocr[0] & 0x40) ? SD_SDHC : SD_SDSC;
-                        }
-                    }
-                }
-            }
-        }
-        else {
-            /* SDC Ver1 or MMC */
-            /*
-             * The card version is not SDC V2+ so check if we are dealing with a
-             * SDC or MMC card
-             */
-            if ((sendCmd(object->spiHandle, CMD55, 0) <= 1) &&
-                (sendCmd(object->spiHandle, CMD41, 0) <= 1)) {
-                cardType = SD_SDSC;
-            }
-            else {
-                cardType = SD_MMC;
-            }
-
-            /*
-             * Wait for data packet in timeout of 1s - status used to
-             * indicate if a timeout occurred before operation
-             * completed.
-             */
-            status = SD_STATUS_ERROR;
-            timeout = 1000000/ClockP_getSystemTickPeriod();
-            startTime = ClockP_getSystemTicks();
-            do {
-                if (cardType == SD_SDSC) {
-                    /* ACMD41 */
+                do {
+                    /* ACMD41 with HCS bit */
                     if ((sendCmd(object->spiHandle, CMD55, 0) <= 1) &&
-                        (sendCmd(object->spiHandle, CMD41, 0) == 0)) {
+                        (sendCmd(object->spiHandle, CMD41, 1UL << 30) == 0)) {
                         status = SD_STATUS_SUCCESS;
                         break;
                     }
-                }
-                else {
-                    /* CMD1 */
-                    if (sendCmd(object->spiHandle, CMD1, 0) == 0) {
-                        status = SD_STATUS_SUCCESS;
-                        break;
-                    }
-                }
-                currentTime = ClockP_getSystemTicks();
-            } while ((currentTime - startTime) < timeout);
+                    currentTime = ClockP_getSystemTicks();
+                } while ((currentTime - startTime) < timeout);
 
-            /* Select R/W block length */
-            if ((status == SD_STATUS_ERROR) ||
-                (sendCmd(object->spiHandle, CMD16, SD_SECTOR_SIZE) != 0)) {
-                cardType = SD_NOCARD;
+                /*
+                 * Check CCS bit to determine which type of capacity we are
+                 * dealing with
+                 */
+                if ((status == SD_STATUS_SUCCESS) &&
+                    sendCmd(object->spiHandle, CMD58, 0) == 0) {
+                    status = spiTransfer(object->spiHandle, &ocr, &txDummy, 4);
+                    if (status == SD_STATUS_SUCCESS) {
+                        cardType = (ocr[0] & 0x40) ? SD_SDHC : SD_SDSC;
+                    }
+                }
             }
         }
     }
+    else {
+        /* SDC Version 1 or MMC */
+        /*
+         * The card version is not SDC V2+ so check if we are dealing with a
+         * SDC or MMC card
+         */
+        if ((sendCmd(object->spiHandle, CMD55, 0) <= 1) &&
+            (sendCmd(object->spiHandle, CMD41, 0) <= 1)) {
+            cardType = SD_SDSC;
+        }
+        else {
+            cardType = SD_MMC;
+        }
 
-    object->cardType = cardType;
+        /*
+         * Wait for data packet in timeout of 1s - status used to
+         * indicate if a timeout occurred before operation
+         * completed.
+         */
+        status = SD_STATUS_ERROR;
+        timeout = 1000000/ClockP_getSystemTickPeriod();
+        startTime = ClockP_getSystemTicks();
+        do {
+            if (cardType == SD_SDSC) {
+                /* ACMD41 */
+                if ((sendCmd(object->spiHandle, CMD55, 0) <= 1) &&
+                    (sendCmd(object->spiHandle, CMD41, 0) == 0)) {
+                    status = SD_STATUS_SUCCESS;
+                    break;
+                }
+            }
+            else {
+                /* CMD1 */
+                if (sendCmd(object->spiHandle, CMD1, 0) == 0) {
+                    status = SD_STATUS_SUCCESS;
+                    break;
+                }
+            }
+            currentTime = ClockP_getSystemTicks();
+        } while ((currentTime - startTime) < timeout);
+
+        /* Select R/W block length */
+        if ((status == SD_STATUS_ERROR) ||
+            (sendCmd(object->spiHandle, CMD16, SD_SECTOR_SIZE) != 0)) {
+            cardType = SD_NOCARD;
+        }
+    }
 
     deassertCS(hwAttrs);
+
+    object->cardType = cardType;
 
     /* Check to see if a card type was determined */
     if (cardType == SD_NOCARD) {
@@ -363,6 +378,7 @@ int_fast16_t SDSPI_initialize(SD_Handle handle)
 SD_Handle SDSPI_open(SD_Handle handle, SD_Params *params)
 {
     uintptr_t            key;
+    int_fast16_t         status;
     SPI_Params           spiParams;
     SDSPI_Object        *object = handle->object;
     SDSPI_HWAttrs const *hwAttrs = handle->hwAttrs;
@@ -377,6 +393,15 @@ SD_Handle SDSPI_open(SD_Handle handle, SD_Params *params)
     object->isOpen = true;
 
     HwiP_restore(key);
+
+    /* Configure the SPI CS pin as output set high */
+    status = GPIO_setConfig(hwAttrs->spiCsGpioIndex,
+        GPIO_CFG_OUT_STD | GPIO_CFG_OUT_HIGH);
+    if (status != GPIO_STATUS_SUCCESS) {
+        object->isOpen = false;
+
+        return (NULL);
+    }
 
     object->lockSem = SemaphoreP_createBinary(1);
     if (object->lockSem == NULL) {
@@ -400,9 +425,8 @@ SD_Handle SDSPI_open(SD_Handle handle, SD_Params *params)
         return (NULL);
     }
 
-    /* Configure the SPI CS pin as output set high */
-    GPIO_setConfig(hwAttrs->spiCsGpioIndex,
-        GPIO_CFG_OUT_STD | GPIO_CFG_OUT_HIGH);
+    /* Ensure the CS line is de-asserted. */
+    deassertCS(hwAttrs);
 
     return (handle);
 }
@@ -413,7 +437,8 @@ SD_Handle SDSPI_open(SD_Handle handle, SD_Params *params)
 int_fast16_t SDSPI_read(SD_Handle handle, void *buf, int_fast32_t sector,
     uint_fast32_t sectorCount)
 {
-    int_fast16_t         status = SD_STATUS_ERROR;
+    uint8_t             ffByte = 0xFF;
+    int_fast16_t        status = SD_STATUS_ERROR;
     SDSPI_Object        *object = handle->object;
     SDSPI_HWAttrs const *hwAttrs = handle->hwAttrs;
 
@@ -462,6 +487,9 @@ int_fast16_t SDSPI_read(SD_Handle handle, void *buf, int_fast32_t sector,
     }
 
     deassertCS(hwAttrs);
+
+    /* Send a 0xFF with CS high to try to put SD card into low power mode */
+    spiTransfer(object->spiHandle, NULL, &ffByte, 1);
 
     SemaphoreP_post(object->lockSem);
 
@@ -535,6 +563,12 @@ int_fast16_t SDSPI_write(SD_Handle handle, const void *buf,
             }
         }
     }
+
+    /*
+     * Wait for SD card to finish storing the data it received. This may help
+     * the card go into low power mode.
+     */
+    waitUntilReady(object->spiHandle);
 
     deassertCS(hwAttrs);
 
@@ -663,25 +697,6 @@ static uint8_t sendCmd(SPI_Handle handle, uint8_t cmd, uint32_t arg)
 
     /* Return with the response value */
     return (rxBuf);
-}
-
-/*
- *  ======== sendInitialClockTrain ========
- *  Function to get the SDCard into SPI mode
- */
-static int_fast16_t sendInitialClockTrain(SPI_Handle handle)
-{
-    uint8_t txBuf[10] = {
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF
-    };
-
-    /*
-     * To put the SD card in SPI mode we must keep the TX line high while
-     * toggling the clock line several times.  To do this we transmit 0xFF
-     * 10 times.
-     */
-    return (spiTransfer(handle, NULL, &txBuf, 10));
 }
 
 /*

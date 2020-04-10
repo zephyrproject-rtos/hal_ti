@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,7 @@
 #include <ti/drivers/power/PowerCC32XX.h>
 
 #include <ti/drivers/crypto/CryptoCC32XX.h>
+#include <ti/drivers/cryptoutils/utils/CryptoUtils.h>
 
 #include <ti/devices/cc32xx/inc/hw_types.h>
 #include <ti/devices/cc32xx/inc/hw_ints.h>
@@ -83,7 +84,7 @@
 #define SHAMD5_SIGNATURE_MAX_LEN    CryptoCC32XX_SHAMD5_SIGNATURE_LEN_SHA256
 typedef int8_t CryptoCC32XX_SHAMD5Signature[SHAMD5_SIGNATURE_MAX_LEN];
 
-typedef struct CryptoCC32XX_HwiP {
+typedef struct {
     /*! Crypto Peripheral's interrupt handler */
     HwiP_Fxn    hwiIntFxn;
     /*! Crypto Peripheral's interrupt vector */
@@ -429,7 +430,7 @@ int32_t CryptoCC32XX_verify(CryptoCC32XX_Handle handle, CryptoCC32XX_HmacMethod 
                     {
                         if (pParams->moreData == 0)
                         {
-                            if (memcmp(shamd5Signature,pSignature,shamd5SignatureSize) != 0)
+                            if (CryptoUtils_buffersMatch(shamd5Signature, pSignature, shamd5SignatureSize) != true)
                             {
                                 status = CryptoCC32XX_STATUS_ERROR_VERIFY;
                             }
@@ -488,7 +489,7 @@ int32_t CryptoCC32XX_shamd5Process(uint32_t cryptoMode , uint8_t *pBuff, uint32_
     {
         return CryptoCC32XX_STATUS_ERROR;
     }
-        
+
     if (pParams->moreData == 1)
     {
         /* Less than block size available. Copy the received data to the internal buffer and return */
@@ -526,7 +527,7 @@ int32_t CryptoCC32XX_shamd5Process(uint32_t cryptoMode , uint8_t *pBuff, uint32_
     else
     {
         if(pParams->first)
-        {    
+        {
             /* If Keyed Hashing is used, set Key */
             if (pParams->pKey != NULL)
             {
@@ -551,7 +552,7 @@ int32_t CryptoCC32XX_shamd5Process(uint32_t cryptoMode , uint8_t *pBuff, uint32_
             {
                 MAP_SHAMD5ConfigSet(SHAMD5_BASE, cryptoMode, 0, 1, 0, 0);
             }
-            
+
             /* This is the last iteration for the requested calculation */
             /* Set the first flag to 1 (initial value) for next calculations */
             pParams->first = 1;

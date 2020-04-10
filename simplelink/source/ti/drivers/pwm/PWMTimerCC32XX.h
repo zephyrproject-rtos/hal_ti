@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,7 +72,7 @@
  *  ### CC32xx PWM Driver Configuration #
  *
  *  In order to use the PWM APIs, the application is required
- *  to define 4 configuration items in the application Board.c file:
+ *  to define 4 configuration items in the application ti_drivers_config.c file:
  *
  *  1.  An array of PWMTimerCC32XX_Object elements, which will be used by
  *  by the driver to maintain instance state.
@@ -150,13 +150,13 @@
 #ifndef ti_driver_pwm_PWMTimerCC32XX__include
 #define ti_driver_pwm_PWMTimerCC32XX__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdbool.h>
 #include <ti/drivers/Power.h>
 #include <ti/drivers/PWM.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*! \cond */
 /*
@@ -290,7 +290,7 @@ extern const PWM_FxnTable PWMTimerCC32XX_fxnTable;
  *  };
  *  @endcode
  */
-typedef struct PWMTimerCC32XX_HWAttrsV2 {
+typedef struct {
     uint32_t pwmPin;                    /*!< Pin to output PWM signal on
                                              (see @ref pwmPinIdentifiersCC32XX) */
 } PWMTimerCC32XX_HWAttrsV2;
@@ -300,7 +300,7 @@ typedef struct PWMTimerCC32XX_HWAttrsV2 {
  *
  *  The application must not access any member variables of this structure!
  */
-typedef struct PWMTimerCC32XX_Object {
+typedef struct {
     Power_NotifyObj  postNotify;
     uint32_t         duty;              /* Current duty cycle in Duty_Unites */
     uint32_t         period;            /* Current period PERIOD_Units */

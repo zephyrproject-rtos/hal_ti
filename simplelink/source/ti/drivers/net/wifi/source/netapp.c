@@ -623,6 +623,7 @@ _i16 sl_NetAppDnsGetHostByService(_i8        *pServiceName,    /* string contain
     _SlCmdExt_t                      CmdExt ;
     _GetHostByServiceAsyncResponse_t AsyncRsp;
     _i16                              ObjIdx = MAX_CONCURRENT_ACTIONS;
+    _i16                              RetVal = 0;
 
     /* verify that this api is allowed. if not allowed then
     ignore the API execution and return immediately with an error */
@@ -669,9 +670,9 @@ _i16 sl_NetAppDnsGetHostByService(_i8        *pServiceName,    /* string contain
 
     ObjIdx = _SlDrvProtectAsyncRespSetting((_u8*)&AsyncRsp, GETHOSYBYSERVICE_ID, SL_MAX_SOCKETS);
 
-    if (MAX_CONCURRENT_ACTIONS == ObjIdx)
+    if (ObjIdx < 0)
     {
-        return SL_POOL_IS_EMPTY;
+        return ObjIdx;
     }
     
     if (SL_AF_INET6 == Family)  
@@ -684,7 +685,7 @@ _i16 sl_NetAppDnsGetHostByService(_i8        *pServiceName,    /* string contain
     /* If the immediate reponse is O.K. than  wait for aSYNC event response. */
     if(SL_RET_CODE_OK == Msg.Rsp.status)
     {        
-        VERIFY_RET_OK(_SlDrvWaitForInternalAsyncEvent(ObjIdx,0,0));
+        RetVal = _SlDrvWaitForInternalAsyncEvent(ObjIdx,0,0);
 
         /* If we are - it means that Async event was sent.
            The results are copied in the Async handle return functions */
@@ -693,7 +694,14 @@ _i16 sl_NetAppDnsGetHostByService(_i8        *pServiceName,    /* string contain
     }
 
     _SlDrvReleasePoolObj(ObjIdx);
-    return Msg.Rsp.status;
+    if(RetVal < 0)
+    {
+        return RetVal;
+    }
+    else
+    {
+        return Msg.Rsp.status;
+    }
 }
 #endif
 
@@ -844,6 +852,7 @@ _i16 sl_NetAppDnsGetHostByName(_i8 * pHostName,const  _u16 NameLen, _u32*  OutIp
     _SlCmdExt_t                     ExtCtrl;
     _GetHostByNameAsyncResponse_u   AsyncRsp;
     _i16                            ObjIdx = MAX_CONCURRENT_ACTIONS;
+    _i16                RetVal=0;
 
     /* verify that this api is allowed. if not allowed then
     ignore the API execution and return immediately with an error */
@@ -882,7 +891,8 @@ _i16 sl_NetAppDnsGetHostByName(_i8 * pHostName,const  _u16 NameLen, _u32*  OutIp
 
     if(SL_RET_CODE_OK == Msg.Rsp.status)
     {
-	VERIFY_RET_OK(_SlDrvWaitForInternalAsyncEvent(ObjIdx,0,0));
+//        VERIFY_RET_OK(_SlDrvWaitForInternalAsyncEvent(ObjIdx,0,0));
+        RetVal = _SlDrvWaitForInternalAsyncEvent(ObjIdx,0,0);
 
         Msg.Rsp.status = (_i16)AsyncRsp.IpV4.Status;
 
@@ -893,8 +903,16 @@ _i16 sl_NetAppDnsGetHostByName(_i8 * pHostName,const  _u16 NameLen, _u32*  OutIp
                       (SL_AF_INET == Family) ? SL_IPV4_ADDRESS_SIZE : SL_IPV6_ADDRESS_SIZE);
         }
     }
+
     _SlDrvReleasePoolObj(ObjIdx);
-    return Msg.Rsp.status;
+    if(RetVal < 0)
+    {
+        return RetVal;
+    }
+    else
+    {
+        return Msg.Rsp.status;
+    }
 }
 #endif
 
@@ -989,6 +1007,8 @@ _i16 sl_NetAppPing(const SlNetAppPingCommand_t* pPingParams, const _u8 Family, S
     SlPingReportResponse_t      PingRsp;
     _i16 ObjIdx = MAX_CONCURRENT_ACTIONS;
     _u32 PingTimeout = 0;
+    _i16                RetVal=0;
+
 
     /* verify that this api is allowed. if not allowed then
     ignore the API execution and return immediately with an error */
@@ -1068,13 +1088,19 @@ _i16 sl_NetAppPing(const SlNetAppPingCommand_t* pPingParams, const _u8 Family, S
             /* block waiting for results if no callback function is used */
             if( NULL == pPingCallback ) 
             {
-                VERIFY_RET_OK(_SlDrvWaitForInternalAsyncEvent(ObjIdx, PingTimeout, SL_OPCODE_NETAPP_PINGREPORTREQUESTRESPONSE));
+//                VERIFY_RET_OK(_SlDrvWaitForInternalAsyncEvent(ObjIdx, PingTimeout, SL_OPCODE_NETAPP_PINGREPORTREQUESTRESPONSE));
+                RetVal = _SlDrvWaitForInternalAsyncEvent(ObjIdx, PingTimeout, SL_OPCODE_NETAPP_PINGREPORTREQUESTRESPONSE);
 
                 if( SL_OS_RET_CODE_OK == (_i16)PingRsp.Status )
                 {
                     _SlNetAppCopyPingResultsToReport(&PingRsp,pReport);
                 }
-                _SlDrvReleasePoolObj(ObjIdx);                
+
+                _SlDrvReleasePoolObj(ObjIdx);
+                if(RetVal < 0)
+                {
+                    return RetVal;
+                }
             }
         }
         else
@@ -1305,7 +1331,8 @@ _SlReturnVal_t sl_NetAppRecv( _u16 Handle, _u16 *DataLen, _u8 *pData, _u32 *Flag
     if(SL_OS_RET_CODE_OK == RetVal)
     {
         /* Wait for SL_OPCODE_NETAPP_RECEIVE async event. Will be signaled by _SlNetAppHandleAsync_NetAppReceive. */
-        VERIFY_RET_OK(_SlDrvWaitForInternalAsyncEvent(ObjIdx, 0, 0));
+//        VERIFY_RET_OK(_SlDrvWaitForInternalAsyncEvent(ObjIdx, 0, 0));
+        RetVal = _SlDrvWaitForInternalAsyncEvent(ObjIdx, 0, 0);
 
         /* Update information for the user */
         *DataLen = AsyncRsp.PayloadLen;

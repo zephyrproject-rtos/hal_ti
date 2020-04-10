@@ -752,12 +752,10 @@ _i16 sl_WlanProfileGet(const _i16 Index,_i8*  pName, _i16 *pNameLen, _u8 *pMacAd
 
         *pNameLen  = (_i16)(Msg.Rsp.Args.Common.SsidLen);      
         *pPriority = Msg.Rsp.Args.Common.Priority;       
-
-        if (NULL != Msg.Rsp.Args.Common.Bssid)
+        if (NULL != pMacAddr)
         {
             sl_Memcpy(pMacAddr, Msg.Rsp.Args.Common.Bssid, sizeof(Msg.Rsp.Args.Common.Bssid));
         }
-
         sl_Memset(pName, 0, SL_WLAN_SSID_MAX_LENGTH);
         sl_Memcpy(pName, EAP_PROFILE_SSID_STRING(&Msg), *pNameLen);
     }
@@ -955,28 +953,41 @@ _i16 sl_WlanRxFilterAdd(SlWlanRxFilterRuleType_t                RuleType,
 #if _SL_INCLUDE_FUNC(sl_WlanRxStatStart)
 _i16 sl_WlanRxStatStart(void)
 {
-    /* verify that this api is allowed. if not allowed then
-    ignore the API execution and return immediately with an error */
-    VERIFY_API_ALLOWED(SL_OPCODE_SILO_WLAN);
+    SL_DRV_PROTECTION_OBJ_LOCK_FOREVER();
+    if(SL_IS_DEVICE_STAT_IN_PROGRESS)
+    {
+        SL_DRV_PROTECTION_OBJ_UNLOCK();
+        return SL_RET_CODE_DEVICE_STAT_IN_PROGRESS;
+    }
+    else
+    {
+       /* turn on flag indication for RX statistics is in progress
+        * to avoid parallel "starts" between
+        * Device statistics API and RX statistics API */
+        SL_SET_WLAN_RX_STAT_IN_PROGRESS;
+        SL_DRV_PROTECTION_OBJ_UNLOCK();
+       /* verify that this api is allowed. if not allowed then
+        ignore the API execution and return immediately with an error */
+        VERIFY_API_ALLOWED(SL_OPCODE_SILO_WLAN);
 
+    }
     return _SlDrvBasicCmd(SL_OPCODE_WLAN_STARTRXSTATCOMMAND);
 }
 #endif
 
-#if _SL_INCLUDE_FUNC(sl_WlanRxStatStop)
-_i16 sl_WlanRxStatStop(void)
-{
-    /* verify that this api is allowed. if not allowed then
-    ignore the API execution and return immediately with an error */
-    VERIFY_API_ALLOWED(SL_OPCODE_SILO_WLAN);
 
-    return _SlDrvBasicCmd(SL_OPCODE_WLAN_STOPRXSTATCOMMAND);
-}
-#endif
 
 #if _SL_INCLUDE_FUNC(sl_WlanRxStatGet)
 _i16 sl_WlanRxStatGet(SlWlanGetRxStatResponse_t *pRxStat,const _u32 Flags)
 {
+    SL_DRV_PROTECTION_OBJ_LOCK_FOREVER();
+    if(SL_IS_DEVICE_STAT_IN_PROGRESS)
+    {
+        SL_DRV_PROTECTION_OBJ_UNLOCK();
+        return SL_RET_CODE_DEVICE_STAT_IN_PROGRESS;
+    }
+    SL_DRV_PROTECTION_OBJ_UNLOCK();
+
     _SlCmdCtrl_t CmdCtrl = {SL_OPCODE_WLAN_GETRXSTATCOMMAND, 0, (_SlArgSize_t)sizeof(SlWlanGetRxStatResponse_t)};
     /* Flags parameter is currently not in use */
     (void)Flags;
@@ -987,8 +998,31 @@ _i16 sl_WlanRxStatGet(SlWlanGetRxStatResponse_t *pRxStat,const _u32 Flags)
     
     _SlDrvMemZero(pRxStat, (_u16)sizeof(SlWlanGetRxStatResponse_t));
     VERIFY_RET_OK(_SlDrvCmdOp((_SlCmdCtrl_t *)&CmdCtrl, pRxStat, NULL)); 
-
     return 0;
+}
+#endif
+
+
+#if _SL_INCLUDE_FUNC(sl_WlanRxStatStop)
+_i16 sl_WlanRxStatStop(void)
+{
+    SL_DRV_PROTECTION_OBJ_LOCK_FOREVER();
+    if(SL_IS_DEVICE_STAT_IN_PROGRESS)
+    {
+        SL_DRV_PROTECTION_OBJ_UNLOCK();
+        return SL_RET_CODE_DEVICE_STAT_IN_PROGRESS;
+    }
+
+    else
+    {
+        SL_UNSET_WLAN_RX_STAT_IN_PROGRESS;
+        SL_DRV_PROTECTION_OBJ_UNLOCK();
+        /* verify that this api is allowed. if not allowed then
+        ignore the API execution and return immediately with an error */
+        VERIFY_API_ALLOWED(SL_OPCODE_SILO_WLAN);
+        return _SlDrvBasicCmd(SL_OPCODE_WLAN_STOPRXSTATCOMMAND);
+
+    }
 }
 #endif
 

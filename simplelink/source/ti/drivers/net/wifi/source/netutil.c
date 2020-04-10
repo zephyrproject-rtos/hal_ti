@@ -195,9 +195,9 @@ _i16 sl_NetUtilCmd(const _u16 Cmd, const _u8 *pAttrib,  const _u16 AttribLen,
     OutData.pOutputLen = pOutputLen;
 
     ObjIdx = _SlDrvProtectAsyncRespSetting((_u8*)&OutData, NETUTIL_CMD_ID, SL_MAX_SOCKETS);
-    if (MAX_CONCURRENT_ACTIONS == ObjIdx)
+    if (ObjIdx < 0)
     {
-        return SL_POOL_IS_EMPTY;
+        return ObjIdx;
     }
 
     /* send the command */
@@ -206,16 +206,19 @@ _i16 sl_NetUtilCmd(const _u16 Cmd, const _u8 *pAttrib,  const _u16 AttribLen,
     if(SL_OS_RET_CODE_OK == (_i16)Msg.Rsp.status)
     {
         /* after the async event is signaled, the data will be copied to the pOutputValues buffer  */
-        VERIFY_RET_OK(_SlDrvWaitForInternalAsyncEvent(ObjIdx, 0, 0));
+        RetVal = _SlDrvWaitForInternalAsyncEvent(ObjIdx, 0, 0);
 
-        /* the response header status */
-        RetVal = OutData.Status;
-
+        if(RetVal >= 0)
+        {
+            /* the response header status */
+            RetVal = OutData.Status;
+        }
     }
     else
     {
         RetVal = Msg.Rsp.status;
     }
+
     _SlDrvReleasePoolObj((_u8)ObjIdx);
 
     return RetVal;

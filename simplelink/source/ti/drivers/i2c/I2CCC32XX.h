@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2020, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,10 +52,6 @@
 #ifndef ti_drivers_i2c_I2CCC32XX__include
 #define ti_drivers_i2c_I2CCC32XX__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -63,6 +59,10 @@ extern "C" {
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/dpl/SemaphoreP.h>
 #include <ti/drivers/Power.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  *  Macros defining possible I2C signal pin mux options
@@ -117,24 +117,6 @@ extern "C" {
 extern const I2C_FxnTable I2CCC32XX_fxnTable;
 
 /*!
- *  @cond NODOC
- *  I2CCC32XX mode
- *
- *  This enum defines the state of the I2C driver's state machine.
- */
-typedef enum I2CCC32XX_Mode {
-    /*! I2C is idle, and not performing a transaction */
-    I2CCC32XX_IDLE_MODE = 0,
-    /*! I2C is currently performing a write operation */
-    I2CCC32XX_WRITE_MODE,
-    /*! I2C is currently performing a read operation */
-    I2CCC32XX_READ_MODE,
-    /*! I2C error has occurred */
-    I2CCC32XX_ERROR = 0xFF
-} I2CCC32XX_Mode;
-/*! @endcond */
-
-/*!
  *  @brief  I2CCC32XX Hardware attributes
  *
  *  The baseAddr and intNum fields define the base address and interrupt number
@@ -170,7 +152,7 @@ typedef enum I2CCC32XX_Mode {
  *  };
  *  @endcode
  */
-typedef struct I2CCC32XX_HWAttrsV1 {
+typedef struct {
     /*! I2C Peripheral's base address */
     unsigned int baseAddr;
     /*! I2C Peripheral's interrupt vector */
@@ -188,33 +170,47 @@ typedef struct I2CCC32XX_HWAttrsV1 {
  *  I2CCC32XX Object.  Applications must not access any member variables of
  *  this structure!
  */
-typedef struct I2CCC32XX_Object {
-    SemaphoreP_Handle   mutex;            /* Grants exclusive access to I2C */
-    SemaphoreP_Handle   transferComplete; /* Signals I2C transfer completion */
+typedef struct {
+    /* Grants exclusive access to I2C */
+    SemaphoreP_Handle mutex;
 
-    HwiP_Handle         hwiHandle;
+    /* Notify finished I2C transfer */
+    SemaphoreP_Handle transferComplete;
 
-    I2C_TransferMode    transferMode;        /* Blocking or Callback mode */
-    I2C_CallbackFxn     transferCallbackFxn; /* Callback function pointer */
+    /* Hardware interrupt handle */
+    HwiP_Handle hwiHandle;
 
-    volatile I2CCC32XX_Mode mode;            /* Stores the I2C state */
+    /* Blocking or Callback mode */
+    I2C_TransferMode transferMode;
 
-    I2C_Transaction    *currentTransaction; /* Pointer to current transaction */
+    /* Application callback function pointer */
+    I2C_CallbackFxn transferCallbackFxn;
 
-    uint8_t            *writeBufIdx;    /* Internal inc. writeBuf index */
-    size_t              writeCountIdx;  /* Internal dec. writeCounter */
+    /* Pointer to current I2C transaction */
+    I2C_Transaction *currentTransaction;
 
-    uint8_t            *readBufIdx;     /* Internal inc. readBuf index */
-    size_t              readCountIdx;   /* Internal dec. readCounter */
+    /* Head and tail pointers for queued transactions */
+    I2C_Transaction * volatile headPtr;
+    I2C_Transaction *tailPtr;
 
-    /* I2C transaction pointers for I2C_MODE_CALLBACK */
-    I2C_Transaction    *headPtr;        /* Head ptr for queued transactions */
-    I2C_Transaction    *tailPtr;        /* Tail ptr for queued transactions */
+    /* Pointers to transaction buffers */
+    const uint8_t * writeBuf;
+    uint8_t *readBuf;
 
-    bool                isOpen;         /* Flag to indicate module is open */
+    /* Read, write, and burst counters */
+    size_t writeCount;
+    size_t readCount;
+    uint16_t burstCount;
+    bool burstStarted;
 
-    Power_NotifyObj     notifyObj;      /* For notification of wake from LPDS */
-    I2C_BitRate         bitRate;        /* I2C bus bit rate */
+    /* Flag to indicate module is open */
+    bool isOpen;
+
+    /* Enumerated bit rate */
+    I2C_BitRate bitRate;
+
+    /* For notification of wake from LPDS */
+    Power_NotifyObj notifyObj;
 } I2CCC32XX_Object;
 /*! @endcond */
 

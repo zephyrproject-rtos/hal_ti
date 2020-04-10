@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,11 +33,6 @@
  *  ======== I2S.c ========
  */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-
-#include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/I2S.h>
 
 extern const I2S_Config I2S_config[];
@@ -45,80 +40,30 @@ extern const uint_least8_t I2S_count;
 
 /* Default I2S parameters structure */
 const I2S_Params I2S_defaultParams = {
-    I2S_OPMODE_TX_RX_SYNC,        /* I2SMode */
-    16000,                        /* Sampling Freq */
-    16,                           /* Slot length */
-    16,                           /* Bits/Sample */
-    2,                            /* Mono/Stero */
-    I2S_MODE_ISSUERECLAIM,        /* Read mode */
-    NULL,                         /* Read callback */
-    I2S_WAIT_FOREVER,             /* Read timeout */
-    I2S_MODE_ISSUERECLAIM,        /* Write mode */
-    NULL,                         /* Write callback */
-    I2S_WAIT_FOREVER,             /* Write timeout  */
-    NULL                          /* customParams */
+  .samplingFrequency     = 8000,                              /* Sampling Freq */
+  .memorySlotLength      = I2S_MEMORY_LENGTH_16BITS,          /* Memory slot length */
+  .moduleRole            = I2S_MASTER,                        /* Master / Slave selection */
+  .trueI2sFormat         = (bool)true,                        /* Activate true I2S format */
+  .invertWS              = (bool)true,                        /* WS inversion */
+  .isMSBFirst            = (bool)true,                        /* Endianness selection */
+  .isDMAUnused           = (bool)false,                       /* Selection between DMA and CPU transmissions */
+  .samplingEdge          = I2S_SAMPLING_EDGE_RISING,          /* Sampling edge */
+  .beforeWordPadding     = 0,                                 /* Before sample padding */
+  .bitsPerWord           = 16,                                /* Bits/Sample */
+  .afterWordPadding      = 0,                                 /* After sample padding */
+  .fixedBufferLength     = 1,                                 /* Fixed Buffer Length */
+  .SD0Use                = I2S_SD0_OUTPUT,                    /* SD0Use */
+  .SD1Use                = I2S_SD1_INPUT,                     /* SD1Use */
+  .SD0Channels           = I2S_CHANNELS_STEREO,               /* Channels activated on SD0 */
+  .SD1Channels           = I2S_CHANNELS_STEREO,               /* Channels activated on SD1 */
+  .phaseType             = I2S_PHASE_TYPE_DUAL,               /* Phase type */
+  .startUpDelay          = 0,                                 /* Start up delay */
+  .MCLKDivider           = 40,                                /* MCLK divider */
+  .readCallback          = NULL,                              /* Read callback */
+  .writeCallback         = NULL,                              /* Write callback */
+  .errorCallback         = NULL,                              /* Error callback */
+  .custom                = NULL,                              /* customParams */
 };
-
-static bool isInitialized = false;
-
-/*
- *  ======== I2S_close ========
- */
-void I2S_close(I2S_Handle handle)
-{
-    handle->fxnTablePtr->closeFxn(handle);
-}
-
-/*
- *  ======== I2S_control ========
- */
-int_fast16_t I2S_control(I2S_Handle handle, uint_fast16_t cmd, void *arg)
-{
-    return (handle->fxnTablePtr->controlFxn(handle, cmd, arg));
-}
-
-/*
- *  ======== I2S_init ========
- */
-void I2S_init(void)
-{
-    uint_least8_t i;
-    uint_fast32_t key;
-
-    key = HwiP_disable();
-
-    if (!isInitialized) {
-        isInitialized = (bool) true;
-
-        /* Call each driver's init function */
-        for (i = 0; i < I2S_count; i++) {
-            I2S_config[i].fxnTablePtr->initFxn((I2S_Handle)&(I2S_config[i]));
-        }
-    }
-
-    HwiP_restore(key);
-}
-
-/*
- *  ======== I2S_open ========
- */
-I2S_Handle I2S_open(uint_least8_t index, I2S_Params *params)
-{
-    I2S_Handle handle = NULL;
-
-    if (isInitialized && (index < I2S_count)) {
-        /* If params are NULL use defaults. */
-        if (params == NULL) {
-            params = (I2S_Params *) &I2S_defaultParams;
-        }
-
-        /* Get handle for this driver instance */
-        handle = (I2S_Handle)&(I2S_config[index]);
-        handle = handle->fxnTablePtr->openFxn(handle, params);
-    }
-
-    return (handle);
-}
 
 /*
  *  ======== I2S_Params_init ========
@@ -129,49 +74,14 @@ void I2S_Params_init(I2S_Params *params)
 }
 
 /*
- *  ======== I2S_read ========
+ *  ======== I2S_Transaction_init ========
  */
-int_fast16_t I2S_read(I2S_Handle handle, I2S_BufDesc *desc)
+void I2S_Transaction_init(I2S_Transaction *transaction)
 {
-    return (handle->fxnTablePtr->readIssueFxn(handle, desc));
-}
-
-/*
- *  ======== I2S_readIssue ========
- */
-int_fast16_t I2S_readIssue(I2S_Handle handle, I2S_BufDesc *desc)
-{
-    return (handle->fxnTablePtr->readIssueFxn(handle, desc));
-}
-
-/*
- *  ======== I2S_readReclaim ========
- */
-size_t I2S_readReclaim(I2S_Handle handle, I2S_BufDesc **pDesc)
-{
-    return (handle->fxnTablePtr->readReclaimFxn(handle, pDesc));
-}
-
-/*
- *  ======== I2S_write ========
- */
-int_fast16_t I2S_write(I2S_Handle handle, I2S_BufDesc *desc)
-{
-    return (handle->fxnTablePtr->writeIssueFxn(handle, desc));
-}
-
-/*
- *  ======== I2S_writeIssue ========
- */
-int_fast16_t I2S_writeIssue(I2S_Handle handle, I2S_BufDesc *desc)
-{
-    return (handle->fxnTablePtr->writeIssueFxn(handle, desc));
-}
-
-/*
- *  ======== I2S_writeReclaim ========
- */
-size_t I2S_writeReclaim(I2S_Handle handle, I2S_BufDesc **pDesc)
-{
-    return (handle->fxnTablePtr->writeReclaimFxn(handle, pDesc));
+    transaction->bufPtr               = NULL;
+    transaction->bufSize              = 0;
+    transaction->bytesTransferred     = 0;
+    transaction->untransferredBytes   = 0;
+    transaction->numberOfCompletions  = 0;
+    transaction->arg                  = (uintptr_t)NULL;
 }

@@ -521,18 +521,25 @@ int_fast16_t Power_setDependency(uint_fast16_t resourceId)
             /* now activate this resource ... */
             id = PowerCC32XX_module.dbRecords[resourceId];
 
+            /* 
+             * When the periphery is LSPI, choose PLL or XTAL according 
+             * to the generation of the NWP 
+             */
             if(id == PowerCC32XX_PERIPH_LSPI)
             {
                  /* Check NWP generation */
                  if((HWREG(GPRCM_BASE + GPRCM_O_GPRCM_DIEID_READ_REG4) >> 24) & 0x02)
                  {
+                     /* Configure PLL and divide the speed by 8 for LSPI */
                      HWREG(ARCM_BASE + APPS_RCM_O_MCSPI_A2_CLK_GEN) = 0x10303;
                  }
                  else
                  {
+                     /* Configure XTAL for LSPI */
                      HWREG(ARCM_BASE + APPS_RCM_O_MCSPI_A2_CLK_GEN) = 0x00;
                  }
             }
+            
             /* enable the peripheral clock to the resource */
             MAP_PRCMPeripheralClkEnable(id,
                 PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK);
@@ -672,6 +679,15 @@ int_fast16_t Power_sleep(uint_fast16_t sleepState)
             return (status);
         }
 
+        /* indicate to the MAC layer through register that the 
+           APPS layer is going to sleep this is needed because 
+           the MAC cannot do DC2DC clock sync when the application 
+           processor waking up from sleep and running through its 
+           ROM bootloader because it is also touching the DC2DC 
+           of the top die FLASH                                */
+        
+        HWREG(OCP_SHARED_BASE + OCP_SHARED_O_ALT_PC_VAL_APPS) = 1;
+
         DebugP_log1("Power: sleep, sleepState (%d)", sleepState);
 
         /* invoke specific sequence to activate LPDS ...*/
@@ -748,6 +764,10 @@ int_fast16_t Power_sleep(uint_fast16_t sleepState)
 
         /* set transition state to EXITING_SLEEP */
         PowerCC32XX_module.state = Power_EXITING_SLEEP;
+
+        /* indicate to the MAC layer that the application processor is
+           up and running                                             */
+        HWREG(OCP_SHARED_BASE + OCP_SHARED_O_ALT_PC_VAL_APPS) = 0;
 
         /*
          * signal clients registered for post-sleep notification; for example,
@@ -1033,7 +1053,7 @@ void PowerCC32XX_shutdownSSPI(void)
         return;
     }
 
-    //Gate MCSPI clock
+    /* Gate MCSPI clock */
     HWREG(ARCM_BASE + APPS_RCM_O_MCSPI_S0_CLK_GATING) = 0x0;
 
     /* Enable clock for SSPI module */
@@ -1059,7 +1079,7 @@ void PowerCC32XX_shutdownSSPI(void)
     /* Enable SSPI module */
     MAP_SPIEnable(SSPI_BASE);
 
-    // Ungate MCSPI clock
+    /* Ungate MCSPI clock */
     HWREG(ARCM_BASE + APPS_RCM_O_MCSPI_S0_CLK_GATING) = 0x1;
 
     /* Allow settling before enabling chip select */
@@ -1068,7 +1088,7 @@ void PowerCC32XX_shutdownSSPI(void)
     /* Enable chip select for the spi flash. */
     MAP_SPICSEnable(SSPI_BASE);
 
-     /* Wait for spi flash. */
+    /* Wait for spi flash. */
     do{
         /* Send status register read instruction and read back a dummy byte. */
         MAP_SPIDataPut(SSPI_BASE,PowerCC32XX_SSPIReadStatusInstruction);

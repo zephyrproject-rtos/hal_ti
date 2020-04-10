@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Texas Instruments Incorporated
+ * Copyright (c) 2017-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -174,7 +174,7 @@ void CaptureCC32XX_hwiIntFunction(uintptr_t arg)
     }
 
     /* Call the user callbackFxn */
-    object->callBack(handle, interval);
+    object->callBack(handle, interval, Capture_STATUS_SUCCESS);
 }
 
 /*
@@ -199,6 +199,24 @@ Capture_Handle CaptureCC32XX_open(Capture_Handle handle, Capture_Params *params)
     if (params == NULL ||
         params->callbackFxn == NULL) {
 
+        return (NULL);
+    }
+
+    /* Set the mode */
+    if (params->mode == Capture_RISING_EDGE) {
+
+        object->mode = TIMER_EVENT_POS_EDGE;
+    }
+    else if (params->mode == Capture_FALLING_EDGE) {
+
+        object->mode = TIMER_EVENT_NEG_EDGE;
+    }
+    else if (params->mode == Capture_ANY_EDGE) {
+
+        object->mode = TIMER_EVENT_BOTH_EDGES;
+    }
+    else {
+        /* Fail if Capture mode is not supported by device*/
         return (NULL);
     }
 
@@ -231,20 +249,6 @@ Capture_Handle CaptureCC32XX_open(Capture_Handle handle, Capture_Params *params)
     else {
 
         object->timer = TIMER_B;
-    }
-
-    /* Set the mode */
-    if (params->mode == Capture_RISING_EDGE) {
-
-        object->mode = TIMER_EVENT_POS_EDGE;
-    }
-    else if (params->mode == Capture_FALLING_EDGE) {
-
-        object->mode = TIMER_EVENT_NEG_EDGE;
-    }
-    else {
-
-        object->mode = TIMER_EVENT_BOTH_EDGES;
     }
 
     object->isRunning = false;

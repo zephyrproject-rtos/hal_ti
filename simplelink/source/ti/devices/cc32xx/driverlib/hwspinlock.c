@@ -244,7 +244,7 @@ uint32_t HwSpinLockTest(uint32_t ui32LockID, bool bCurrentStatus)
     //
     // Identify which register to read
     //
-    if(ui32LockID & 0xF > 4)
+    if((ui32LockID & 0xF) > 4)
     {
       ui32SemVal = ((HWREG(COMMON_REG_BASE +
                      COMMON_REG_O_SEMAPHORE_PREV_OWNER1) >> ui32BitPos ) & 0x3);

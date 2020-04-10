@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017, Texas Instruments Incorporated
+ * Copyright (c) 2016-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,10 +29,10 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** ============================================================================
+/*!****************************************************************************
  *  @file       SDFatFS.h
  *
- *  @brief      FATFS driver interface
+ *  @brief      File Allocation Table File System (FATFS) Driver
  *
  *  The SDFatFS header file should be included in an application as follows:
  *  @code
@@ -40,7 +40,8 @@
  *  #include <ti/drivers/SD.h>
  *  @endcode
  *
- *  # Operation #
+ *  @anchor ti_drivers_SDFatFS_Overview
+ *  # Overview #
  *
  *  The SDFatFS driver is designed to hook into FatFs by implementing a
  *  set of functions that FatFs needs to call to perform basic block data
@@ -60,20 +61,12 @@
  *  @code
  *  SDFatFS_Handle handle;
  *
- *  handle = SDFatFS_open(Board_SDFatFS0, driveNum, NULL);
+ *  handle = SDFatFS_open(CONFIG_SDFatFS0, driveNum, NULL);
  *  if (handle == NULL) {
  *      //Error opening SDFatFS driver
  *      while (1);
  *  }
  *  @endcode
- *
- *  # Implementation #
- *
- *  The SDFatFS driver interface module is joined (at link time) to a NULL
- *  terminated array of SDFatFS_Config data structures named *SDFatFS_config*.
- *  *SDFatFS_config* is implemented in the application with each entry being an
- *  instance of the driver. Each entry in *SDFatFS_config* contains a:
- *  - (void *) data object that contains internal driver data structures
  *
  *  # Instrumentation #
  *
@@ -90,10 +83,6 @@
 #ifndef ti_drivers_SDFatFS__include
 #define ti_drivers_SDFatFS__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 
 #include <ti/drivers/SD.h>
@@ -101,11 +90,15 @@ extern "C" {
 #include <third_party/fatfs/ff.h>
 #include <third_party/fatfs/diskio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!
  *  @brief SDFatFS Object
  *  The application must not access any member variables of this structure!
  */
-typedef struct SDFatFS_Object_ {
+typedef struct {
     uint_fast32_t driveNum;
     DSTATUS       diskState;
     FATFS         filesystem; /* FATFS data object */
@@ -113,15 +106,9 @@ typedef struct SDFatFS_Object_ {
 } SDFatFS_Object;
 
 /*!
- *  @brief A handle that is returned from a SDFatFS_open() call.
- */
-typedef struct SDFatFS_Config_      *SDFatFS_Handle;
-
-
-/*!
  *  @brief SDFatFS Global configuration
  *
- *  The SDFatFS_Config structure contains a single pointer used to characterize
+ *  The #SDFatFS_Config structure contains a single pointer used to characterize
  *  the SDFatFS driver implementation.
  *
  *  This structure needs to be defined before calling SDFatFS_init() and it must
@@ -129,10 +116,16 @@ typedef struct SDFatFS_Config_      *SDFatFS_Handle;
  *
  *  @sa SDFatFS_init()
  */
-typedef struct SDFatFS_Config_ {
+typedef struct {
     /*! Pointer to a SDFatFS object */
-    void       *object;
+    SDFatFS_Object *object;
 } SDFatFS_Config;
+
+
+/*!
+ *  @brief A handle that is returned from a SDFatFS_open() call.
+ */
+typedef SDFatFS_Config *SDFatFS_Handle;
 
 /*!
  *  @brief Function to open a SDFatFS instance on the specified drive.
@@ -141,7 +134,7 @@ typedef struct SDFatFS_Config_ {
  *  I/O functions with the FatFS module.
  *
  *  @param idx Logical peripheral number indexed into the HWAttrs
- *               table.
+ *             table.
  *  @param drive Drive Number
  */
 extern SDFatFS_Handle SDFatFS_open(uint_least8_t idx, uint_least8_t drive);
@@ -150,12 +143,12 @@ extern SDFatFS_Handle SDFatFS_open(uint_least8_t idx, uint_least8_t drive);
  *  @brief Function to close a SDFatFS instance specified by the SDFatFS
  *         handle.
  *
- *         This function unmounts the file system mounted by SDFatFS_open and
+ *         This function unmounts the file system mounted by SDFatFS_open() and
  *         unregisters the SDFatFS driver from the FatFs module.
  *
  *  @pre SDFatFS_open() had to be called first.
  *
- *  @param handle A SDFatFS handle returned from SDFatFS_open
+ *  @param handle A #SDFatFS_Handle returned from SDFatFS_open()
  *
  *  @sa SDFatFS_open()
  */

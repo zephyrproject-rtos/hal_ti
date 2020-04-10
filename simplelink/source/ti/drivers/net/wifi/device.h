@@ -179,10 +179,16 @@ typedef struct
 #define SL_DEVICE_GENERAL_PERSISTENT (5)
 #define SL_DEVICE_GENERAL_VERSION    (12)
 #define SL_DEVICE_FIPS_ZEROIZATION   (20)
+
+/* Under SL_DEVICE_GENERAL - Statistics */
+#define SL_DEVICE_STAT_WLAN_RX       (16)
+#define SL_DEVICE_STAT_PM            (14)
+
 /*
     Declare the different Options for SL_DEVICE_IOT in sl_DeviceGet and sl_DeviceSet
 */  
 #define SL_DEVICE_IOT_UDID              (41)
+#define SL_DEVICE_DICE_VERSION          (14)
 
 /* Events list to mask/unmask*/
 #define SL_DEVICE_EVENT_CLASS_DEVICE                     (1)
@@ -225,8 +231,6 @@ typedef struct
   
 /******************  FS CLASS  ****************/
   
-
-
 /*****************************************************************************/
 /* Structure/Enum declarations                                               */
 /*****************************************************************************/
@@ -294,6 +298,55 @@ typedef struct
 
 typedef void (*P_INIT_CALLBACK)(_u32 Status, SlDeviceInitInfo_t *DeviceInitInfo);
 
+/*  Device statistics structs  */
+typedef struct
+{
+    _u32 ReceivedValidPacketsNumber;                    /* sum of the packets that been received OK (include filtered) */
+    _u32 ReceivedFcsErrorPacketsNumber;                 /* sum of the packets that been dropped due to FCS error */
+    _u32 ReceivedAddressMismatchPacketsNumber;          /* sum of the packets that been received but filtered out by one of the HW filters */
+    _i16 AvarageDataCtrlRssi;                           /* average RSSI for all valid data packets received */
+    _i16 AvarageMgMntRssi;                              /* average RSSI for all valid management packets received */
+    _u16 RateHistogram[SL_WLAN_NUM_OF_RATE_INDEXES];    /* rate histogram for all valid packets received */
+    _u16 RssiHistogram[SL_WLAN_SIZE_OF_RSSI_HISTOGRAM]; /* RSSI histogram from -40 until -87 (all below and above\n RSSI will appear in the first and last cells) */
+    _u32 StartTimeStamp;                                /* the time stamp started collecting the statistics in uSec */
+    _u32 GetTimeStamp;                                  /* the time stamp called the get statistics command */
+}SlDeviceGetStat_t;
+
+typedef struct
+{
+    _u32 Disconnects;         // clear on read - disconnect count
+    _u32 TxFramesCount;       // clear on read - Tx Frame count
+    _u32 ReceivedBytesCount;  // clear on read
+    _u32 reserved[4];         // reserved for additional clear on read statistics
+}SlDeviceGetPmStatClrOnRdTypes_t;
+
+/*
+ * The following statistics are 64 bits represented as array of two 32 Bit
+ * where the first index is the LSB and the second index is MSB.
+ *
+ * For example: TimeMacAwake[0] = LSB, TimeMacAwake[1] = MSB,
+ *              TimeMacSleep[0] = LSB, TimeMacSleep[1] = MSB, etc.
+ *  */
+typedef struct
+{
+    _u32 TimeMacAwake[2];
+    _u32 TimeMacSleep[2];
+    _u32 TimeMacListen11B[2];
+    _u32 TimeNWPDeepSleep[2];
+    _u32 TimeNWPStandBy[2];
+    _u32 TimeNWPAwake[2];
+}SlDeviceGetPmStatAcc_t;
+
+
+typedef struct
+{
+    SlDeviceGetPmStatClrOnRdTypes_t PmClrOnRd; // Clear on read types
+    SlDeviceGetPmStatAcc_t          PmAcc;     // Accumulated types
+    _u32                            Reserved[4];
+    _u32                            StartTimeStamp;
+    _u32                            GetTimeStamp;
+}SlDeviceGetPmStat_t;
+
 /*****************************************************************************/
 /* Function prototypes                                                       */
 /*****************************************************************************/
@@ -324,8 +377,9 @@ typedef void (*P_INIT_CALLBACK)(_u32 Status, SlDeviceInitInfo_t *DeviceInitInfo)
                                         immediately.
 
     \return         Returns the current active role (STA/AP/P2P/TAG) or an error code:
-                    - ROLE_STA, ROLE_AP, ROLE_P2P, ROLE_TAG in case of success, 
-                      otherwise in failure one of the following is return:
+                    - ROLE_STA, ROLE_AP, ROLE_P2P, ROLE_TAG in case of success and when pInitCallBack is NULL (the third parameter),\n
+                    or, in case of pInitCallBack is not null - sl_start will return zero in case of success,
+                    otherwise in failure one of the following is return:
                     - SL_ERROR_ROLE_STA_ERR  (Failure to load MAC/PHY in STA role)
                     - SL_ERROR_ROLE_AP_ERR  (Failure to load MAC/PHY in AP role)
                     - SL_ERROR_ROLE_P2P_ERR  (Failure to load MAC/PHY in P2P role)
@@ -483,6 +537,7 @@ _i16 sl_DeviceSet(const _u8 DeviceSetId ,const _u8 Option,const _u16 ConfigLen,c
                                                     - SL_DEVICE_GENERAL_PERSISTENT   
                                                 - SL_DEVICE_IOT:
                                                     - SL_DEVICE_IOT_UDID
+                                                    - SL_DEVICE_DICE_VERSION 
                                         
     \param[out] pConfigLen   The length of the allocated memory as input, when the
                              function complete, the value of this parameter would be
@@ -552,6 +607,15 @@ _i16 sl_DeviceSet(const _u8 DeviceSetId ,const _u8 Option,const _u16 ConfigLen,c
         _i16 configLen = sizeof(_u8); 
         _i8 configOpt = SL_DEVICE_GENERAL_PERSISTENT;
         sl_DeviceGet(SL_DEVICE_GENERAL,&configOpt, &configLen,&persistent); 
+    \endcode
+    
+    - Getting DICE version:
+    \code
+        _i8 ver[2] = {0};
+        _i16 configSize = sizeof(ver);
+        _i8 configOpt = SL_DEVICE_DICE_VERSION;
+       
+        sl_DeviceGet(SL_DEVICE_IOT, &configOpt, &configSize,(uint8_t*)(&ver));
     \endcode
 
 */
@@ -746,11 +810,132 @@ _i16 sl_DeviceUartSetMode(const SlDeviceUartIfParams_t* pUartParams);
 _i32 sl_WifiConfig();
 
 /*!
+    \brief   Start collecting Device statistics (including RX statistics), for unlimited time.
+
+    \par Parameters  const _u32 Flags, for future use.
+    \return  Zero on success, or negative error code on failure
+
+    \sa      sl_DeviceStatStop      sl_DeviceStatGet
+    \warning This API should replace and extend the existing API of sl_WlanRxStatStart.
+             sl_WlanRxStatStart, sl_WlanRxStatStop and sl_WlanRxStatGet are deprecated API's
+             and exist only for backwards compatibility reasons.
+             The recommendation is to use ONLY sl_DeviceStatStart, sl_DeviceStatGet and sl_DeviceStatStop
+             API's.
+             The new APIs (sl_DeviceStat) contains all the capabilities of the deprecated APIs (sl_WlanRxStat).
+             PAY ATTENTION: Once the user starts to work with one of the API's flow (sl_WlanRxStat/sl_DeviceStat) 
+             the other cannot be called until sl_XXStatStop is called.
+             meaning:  sl_WlanRxStat flow and sl_DeviceStat flow cannot run at the same time.
+
+    \par     Example
+
+    - Getting Device statistics:
+    \code
+    void CollectStatistics()
+    {
+        SlDeviceGetStat_t deviceRXStat;     // this struct is equivalent to SlWlanGetRxStatResponse_t
+        SlDeviceGetPmStat_t devicePMStat; // PM statistics (new statistics)
+        int ret = 0;
+
+        ret = sl_DeviceStatStart(0);  // start statistics mode - only one mode can be use in parallel (as described above)
+        if (ret != 0)
+        {
+            //check ret error
+        }
+
+        sleep(1); // sleep for 1 sec
+
+        // this call is equivalent to sl_WlanRxStatGet(&rxStat,0)
+        ret = sl_DeviceStatGet(SL_DEVICE_STAT_WLAN_RX, sizeof(SlDeviceGetStat_t), &deviceRXStat); // statistics has been cleared upon read
+
+        if (ret != 0)
+        {
+            //check ret error
+        }
+
+        // new statistics
+        ret = sl_DeviceStatGet(SL_DEVICE_STAT_PM, sizeof(SlDeviceGetPmStat_t), &devicePMStat); // statistics has been cleared upon read
+        if (ret != 0)
+        {
+            //check ret error
+        }
+
+        // Use the statistics that has returned from the API's.
+
+        ret = sl_DeviceStatStop(0);
+        if (ret != 0)
+        {
+            //check ret error
+        }
+
+
+    }
+    \endcode
+*/
+_i16 sl_DeviceStatStart(const _u32 Flags); // start collecting the statistics
+/*!
+    \brief     Getting DEVICE statistics
+
+    \param[in] ConfigId -  configuration id
+                          - <b>SL_DEVICE_STAT_WLAN_RX</b>
+                          - <b>SL_DEVICE_STAT_PM</b>
+
+    \param[in]  length - length of output data
+
+    \param[out] buffer - buffer for the requested device statistics
+    \return     Zero on success, or negative error code on failure
+    \sa   sl_DeviceStatGet, sl_DeviceStatStart
+    \note
+            There is 2 prototypes of variable - Accumulated and Clear On Read.
+            -Accumulated data will be store from the init time of the system.
+            -Clear On Read data will be delete when
+            sl_DeviceStatGet(clear on read per ConfigId) or sl_DeviceStatStart(clear on read all the ConfigId's) are used.
+            The division between Accumulated and Clear On Read is at the internal struct.
+            For the Accumulated types store in: SlDeviceGetPmStatAcc_t struct.
+            and the Clear On Read types store in: SlDeviceGetPmStatClrOnRdTypes_t struct.
+
+
+    \warning
+    \par    Examples
+
+    - SL_DEVICE_STAT_WLAN_RX:
+    \code
+        SlDeviceGetStat_t deviceRXStat;
+        _u16 length = sizeof(SlDeviceGetStat_t);
+        sl_DeviceStatGet(SL_DEVICE_STAT_WLAN_RX, length, &deviceRXStat);
+    \endcode
+    <br>
+
+        - SL_DEVICE_STAT_PM:
+    \code
+        SlDeviceGetPmStat_t devicePMStat;
+        _u16 length = sizeof(SlDeviceGetPmStat_t);
+        sl_DeviceStatGet(SL_DEVICE_STAT_PM, length, &devicePMStat);
+    \endcode
+    <br>
+
+*/
+_i16 sl_DeviceStatGet(const _u16 ConfigId,_u16 length,void* buffer);
+/*!
+    \brief    Stop collecting Device statistic, (if previous called sl_DeviceStatStart)
+
+    \par Parameters  const _u32 Flags, for future use.
+
+    \return  Zero on success, or negative error code on failure
+
+    \sa       sl_DeviceStatStart      sl_DeviceStatGet
+
+    \warning  Cannot be use when sl_WlanRxStatStart in called.
+*/
+_i16 sl_DeviceStatStop(const _u32 Flags);
+
+
+/*!
 
  Close the Doxygen group.
  @}
 
  */
+
 
 
 #ifdef  __cplusplus

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018, Texas Instruments Incorporated
+ * Copyright (c) 2016-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -139,7 +139,7 @@ int_fast16_t SDHostCC32XX_write(SD_Handle handle, const void *buf,
     int_fast32_t sector, uint_fast32_t secCount);
 
 /* Local Functions */
-static void configDMAChannel(SD_Handle handle, uint_fast32_t channelSel,
+static inline void configDMAChannel(SD_Handle handle, uint_fast32_t channelSel,
     uint_fast32_t operation);
 static int_fast32_t deSelectCard(SD_Handle handle);
 static uint_fast32_t getPowerMgrId(uint_fast32_t baseAddr);
@@ -434,10 +434,8 @@ void SDHostCC32XX_init(SD_Handle handle)
 {
     SDHostCC32XX_Object *object = handle->object;
 
-    object->writeBuf = NULL;
-    object->readBuf = NULL;
-    object->writeSecCount = 0;
-    object->readSecCount = 0;
+    object->buffer = NULL;
+    object->sectorCount = 0;
     object->cardType = SD_NOCARD;
     object->isOpen = false;
 
@@ -497,7 +495,7 @@ SD_Handle SDHostCC32XX_open(SD_Handle handle, SD_Params *params)
     }
 
     SemaphoreP_Params_init(&semParams);
-    semParams.mode = SemaphoreP_Mode_BINARY;
+    semParams.mode = SemaphoreP_Mode_COUNTING;
     object->cmdSem = SemaphoreP_create(0, &semParams);
 
     if (object->cmdSem == NULL) {
@@ -545,7 +543,7 @@ int_fast16_t SDHostCC32XX_read(SD_Handle handle, void *buf,
     SDHostCC32XX_Object          *object  = handle->object;
     SDHostCC32XX_HWAttrsV1 const *hwAttrs = handle->hwAttrs;
 
-    object->stat = SD_STATUS_ERROR;
+    object->stat = SD_STATUS_SUCCESS;
 
     /* Check for valid sector count */
     if (secCount == 0) {
@@ -558,39 +556,41 @@ int_fast16_t SDHostCC32XX_read(SD_Handle handle, void *buf,
     }
 
     Power_setConstraint(PowerCC32XX_DISALLOW_LPDS);
-    DebugP_log1("SDHost:(%p) SDHostCC32XX_read set read power constraint",
-        hwAttrs->baseAddr);
 
     /* Set the block count */
     MAP_SDHostBlockCountSet(hwAttrs->baseAddr, secCount);
 
     /* If input buffer is word aligned use DMA */
-    if (!(((uint_fast32_t)buf) & 0x03)) {
-        object->readBuf = (uint_fast32_t *)buf;
-        object->readSecCount = secCount;
+    if (!(((uint32_t)buf) & 0x03)) {
+        object->buffer = (uint32_t *)buf;
+        object->sectorCount = secCount;
 
-        /* Configure Primary structure */
+        /* Configure ping */
         configDMAChannel(handle, UDMA_PRI_SELECT , UDMAREAD);
 
         /* Add offset to input buffer */
-        object->readBuf = (uint_fast32_t *)((uint_least8_t *)buf +
-            SECTORSIZE);
+        object->buffer = object->buffer + (SECTORSIZE / 4);
 
-        /* Configure alternate control structure */
-        configDMAChannel(handle, UDMA_ALT_SELECT , UDMAREAD);
+        /* Configure pong */
+        if (secCount > 1) {
+            configDMAChannel(handle, UDMA_ALT_SELECT , UDMAREAD);
+        }
 
-        MAP_SDHostIntClear(hwAttrs->baseAddr, SDHOST_INT_DMARD);
+        /*
+         * Enable DMA and transmit complete interrupts, reset ping and
+         * dmaPosted flags.
+         */
+        object->dmaPosted = false;
+        object->ping = false;
+        MAP_SDHostIntEnable(hwAttrs->baseAddr, SDHOST_INT_DMARD | SDHOST_INT_TC);
 
-        /* Send multi block read command */
+        /* Send multi block read command to the SD card */
         result = send_cmd(handle, CMD_READ_MULTI_BLK | SDHOST_DMA_EN, sector);
 
+        /* Wait for DMA read(s) to complete */
         if (result == SD_STATUS_SUCCESS) {
-            MAP_SDHostIntEnable(hwAttrs->baseAddr, SDHOST_INT_DMARD);
-
-            /* Wait for DMA read(s) to complete */
+            /* Any remaining DMA transfers are completed in the hwiFxn */
             SemaphoreP_pend(object->cmdSem, SemaphoreP_WAIT_FOREVER);
-
-            MAP_SDHostIntDisable(hwAttrs->baseAddr, SDHOST_INT_DMARD);
         }
     }
     /* Poll buffer for new data */
@@ -671,7 +671,7 @@ int_fast16_t SDHostCC32XX_write(SD_Handle handle, const void *buf,
     SDHostCC32XX_Object          *object  = handle->object;
     SDHostCC32XX_HWAttrsV1 const *hwAttrs = handle->hwAttrs;
 
-    object->stat = SD_STATUS_ERROR;
+    object->stat = SD_STATUS_SUCCESS;
 
     /* Check for valid sector count */
     if (secCount == 0) {
@@ -684,48 +684,52 @@ int_fast16_t SDHostCC32XX_write(SD_Handle handle, const void *buf,
     }
 
     Power_setConstraint(PowerCC32XX_DISALLOW_LPDS);
-    DebugP_log1("SDHost:(%p) SDHostCC32XX_write set write power"
-        " constraint", hwAttrs->baseAddr);
 
     /* Set the block count */
     MAP_SDHostBlockCountSet(hwAttrs->baseAddr, secCount);
 
-    /* Set the card write block count */
+    /* Set card write block erase count */
     result = send_cmd(handle, CMD_APP_CMD,  object->rca << 16);
-
-    if (result == SD_STATUS_SUCCESS) {
-        result = send_cmd(handle, CMD_SET_BLK_CNT, secCount);
+    if (result != SD_STATUS_SUCCESS) {
+        return (SD_STATUS_ERROR);
+    }
+    result = send_cmd(handle, CMD_SET_BLK_CNT, secCount);
+    if (result != SD_STATUS_SUCCESS) {
+        return (SD_STATUS_ERROR);
     }
 
-    /* If input buffer is word aligned use DMA */
+    /* If the write buffer is word aligned use the DMA */
     if (!(((uint_fast32_t)buf) & 0x03)) {
-        object->writeBuf = (uint_fast32_t *)buf;
-        object->writeSecCount = secCount;
+        object->buffer = (uint32_t *)buf;
+        object->sectorCount = secCount;
 
-        /* Configure Primary structure */
+        /* Configure ping */
         configDMAChannel(handle, UDMA_PRI_SELECT, UDMAWRITE);
 
         /* Add offset to input buffer */
-        object->writeBuf = (uint_fast32_t *)((uint_least8_t *)buf +
-            SECTORSIZE);
-        /* Configure alternate control structure */
-        configDMAChannel(handle, UDMA_ALT_SELECT, UDMAWRITE);
+        object->buffer = object->buffer + (SECTORSIZE / 4);
 
-        /* Verify that the block count had been previous set */
-        if (result == SD_STATUS_SUCCESS) {
-            result = send_cmd(handle, CMD_WRITE_MULTI_BLK | SDHOST_DMA_EN,
-                sector);
+        /* Configure pong */
+        if (secCount > 1) {
+            configDMAChannel(handle, UDMA_ALT_SELECT, UDMAWRITE);
         }
 
-        if (result == SD_STATUS_SUCCESS) {
-            /* Wait for DMA write(s) to complete */
-            MAP_SDHostIntEnable(hwAttrs->baseAddr, SDHOST_INT_DMAWR);
+        /*
+         * Enable DMA and transmit complete interrupts, reset ping and
+         * dmaPosted flags.
+         */
+        object->dmaPosted = false;
+        object->ping = false;
+        MAP_SDHostIntEnable(hwAttrs->baseAddr, SDHOST_INT_DMAWR | SDHOST_INT_TC);
 
+        /* Send write multi block command to the SD card */
+        result = send_cmd(handle, CMD_WRITE_MULTI_BLK | SDHOST_DMA_EN, sector);
+
+        /* Wait for the DMA to finish */
+        if (result == SD_STATUS_SUCCESS) {
+            /* Any remaining DMA transfers are completed in the hwiFxn */
             SemaphoreP_pend(object->cmdSem, SemaphoreP_WAIT_FOREVER);
-
-            MAP_SDHostIntDisable(hwAttrs->baseAddr, SDHOST_INT_DMAWR);
         }
-
     }
     else {
         /* Compute the number of words to write */
@@ -749,6 +753,7 @@ int_fast16_t SDHostCC32XX_write(SD_Handle handle, const void *buf,
                     SemaphoreP_pend(object->cmdSem, SemaphoreP_WAIT_FOREVER);
 
                     MAP_SDHostIntDisable(hwAttrs->baseAddr, SDHOST_INT_BWR);
+
                 }
                 else {
                     buf = (uint_least8_t *)buf + 4;
@@ -770,7 +775,7 @@ int_fast16_t SDHostCC32XX_write(SD_Handle handle, const void *buf,
 
     /* Verify host controller errors didn't occur */
     if (object->stat == SD_STATUS_SUCCESS) {
-        /* Wait for command transfer stop acknowledgement */
+        /* Wait for command transfer stop acknowledgment */
         result = send_cmd(handle, CMD_STOP_TRANS, NULLARG);
 
         if (result ==  SD_STATUS_SUCCESS) {
@@ -799,7 +804,7 @@ int_fast16_t SDHostCC32XX_write(SD_Handle handle, const void *buf,
  *  ping-pong mode.
  *  channelSel is the PRI or ALT channel select flag
  */
-static void configDMAChannel(SD_Handle handle, uint_fast32_t channelSel,
+static inline void configDMAChannel(SD_Handle handle, uint_fast32_t channelSel,
     uint_fast32_t operation)
 {
     unsigned long                 channelControlOptions;
@@ -816,11 +821,8 @@ static void configDMAChannel(SD_Handle handle, uint_fast32_t channelSel,
 
         /* Transfer size is the sector size in words */
         MAP_uDMAChannelTransferSet(hwAttrs->txChIdx | channelSel,
-            UDMA_MODE_PINGPONG, (void *)object->writeBuf,
+            UDMA_MODE_PINGPONG, (void *)object->buffer,
             (void *)(hwAttrs->baseAddr + MMCHS_O_DATA), SECTORSIZE / 4);
-
-        /* Enable the DMA channel */
-        MAP_uDMAChannelEnable(hwAttrs->txChIdx);
     }
     else {
         channelControlOptions = UDMA_SIZE_32 | UDMA_SRC_INC_NONE |
@@ -833,10 +835,7 @@ static void configDMAChannel(SD_Handle handle, uint_fast32_t channelSel,
         /* Transfer size is the sector size in words */
         MAP_uDMAChannelTransferSet(hwAttrs->rxChIdx | channelSel,
             UDMA_MODE_PINGPONG, (void *)(hwAttrs->baseAddr + MMCHS_O_DATA),
-            (void *)object->readBuf, SECTORSIZE / 4);
-
-        /* Enable the DMA channel */
-        MAP_uDMAChannelEnable(hwAttrs->rxChIdx);
+            (void *)object->buffer, SECTORSIZE / 4);
     }
 }
 
@@ -874,126 +873,133 @@ static uint_fast32_t getPowerMgrId(uint_fast32_t baseAddr)
 static void hwiIntFxn(uintptr_t handle)
 {
     uint_fast32_t                 ret;
-    uint_fast32_t                 priChannelMode;
-    uint_fast32_t                 altChannelMode;
     SDHostCC32XX_Object          *object = ((SD_Handle)handle)->object;
     SDHostCC32XX_HWAttrsV1 const *hwAttrs = ((SD_Handle)handle)->hwAttrs;
 
-    /* Get interrupt status */
+    /* Get interrupt and clear all interrupt flags */
     ret = MAP_SDHostIntStatus(hwAttrs->baseAddr);
+    MAP_SDHostIntClear(hwAttrs->baseAddr, ret);
 
-    /* Don't unblock if an error occurred */
+    /* Error or unsupported interrupt occurred */
     if (ret & SDHOST_INT_ERRI) {
-        /* Clear any spurious interrupts caused by the error */
-        MAP_SDHostIntClear(hwAttrs->baseAddr, SDHOST_INT_CC | SDHOST_INT_TC |
-            DATAERROR | CMDERROR);
-
-        /* Error or unsupported interrupt occurred */
         object->stat = SD_STATUS_ERROR;
         SemaphoreP_post(object->cmdSem);
+        return;
     }
+
     /* Command complete flag */
-    else if (ret & SDHOST_INT_CC) {
-        object->stat = SD_STATUS_SUCCESS;
-        MAP_SDHostIntClear(hwAttrs->baseAddr, SDHOST_INT_CC);
+    if (ret & SDHOST_INT_CC) {
+        if (object->stat != SD_STATUS_ERROR) {
+            object->stat = SD_STATUS_SUCCESS;
+        }
         SemaphoreP_post(object->cmdSem);
     }
-    /* DMA read complete flag */
-    else if (ret & SDHOST_INT_DMARD) {
-        object->readSecCount--;
 
-        priChannelMode = MAP_uDMAChannelModeGet(hwAttrs->rxChIdx |
-            UDMA_PRI_SELECT);
-        altChannelMode = MAP_uDMAChannelModeGet(hwAttrs->rxChIdx |
-            UDMA_ALT_SELECT);
+    /*
+     * DMA read and write interrupt flags. This interrupt is
+     * generated when a DMA channel finishes a transfer AND when
+     * the SD peripheral empties it's TX or RX buffer. Both events
+     * use the DMA WRITE or DMA READ interrupt flags respectively.
+     */
+    if (ret & (SDHOST_INT_DMARD | SDHOST_INT_DMAWR)) {
+        uint_fast32_t priChannelMode;
+        uint_fast32_t altChannelMode;
+        uint32_t channel = hwAttrs->txChIdx;
+        uint32_t operation = UDMAWRITE;
 
-        /* Corner case in which a DMA interrupt is missed, (both completed) */
-        if ((priChannelMode != UDMA_MODE_STOP) ||
-            (altChannelMode != UDMA_MODE_STOP)) {
-            MAP_SDHostIntClear(hwAttrs->baseAddr, SDHOST_INT_DMARD);
+        if (ret & SDHOST_INT_DMARD) {
+            channel = hwAttrs->rxChIdx;
+            operation = UDMAREAD;
         }
 
-        /* Check if transfer is complete */
-        if (object->readSecCount == 0) {
-            MAP_SDHostIntClear(hwAttrs->baseAddr, SDHOST_INT_DMARD);
+        priChannelMode = MAP_uDMAChannelModeGet(channel | UDMA_PRI_SELECT);
+        altChannelMode = MAP_uDMAChannelModeGet(channel | UDMA_ALT_SELECT);
 
-            object->stat = SD_STATUS_SUCCESS;
+        /*
+         * Differentiate between the SD peripheral emptying a buffer
+         * and a DMA channel completing a transfer. If neither DMA
+         * channel is stopped, then we wait for the next interrupt.
+         */
+        if (priChannelMode == UDMA_MODE_STOP ||
+            altChannelMode == UDMA_MODE_STOP) {
 
-            /* Reset to primary channel */
-            MAP_uDMAChannelAttributeDisable(hwAttrs->rxChIdx,
-                UDMA_ATTR_ALTSELECT);
-            SemaphoreP_post(object->cmdSem);
-        }
-        else {
-            /* Set-up next portion of buffer to be written to */
-            object->readBuf = object->readBuf + (SECTORSIZE / 4);
-
-            /* Check if primary channel completed */
-            if (priChannelMode == UDMA_MODE_STOP) {
-                configDMAChannel((SD_Handle)handle, UDMA_PRI_SELECT, UDMAREAD);
+            object->ping = !object->ping;
+            if (object->sectorCount != 0) {
+                object->sectorCount--;
             }
-            /* Secondary completed */
-            else {
-                configDMAChannel((SD_Handle)handle, UDMA_ALT_SELECT, UDMAREAD);
+
+            /*
+             * Check DMA transfers are complete,
+             * otherwise wait for the next interrupt
+             */
+            if (priChannelMode == UDMA_MODE_STOP &&
+                altChannelMode == UDMA_MODE_STOP &&
+                object->sectorCount != 0) {
+
+                /* Determine if multiple DMA transfers completed */
+                if (object->ping) {
+                    object->sectorCount--;
+                    object->ping = false;
+                }
+
+                /*
+                 * If sectorCount is 0, then we do not need to configure
+                 * any more DMA transfers.
+                 */
+                if(object->sectorCount != 0) {
+                    /* Configure the primary DMA channel */
+                    object->buffer = object->buffer + (SECTORSIZE / 4);
+                    configDMAChannel((SD_Handle) handle, UDMA_PRI_SELECT, operation);
+
+                    /* If more than 1 sector is left, configure pong */
+                    if (object->sectorCount > 1) {
+                        /* Configure the alternate DMA channel */
+                        object->buffer = object->buffer + (SECTORSIZE / 4);
+                        configDMAChannel((SD_Handle) handle, UDMA_ALT_SELECT, operation);
+                    }
+                }
+            }
+
+            /* If the DMA has transfered all sectors to the SD peripheral */
+            if (object->sectorCount == 0 && object->dmaPosted == false &&
+                priChannelMode == UDMA_MODE_STOP &&
+                altChannelMode == UDMA_MODE_STOP) {
+
+                if (object->stat != SD_STATUS_ERROR) {
+                    object->stat = SD_STATUS_SUCCESS;
+                }
+
+                /* Reset to primary channel and disable all DMA interrupts */
+                MAP_uDMAChannelAttributeDisable(channel, UDMA_ATTR_ALTSELECT);
+                MAP_SDHostIntDisable(hwAttrs->baseAddr, SDHOST_INT_DMAWR | SDHOST_INT_DMARD);
+                MAP_SDHostIntClear(hwAttrs->baseAddr, SDHOST_INT_DMAWR | SDHOST_INT_DMARD);
+                object->dmaPosted = true;
+                SemaphoreP_post(object->cmdSem);
             }
         }
     }
-    /* DMA write complete flag */
-    else if (ret & SDHOST_INT_DMAWR) {
-        object->writeSecCount--;
 
-        priChannelMode = MAP_uDMAChannelModeGet(hwAttrs->txChIdx |
-            UDMA_PRI_SELECT);
-        altChannelMode = MAP_uDMAChannelModeGet(hwAttrs->txChIdx |
-            UDMA_ALT_SELECT);
-
-        /* Corner case in which a DMA interrupt is missed (both completed) */
-        if ((priChannelMode != UDMA_MODE_STOP) ||
-            (altChannelMode != UDMA_MODE_STOP)) {
-            MAP_SDHostIntClear(hwAttrs->baseAddr, SDHOST_INT_DMAWR);
-        }
-
-        /* Check if transfer is complete */
-        if (object->writeSecCount == 0) {
-            MAP_SDHostIntClear(hwAttrs->baseAddr, SDHOST_INT_DMAWR);
-
+    /* Transfer complete flag */
+    if (ret & SDHOST_INT_TC) {
+        if (object->stat != SD_STATUS_ERROR) {
             object->stat = SD_STATUS_SUCCESS;
-
-            /* Reset to primary channel */
-            MAP_uDMAChannelAttributeDisable(hwAttrs->txChIdx,
-                UDMA_ATTR_ALTSELECT);
-            SemaphoreP_post(object->cmdSem);
         }
-        else {
-            /* Set-up next portion of buffer to be written to */
-            object->writeBuf = object->writeBuf + (SECTORSIZE / 4);
-
-            /* Check if primary channel completed */
-            if (priChannelMode == UDMA_MODE_STOP) {
-                configDMAChannel((SD_Handle)handle, UDMA_PRI_SELECT,
-                    UDMAWRITE);
-            }
-            /* Secondary completed */
-            else {
-                configDMAChannel((SD_Handle)handle, UDMA_ALT_SELECT,
-                    UDMAWRITE);
-            }
-        }
+        SemaphoreP_post(object->cmdSem);
     }
-    else {
-        /* Transfer complete flag */
-        if (ret & SDHOST_INT_TC) {
-            MAP_SDHostIntClear(hwAttrs->baseAddr, SDHOST_INT_TC);
+
+    /* Data buffer read ready flag */
+    if (ret & SDHOST_INT_BRR) {
+        if (object->stat != SD_STATUS_ERROR) {
+            object->stat = SD_STATUS_SUCCESS;
         }
-        /* Data buffer read ready flag */
-        else if (ret & SDHOST_INT_BRR) {
-            MAP_SDHostIntClear(hwAttrs->baseAddr, SDHOST_INT_BRR);
+        SemaphoreP_post(object->cmdSem);
+    }
+
+    /* Data buffer write ready flag */
+    if (ret & SDHOST_INT_BWR) {
+        if (object->stat != SD_STATUS_ERROR) {
+            object->stat = SD_STATUS_SUCCESS;
         }
-        /* Data buffer write ready flag */
-        else if (ret & SDHOST_INT_BWR) {
-            MAP_SDHostIntClear(hwAttrs->baseAddr, SDHOST_INT_BWR);
-        }
-        object->stat = SD_STATUS_SUCCESS;
         SemaphoreP_post(object->cmdSem);
     }
 }
@@ -1055,6 +1061,9 @@ static void initHw(SD_Handle handle)
     MAP_uDMAChannelAssign(hwAttrs->txChIdx);
     MAP_uDMAChannelAssign(hwAttrs->rxChIdx);
 
+    MAP_uDMAChannelEnable(hwAttrs->txChIdx);
+    MAP_uDMAChannelEnable(hwAttrs->rxChIdx);
+
     /* Enable SDHost Error Interrupts */
     MAP_SDHostIntEnable(hwAttrs->baseAddr, DATAERROR | CMDERROR);
 }
@@ -1083,11 +1092,11 @@ static int_fast32_t send_cmd(SD_Handle handle, uint_fast32_t cmd,
     SDHostCC32XX_Object          *object  = handle->object;
     SDHostCC32XX_HWAttrsV1 const *hwAttrs = handle->hwAttrs;
 
-    /* Send the command */
-    MAP_SDHostCmdSend(hwAttrs->baseAddr, cmd, arg);
-
     /* Enable command complete interrupts */
     MAP_SDHostIntEnable(hwAttrs->baseAddr, SDHOST_INT_CC);
+
+    /* Send the command */
+    MAP_SDHostCmdSend(hwAttrs->baseAddr, cmd, arg);
 
     SemaphoreP_pend(object->cmdSem, SemaphoreP_WAIT_FOREVER);
 

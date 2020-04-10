@@ -39,7 +39,7 @@ peripheral driver library functions will be accessible from ROM.
 2. CC32xx SDK
 
 The current version supported in Zephyr is the SimpleLink CC32xx SDK
-2.40.01.01, downloaded from:
+4.10.00.07, downloaded from:
 
 	http://www.ti.com/tool/download/simplelink-cc32xx-sdk
 
@@ -54,9 +54,21 @@ source/ti/ subdirectory of the SDK installation, as follows:
 	find net -maxdepth 1 -name '*.[c|h]' | cpio -pdm $EXT_DIR
 	cd $EXT_DIR
 	find . -name '*.[c|h]' -exec chmod 664 {} \;
+	find $EXT_DIR/devices/cc32xx -name '*.[c|h]' -exec dos2unix {} \;
+	find $EXT_DIR/drivers -name '*.[c|h]' -exec dos2unix {} \;
 
-In addition, some files in the drivers/net/wifi/porting directory
-may need to be updated: notably user.h, cc_pal.h, and CC3220SF_LAUNCHXL.c.
+When updating to a new SDK, a comparison of the files in the 'devices'
+and 'drivers' directories as copied above should be performed to pick up
+any new changes. Header files in source/ti/drivers/dpl should also be
+compared, both to pick up new changes and to ensure any modifications
+that were previously made are kept in place after the update if
+appropriate.
+
+In addition, some files in the source/ti/drivers/net/wifi/porting
+directory may need to be updated: notably user.h, cc_pal.c and cc_pal.h.
+Files in kernel/zephyr/dpl copied verbatim from kernel/nortos/dpl in the
+SDK, such as QueueP.h, QueueP_nortos.c and SwiP_nortos.c, should be
+compared to see if new changes have been introduced.
 
 Note: TI provides the driver library functions burned into ROM at the factory,
 or updated via a service pack patch, thus saving application code space.

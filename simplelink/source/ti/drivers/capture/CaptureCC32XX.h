@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
+ * Copyright (c) 2017-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,15 +52,17 @@
  *  TimerCC32XX_freeTimerResource is used. The application is not responsible
  *  for calling these allocation APIs directly.
  *
+ *  # Capture Modes #
+ *  This device implementation only works with the following  modes for
+ *  #Capture_Mode :
+ *    - #Capture_RISING_EDGE
+ *    - #Capture_FALLING_EDGE
+ *    - #Capture_ANY_EDGE
+ *  All other modes will fail.
  *******************************************************************************
  */
 #ifndef ti_drivers_capture_CaptureCC32XX__include
 #define ti_drivers_capture_CaptureCC32XX__include
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -70,6 +72,11 @@ extern "C"
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/devices/cc32xx/inc/hw_ints.h>
 #include <ti/devices/cc32xx/inc/hw_ocp_shared.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /*! \cond */
 /*
@@ -250,7 +257,7 @@ extern const Capture_FxnTable CaptureCC32XX_fxnTable;
  *  };
  *  @endcode
  */
-typedef struct CaptureCC32XX_HWAttrs_ {
+typedef struct {
     /*!  Specifies the input pin for the capture event. There are 17
          pins available as inputs for capture functionality. Each
          available pin must map to a specific general purpose timer
@@ -267,7 +274,7 @@ typedef struct CaptureCC32XX_HWAttrs_ {
  *
  *  The application must not access any member variables of this structure!
  */
-typedef struct CaptureCC32XX_Object_ {
+typedef struct {
     HwiP_Handle           hwiHandle;
     Power_NotifyObj       notifyObj;
     Capture_CallBackFxn   callBack;

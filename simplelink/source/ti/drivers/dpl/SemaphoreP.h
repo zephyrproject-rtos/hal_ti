@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,13 +56,13 @@
 #ifndef ti_dpl_SemaphoreP__include
 #define ti_dpl_SemaphoreP__include
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!
  *  @brief    Number of bytes greater than or equal to the size of any RTOS
@@ -97,7 +97,7 @@ typedef union SemaphoreP_Struct {
 /*!
  *  @brief    Status codes for SemaphoreP APIs (for backwards compatibility)
  */
-typedef enum SemaphoreP_Status {
+typedef enum {
     /*! API completed successfully */
     SemaphoreP_OK = 0,
     /*! API failed because of a timeout */
@@ -116,7 +116,7 @@ typedef  void *SemaphoreP_Handle;
 /*!
  *  @brief    Mode of the semaphore
  */
-typedef enum SemaphoreP_Mode {
+typedef enum {
     SemaphoreP_Mode_COUNTING = 0x0,
     SemaphoreP_Mode_BINARY   = 0x1
 } SemaphoreP_Mode;
@@ -130,7 +130,7 @@ typedef enum SemaphoreP_Mode {
  *  application sets the fields manually. The SemaphoreP default parameters are
  *  noted in SemaphoreP_Params_init.
  */
-typedef struct SemaphoreP_Params {
+typedef struct {
     SemaphoreP_Mode mode;   /*!< Mode for the semaphore */
     void (*callback)(void); /*!< Callback while pending for semaphore post */
 } SemaphoreP_Params;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017, Texas Instruments Incorporated
+ * Copyright (c) 2014-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -301,6 +301,9 @@ UART_Handle UARTCC32XXDMA_open(UART_Handle handle, UART_Params *params)
      */
 
     Power_setDependency(object->powerMgrId);
+
+    /* Do a software reset of the peripheral */
+    PowerCC32XX_reset(object->powerMgrId);
 
     Power_registerNotify(&object->postNotify, PowerCC32XX_AWAKE_LPDS,
             postNotifyFxn, (uintptr_t)handle);
@@ -614,18 +617,18 @@ int_fast32_t UARTCC32XXDMA_write(UART_Handle handle, const void *buffer,
 {
     uintptr_t             key;
     UARTCC32XXDMA_Object *object = handle->object;
+    UARTCC32XXDMA_HWAttrsV1 const *hwAttrs = handle->hwAttrs;
 
     /* DMA cannot handle transfer sizes > 1024 elements */
     if (size > MAXXFERSIZE) {
-        DebugP_log1("UART:(%p) Data size too large.",
-                ((UARTCC32XXDMA_HWAttrsV1 const *)(handle->hwAttrs))->baseAddr);
+        DebugP_log1("UART:(%p) Data size too large.", hwAttrs->baseAddr);
 
         return (UART_ERROR);
     }
 
     /* Disable preemption while checking if the uart is in use. */
     key = HwiP_disable();
-    if (object->writeSize) {
+    if (object->writeSize || UARTBusy(hwAttrs->baseAddr)) {
         HwiP_restore(key);
         DebugP_log1("UART:(%p) Could not write data, uart in use.",
                 ((UARTCC32XXDMA_HWAttrsV1 const *)(handle->hwAttrs))->baseAddr);

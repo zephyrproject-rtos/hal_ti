@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,9 +47,9 @@
  *  states and transition latencies for CC32XX.
  *
  *  A reference power policy is provided which can transition the MCU from the
- *  active state to one of two sleep states: LPDS or Sleep.
- *  The policy looks at the estimated idle time remaining, and the active
- *  constraints, and determine which sleep state to transition to.  The
+ *  active state to one of two sleep states: Low-Power Deep Sleep (LPDS) or
+ *  Sleep. The policy looks at the estimated idle time remaining, and the
+ *  active constraints, and determine which sleep state to transition to. The
  *  policy will give first preference to choosing LPDS, but if that is not
  *  appropriate (e.g., not enough idle time), it will choose Sleep.
  *
@@ -199,7 +199,7 @@ extern "C" {
 /* \endcond */
 
 /*! @brief  Used to specify parking of a pin during LPDS */
-typedef struct PowerCC32XX_ParkInfo {
+typedef struct {
     uint32_t pin;
     /*!< The pin to be parked */
     uint32_t parkState;
@@ -207,7 +207,7 @@ typedef struct PowerCC32XX_ParkInfo {
 } PowerCC32XX_ParkInfo;
 
 /*! @brief Power global configuration */
-typedef struct PowerCC32XX_ConfigV1 {
+typedef struct {
     /*! Initialization function for the power policy */
     Power_PolicyInitFxn policyInitFxn;
     /*! The power policy function */
@@ -268,7 +268,7 @@ typedef struct PowerCC32XX_ConfigV1 {
      *  An argument for this wakeup function can be specified via
      *  wakeupGPIOFxnLPDSArg.
      *
-     *  Note that this wakeup function will be called as one of the last steps
+     *  @note This wakeup function will be called as one of the last steps
      *  in Power_sleep(), after all notifications have been sent out, and after
      *  pins have been restored to their previous (non-parked) states.
      */
@@ -337,7 +337,7 @@ typedef struct PowerCC32XX_ConfigV1 {
  *  @cond NODOC
  *  NVIC registers that need to be saved before entering LPDS.
  */
-typedef struct PowerCC32XX_NVICRegisters {
+typedef struct {
     uint32_t vectorTable;
     uint32_t auxCtrl;
     uint32_t intCtrlState;
@@ -360,7 +360,7 @@ typedef struct PowerCC32XX_NVICRegisters {
  *  @cond NODOC
  *  MCU core registers that need to be save before entering LPDS.
  */
-typedef struct PowerCC32XX_MCURegisters {
+typedef struct {
     uint32_t msp;
     uint32_t psp;
     uint32_t psr;
@@ -375,7 +375,7 @@ typedef struct PowerCC32XX_MCURegisters {
  *  @cond NODOC
  *  Structure of context registers to save before entering LPDS.
  */
-typedef struct PowerCC32XX_SaveRegisters {
+typedef struct {
     PowerCC32XX_MCURegisters m4Regs;
     PowerCC32XX_NVICRegisters nvicRegs;
 } PowerCC32XX_SaveRegisters;
@@ -481,7 +481,7 @@ typedef enum {
  *  should fill a structure of this type, and pass it as the parameter
  *  to PowerCC32XX_configureWakeup() to specify the new wakeup settings.
  */
-typedef struct PowerCC32XX_Wakeup {
+typedef struct {
     /*! Enable GPIO as a wakeup source for LPDS */
     bool enableGPIOWakeupLPDS;
     /*! Enable GPIO as a wakeup source for shutdown */
@@ -555,7 +555,7 @@ typedef struct PowerCC32XX_Wakeup {
  *  @cond NODOC
  *  Internal structure defining Power module state.
  */
-typedef struct PowerCC32XX_ModuleState {
+typedef struct {
     List_List notifyList;
     uint32_t constraintMask;
     uint32_t state;
@@ -583,7 +583,7 @@ typedef struct PowerCC32XX_ModuleState {
  *  as a wakeup source for LPDS.  This overwrites any previous
  *  wakeup settings.
  *
- *  @param  wakeup      Settings applied to wakeup configuration
+ *  @param[in]  wakeup      Settings applied to wakeup configuration
  */
 void PowerCC32XX_configureWakeup(PowerCC32XX_Wakeup *wakeup);
 
@@ -596,7 +596,7 @@ void PowerCC32XX_initPolicy(void);
  *  This function allows an app to query the current LPDS and shutdown
  *  wakeup configuration settings.
  *
- *  @param  wakeup      A PowerCC32XX_Wakeup structure to be written into
+ *  @param[in]  wakeup      A #PowerCC32XX_Wakeup structure to be written into
  */
 void PowerCC32XX_getWakeup(PowerCC32XX_Wakeup *wakeup);
 
@@ -614,21 +614,30 @@ void PowerCC32XX_setParkState(PowerCC32XX_Pin pin, uint32_t level);
  *  @brief  Function to disable IO retention and unlock pin groups following
  *  exit from Shutdown.
  *
- *  PowerCC32XX_ConfigV1.ioRetentionShutdown can be used to specify locking and
- *  retention of pin groups during Shutdown.  Upon exit from Shutdown, and
+ *  #PowerCC32XX_ConfigV1.ioRetentionShutdown can be used to specify locking
+ *  and retention of pin groups during Shutdown. Upon exit from Shutdown, and
  *  when appropriate, an application can call this function, to
  *  correspondingly disable IO retention, and unlock the specified pin groups.
  *
- *  @param  groupFlags     A logical OR of one or more of the following
+ *  @param[in]  groupFlags     A logical OR of one or more of the following
  *  flags (defined in driverlib/prcm.h):
- *      PRCM_IO_RET_GRP_0 - all pins except sFlash and JTAG interface
- *      PRCM_IO_RET_GRP_1 - sFlash interface pins 11,12,13,14
- *      PRCM_IO_RET_GRP_2 - JTAG TDI and TDO interface pins 16,17
- *      PRCM_IO_RET_GRP_3 - JTAG TCK and TMS interface pins 19,20
+ *  @li @p PRCM_IO_RET_GRP_0 - all pins except sFlash and JTAG interface
+ *  @li @p PRCM_IO_RET_GRP_1 - sFlash interface pins 11,12,13,14
+ *  @li @p PRCM_IO_RET_GRP_2 - JTAG TDI and TDO interface pins 16,17
+ *  @li @p PRCM_IO_RET_GRP_3 - JTAG TCK and TMS interface pins 19,20
  */
 void PowerCC32XX_disableIORetention(unsigned long groupFlags);
 
-/*! OS-specific power policy function */
+/*!
+ *  @brief A reference power policy is provided which can transition the MCU
+ *  from the active state to one of two sleep states: Low-Power Deep Sleep
+ *  (LPDS) or Sleep.
+ *
+ *  The policy looks at the estimated idle time remaining, and the
+ *  active constraints, and determine which sleep state to transition to. The
+ *  policy will give first preference to choosing LPDS, but if that is not
+ *  appropriate (e.g., not enough idle time), it will choose Sleep.
+ */
 void PowerCC32XX_sleepPolicy(void);
 
 /*!
@@ -640,10 +649,10 @@ void PowerCC32XX_sleepPolicy(void);
  *  device-specific Power include file.  For example, the resources for
  *  CC32XX are defined in PowerCC32XX.h.
  *
- *  @param  resourceId      resource id
+ *  @param[in]  resourceId      resource id
  *
- *  @return Power_SOK on success,
- *          Power_EINVALIDINPUT if the reseourceId is invalid.
+ *  @retval  #Power_SOK on success,
+ *  @retval  #Power_EINVALIDINPUT if the reseourceId is invalid.
  *
  */
  int_fast16_t PowerCC32XX_reset(uint_fast16_t resourceId);

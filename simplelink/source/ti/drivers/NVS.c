@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -99,6 +99,14 @@ void NVS_init(void)
 }
 
 /*
+ *  ======== NVS_lock =======
+ */
+int_fast16_t NVS_lock(NVS_Handle handle, uint32_t timeout)
+{
+    return (handle->fxnTablePtr->lockFxn(handle, timeout));
+}
+
+/*
  *  ======== NVS_open =======
  */
 NVS_Handle NVS_open(uint_least8_t index, NVS_Params *params)
@@ -136,6 +144,14 @@ int_fast16_t NVS_read(NVS_Handle handle, size_t offset, void *buffer,
              size_t bufferSize)
 {
     return (handle->fxnTablePtr->readFxn(handle, offset, buffer, bufferSize));
+}
+
+/*
+ *  ======== NVS_unlock =======
+ */
+void NVS_unlock(NVS_Handle handle)
+{
+    handle->fxnTablePtr->unlockFxn(handle);
 }
 
 /*

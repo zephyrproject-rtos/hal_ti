@@ -708,7 +708,7 @@ _i32   sl_FsProgram(const _u8*  pData , _u16 DataLen ,const _u8 * pKey ,  _u32 F
     }
     else if( (DataLen> 0)  && ( pData == NULL))
     {
-       return( ((_i32)SL_ERROR_FS_WRONG_INPUT_SIZE) << 16 );
+       return (SL_ERROR_FS_WRONG_INPUT_SIZE_INTERNAL_SHIFTED_16_LEFT);
     }
     else if( (DataLen == 0) && (pKey != NULL) )
     {
@@ -723,7 +723,7 @@ _i32   sl_FsProgram(const _u8*  pData , _u16 DataLen ,const _u8 * pKey ,  _u32 F
     {
         if( (DataLen & 0xF) > 0)
         {
-            return( ((_i32)SL_ERROR_FS_NOT_16_ALIGNED) << 16 );
+            return (SL_ERROR_FS_NOT_16_ALIGNED_INTERNAL_SHIFTED_16_LEFT);
         }
         Msg.Cmd.Flags = Flags;
 

@@ -531,6 +531,7 @@ extern "C" {
 #define SL_ERROR_FS_PROGRAMMING_NOT_STARTED                             (-10276L)
 #define SL_ERROR_FS_IMAGE_EXTRACT_NO_FILE_SYSTEM                        (-10277L)
 #define SL_ERROR_FS_WRONG_INPUT_SIZE                                    (-10278L)
+#define SL_ERROR_FS_WRONG_INPUT_SIZE_INTERNAL_SHIFTED_16_LEFT           (-673579008L)
 #define SL_ERROR_FS_BUNDLE_FILE_SHOULD_BE_CREATED_WITH_FAILSAFE         (-10279L)
 #define SL_ERROR_FS_BUNDLE_NOT_CONTAIN_FILES                            (-10280L)
 #define SL_ERROR_FS_BUNDLE_ALREADY_IN_STATE                             (-10281L)
@@ -544,6 +545,7 @@ extern "C" {
 #define SL_ERROR_FS_WRONG_SIGNATURE_SECURITY_ALERT                      (-10289L)
 #define SL_ERROR_FS_WRONG_SIGNATURE_OR_CERTIFIC_NAME_LENGTH             (-10290L)
 #define SL_ERROR_FS_NOT_16_ALIGNED                                      (-10291L)
+#define SL_ERROR_FS_NOT_16_ALIGNED_INTERNAL_SHIFTED_16_LEFT             (-674430976L)
 #define SL_ERROR_FS_CERT_CHAIN_ERROR_SECURITY_ALERT                     (-10292L)
 #define SL_ERROR_FS_FILE_NAME_EXIST                                     (-10293L)
 #define SL_ERROR_FS_EXTENDED_BUF_ALREADY_ALLOC                          (-10294L)
@@ -747,6 +749,15 @@ extern "C" {
 
 /* SPI/UART interface closed */
 #define SL_RET_CODE_INTERFACE_CLOSED                                    (-2021L)
+
+/* In case of RX start was called and device statistics is already running.
+ * RX and device statistics cannot run in parallel*/
+#define SL_RET_CODE_DEVICE_STAT_IN_PROGRESS                             (-2022L)
+#define SL_RET_CODE_WLAN_RX_STAT_IN_PROGRESS                            (-2023L)
+
+/* In case of StartTLS API was called already on the same socket and it's
+ * still in progress */
+#define SL_RET_CODE_STARTTLS_IN_PROGRESS_ON_THIS_SD                     (-2024L)
 
 #ifdef  __cplusplus
 }

@@ -364,7 +364,7 @@ _i32 sl_FsOpen(const _u8 *pFileName,const _u32 AccessModeAndMaxSize,_u32 *pToken
 
     \param[in]      FileHdl               Pointer to the file (assigned from sl_FsOpen)
     \param[in]      pCeritificateFileName Certificate file, or NULL if irrelevant.
-    \param[in]      pSignature            The signature is SHA-1, the certificate chain may include SHA-256
+    \param[in]      pSignature            The signature is either SHA-1 or SHA-256, the certificate chain may include SHA-256
     \param[in]      SignatureLen          The signature actual length
 
     \return         Zero on success, or a negative value if an error occurred

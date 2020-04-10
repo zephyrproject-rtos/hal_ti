@@ -2022,13 +2022,13 @@ void PRCMCC3200MCUInit()
     HWREG(0x4402E184) |= 0x2;
 
     //
-    // Change UART pins(55,57) mode to PIN_MODE_0 if they are in PIN_MODE_1
+    // Change UART pins(55,57) mode to PIN_MODE_0 if they are in PIN_MODE_3
     //
-    if (PinModeGet(PIN_55) == PIN_MODE_1)
+    if (PinModeGet(PIN_55) == PIN_MODE_3)
     {
         PinModeSet(PIN_55,PIN_MODE_0);
     }
-    if (PinModeGet(PIN_57) == PIN_MODE_1)
+    if (PinModeGet(PIN_57) == PIN_MODE_3)
     {
         PinModeSet(PIN_57,PIN_MODE_0);
     }
@@ -2604,11 +2604,12 @@ unsigned long PRCMDeviceTypeGet()
     }
     else if( ulDevMajorVer == 0x2 )
     {
-      ulDevType  |= (PRCM_DEV_TYPE_FLAG_PRE_PROD|PRCM_DEV_TYPE_FLAG_3220);
+            ulDevType |=
+                    (PRCM_DEV_TYPE_FLAG_PRE_PROD | PRCM_DEV_TYPE_FLAG_3220);
       
       if( ((ulDevType & PRCM_DEV_TYPE_FLAG_Z) != 0) )
       {
-        if((ulDevMinorVer == 0x0))
+                if (ulDevMinorVer == 0x0)
         {
           ulDevType |= PRCM_DEV_TYPE_FLAG_REV1; 
         }
@@ -2619,7 +2620,7 @@ unsigned long PRCMDeviceTypeGet()
       }
       else
       {
-        if((ulDevMinorVer == 0x1))
+                if (ulDevMinorVer == 0x1)
         {
           ulDevType |= PRCM_DEV_TYPE_FLAG_REV1;
         }
@@ -2627,11 +2628,12 @@ unsigned long PRCMDeviceTypeGet()
     }
     else
     {
-      if( (ulDevMinorVer == 0x4))
+            if (ulDevMinorVer == 0x4)
       {
         if( ((ulDevType & PRCM_DEV_TYPE_FLAG_Z) != 0))
         {
-          ulDevType |= (PRCM_DEV_TYPE_FLAG_PRE_PROD|PRCM_DEV_TYPE_FLAG_3220);
+                    ulDevType |= (PRCM_DEV_TYPE_FLAG_PRE_PROD
+                            | PRCM_DEV_TYPE_FLAG_3220);
         }
         else
         {
@@ -2640,7 +2642,8 @@ unsigned long PRCMDeviceTypeGet()
       }
       else
       {
-        ulDevType |= (PRCM_DEV_TYPE_FLAG_PRE_PROD|PRCM_DEV_TYPE_FLAG_3200);
+                ulDevType |= (PRCM_DEV_TYPE_FLAG_PRE_PROD
+                        | PRCM_DEV_TYPE_FLAG_3200);
       }
     }	  
   }

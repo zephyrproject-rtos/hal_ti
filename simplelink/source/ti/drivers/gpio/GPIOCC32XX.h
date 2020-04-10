@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
  *  ### CC32xx GPIO Driver Configuration #
  *
  *  In order to use the GPIO APIs, the application is required
- *  to provide 3 structures in the Board.c file:
+ *  to provide 3 structures in the ti_drivers_config.c file:
  *
  *  1.  An array of @ref GPIO_PinConfig elements that defines the
  *  initial configuration of each pin used by the application. A
@@ -142,12 +142,12 @@
 #ifndef ti_drivers_GPIOCC32XX__include
 #define ti_drivers_GPIOCC32XX__include
 
+#include <stdint.h>
+#include <ti/drivers/GPIO.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
-#include <ti/drivers/GPIO.h>
 
 /*!
  *  @brief  GPIO device specific driver configuration structure
@@ -173,7 +173,7 @@ extern "C" {
  *  };
  *  @endcode
  */
-typedef struct GPIOCC32XX_Config {
+typedef struct {
     /*! Pointer to the board's GPIO_PinConfig array */
     GPIO_PinConfig  *pinConfigs;
 
@@ -212,39 +212,39 @@ typedef struct GPIOCC32XX_Config {
 */
 #define GPIOCC32XX_EMPTY_PIN  0x0000    /*!< @hideinitializer */
 
-#define GPIOCC32XX_GPIO_00    0x0001    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_01    0x0002    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_02    0x0004    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_03    0x0008    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_04    0x0010    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_05    0x0020    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_06    0x0040    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_07    0x0080    /*!< @hideinitializer */
+#define GPIOCC32XX_GPIO_00    0x0001    /*!< PIN 50 */
+#define GPIOCC32XX_GPIO_01    0x0002    /*!< PIN 55 */
+#define GPIOCC32XX_GPIO_02    0x0004    /*!< PIN 57 */
+#define GPIOCC32XX_GPIO_03    0x0008    /*!< PIN 58 */
+#define GPIOCC32XX_GPIO_04    0x0010    /*!< PIN 59 */
+#define GPIOCC32XX_GPIO_05    0x0020    /*!< PIN 60 */
+#define GPIOCC32XX_GPIO_06    0x0040    /*!< PIN 61 */
+#define GPIOCC32XX_GPIO_07    0x0080    /*!< PIN 62 */
 
-#define GPIOCC32XX_GPIO_08    0x0101    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_09    0x0102    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_10    0x0104    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_11    0x0108    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_12    0x0110    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_13    0x0120    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_14    0x0140    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_15    0x0180    /*!< @hideinitializer */
+#define GPIOCC32XX_GPIO_08    0x0101    /*!< PIN 63 */
+#define GPIOCC32XX_GPIO_09    0x0102    /*!< PIN 64 */
+#define GPIOCC32XX_GPIO_10    0x0104    /*!< PIN 1  */
+#define GPIOCC32XX_GPIO_11    0x0108    /*!< PIN 2  */
+#define GPIOCC32XX_GPIO_12    0x0110    /*!< PIN 3  */
+#define GPIOCC32XX_GPIO_13    0x0120    /*!< PIN 4  */
+#define GPIOCC32XX_GPIO_14    0x0140    /*!< PIN 5  */
+#define GPIOCC32XX_GPIO_15    0x0180    /*!< PIN 6  */
 
-#define GPIOCC32XX_GPIO_16    0x0201    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_17    0x0202    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_22    0x0240    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_23    0x0280    /*!< @hideinitializer */
+#define GPIOCC32XX_GPIO_16    0x0201    /*!< PIN 7  */
+#define GPIOCC32XX_GPIO_17    0x0202    /*!< PIN 8  */
+#define GPIOCC32XX_GPIO_22    0x0240    /*!< PIN 15 */
+#define GPIOCC32XX_GPIO_23    0x0280    /*!< PIN 16 */
 
-#define GPIOCC32XX_GPIO_24    0x0301    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_25    0x0302    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_26    0x0304    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_27    0x0308    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_28    0x0310    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_29    0x0320    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_30    0x0340    /*!< @hideinitializer */
-#define GPIOCC32XX_GPIO_31    0x0380    /*!< @hideinitializer */
+#define GPIOCC32XX_GPIO_24    0x0301    /*!< PIN 17 */
+#define GPIOCC32XX_GPIO_25    0x0302    /*!< PIN 21 */
+#define GPIOCC32XX_GPIO_26    0x0304    /*!< PIN 29 */
+#define GPIOCC32XX_GPIO_27    0x0308    /*!< PIN 30 */
+#define GPIOCC32XX_GPIO_28    0x0310    /*!< PIN 18 */
+#define GPIOCC32XX_GPIO_29    0x0320    /*!< PIN 20 */
+#define GPIOCC32XX_GPIO_30    0x0340    /*!< PIN 53 */
+#define GPIOCC32XX_GPIO_31    0x0380    /*!< PIN 45 */
 
-#define GPIOCC32XX_GPIO_32    0x0401    /*!< @hideinitializer */
+#define GPIOCC32XX_GPIO_32    0x0401    /*!< PIN 52 */
 /** @} */
 
 /**
