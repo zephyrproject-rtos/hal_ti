@@ -50,21 +50,7 @@ extern "C" {
 #include <ti/drivers/dpl/ClockP.h>
 #if defined(SL_PLATFORM_MULTI_THREADED)
 /* Use Zephyr posix headers */
-
-/*
- * Hacks to prevent redefining symbols in posix headers. Currently it is not
- * possible to include both socket.h and some posix headers without build
- * errors (issue #13444). So we are disabling some headers, and defining
- * only what is necessary. We should remove these when the POSIX integration
- * story has improved.
- */
-#define ZEPHYR_INCLUDE_POSIX_TIME_H_
-#define ZEPHYR_INCLUDE_POSIX_UNISTD_H_
-#define ZEPHYR_INCLUDE_POSIX_SYS_STAT_H_
-#include <time.h>
-extern int clock_gettime(clockid_t clock_id, struct timespec *ts);
-extern int usleep(useconds_t useconds);
-
+#include <posix/time.h>
 #include <posix/pthread.h>
 #include <posix/semaphore.h>
 #include <posix/unistd.h>
