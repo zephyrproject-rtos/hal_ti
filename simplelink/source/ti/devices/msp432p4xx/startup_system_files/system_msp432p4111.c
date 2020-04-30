@@ -69,7 +69,7 @@
 //     <12000000> 12 MHz
 //     <24000000> 24 MHz
 //     <48000000> 48 MHz
-#define  __SYSTEM_CLOCK    DT_ARM_CORTEX_M4F_0_CLOCK_FREQUENCY
+#define  __SYSTEM_CLOCK    DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency)
 
 /*--------------------- Power Regulator Configuration -----------------------*/
 //  Power Regulator Mode
