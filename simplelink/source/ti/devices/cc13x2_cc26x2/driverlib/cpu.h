@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       cpu.h
-*  Revised:        2018-06-04 16:10:13 +0200 (Mon, 04 Jun 2018)
-*  Revision:       52111
+*  Revised:        2019-05-27 15:23:10 +0200 (Mon, 27 May 2019)
+*  Revision:       55701
 *
 *  Description:    Defines and prototypes for the CPU instruction wrapper
 *                  functions.
@@ -353,7 +353,7 @@ CPUbasepriSet(uint32_t ui32NewBasepri)
     msr     BASEPRI, r0;
     bx      lr
 }
-#elif defined(__TI_COMPILER_VERSION__)
+#elif (defined(__TI_COMPILER_VERSION__) || defined(__clang__))
 __STATIC_INLINE void
 CPUbasepriSet(uint32_t ui32NewBasepri)
 {

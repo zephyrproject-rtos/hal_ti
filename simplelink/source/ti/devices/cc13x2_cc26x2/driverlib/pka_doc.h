@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       pka_doc.h
-*  Revised:        2017-06-05 12:13:49 +0200 (Mon, 05 Jun 2017)
-*  Revision:       49096
+*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
+*  Revision:       56760
 *
 *  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 *  All rights reserved.

@@ -1,11 +1,9 @@
 /******************************************************************************
 *  Filename:       rf_mailbox.h
-*  Revised:        2018-11-02 11:52:02 +0100 (Fri, 02 Nov 2018)
-*  Revision:       18756
 *
 *  Description:    Definitions for interface between system and radio CPU
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

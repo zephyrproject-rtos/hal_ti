@@ -13,10 +13,18 @@ zephyr_library_sources(
   driverlib/aux_sysif.c
   # Required for CPUdelay which is not in ROM
   driverlib/cpu.c
-  # Required for RFCDoorbellSendTo which is not in ROM
-  driverlib/rfc.c
   # Required functions to support the TI Power module
   driverlib/sys_ctrl.c
   driverlib/osc.c
   driverlib/driverlib_release.c
   )
+
+if(CONFIG_SOC_CC1352R)
+  # Required for RFCDoorbellSendTo which is not in ROM
+  set_source_files_properties(driverlib/rfc.c
+    PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC13X2;${COMPILER}" )
+elseif(CONFIG_SOC_CC2652R)
+  # Required for RFCDoorbellSendTo which is not in ROM
+  set_source_files_properties(driverlib/rfc.c
+    PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC26X2;${COMPILER}" )
+endif()

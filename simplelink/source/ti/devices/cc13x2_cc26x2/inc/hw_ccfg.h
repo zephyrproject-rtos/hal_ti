@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_ccfg_h
-*  Revised:        2018-10-19 08:48:09 +0200 (Fri, 19 Oct 2018)
-*  Revision:       52957
+*  Revised:        2019-04-01 09:23:38 +0200 (Mon, 01 Apr 2019)
+*  Revision:       55513
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -139,6 +139,28 @@
 // Register: CCFG_O_MODE_CONF_1
 //
 //*****************************************************************************
+// Field:    [31] TCXO_TYPE
+//
+// Selects the TCXO type.
+//
+// 0: CMOS type. Internal common-mode bias will not be enabled.
+// 1: Clipped-sine type. Internal common-mode bias will be enabled when TCXO is
+// used.
+//
+// Bit field value is only valid if MODE_CONF.XOSC_FREQ=0.
+#define CCFG_MODE_CONF_1_TCXO_TYPE                                  0x80000000
+#define CCFG_MODE_CONF_1_TCXO_TYPE_BITN                                     31
+#define CCFG_MODE_CONF_1_TCXO_TYPE_M                                0x80000000
+#define CCFG_MODE_CONF_1_TCXO_TYPE_S                                        31
+
+// Field: [30:24] TCXO_MAX_START
+//
+// Maximum TCXO startup time in units of 100us.
+// Bit field value is only valid if MODE_CONF.XOSC_FREQ=0.
+#define CCFG_MODE_CONF_1_TCXO_MAX_START_W                                    7
+#define CCFG_MODE_CONF_1_TCXO_MAX_START_M                           0x7F000000
+#define CCFG_MODE_CONF_1_TCXO_MAX_START_S                                   24
+
 // Field: [23:20] ALT_DCDC_VMIN
 //
 // Minimum voltage for when DC/DC should be used if alternate DC/DC setting is
@@ -173,12 +195,12 @@
 // Inductor peak current if alternate DC/DC setting is enabled
 // (SIZE_AND_DIS_FLAGS.DIS_ALT_DCDC_SETTING=0). Assuming 10uH external
 // inductor!
-// Peak current = 31 + ( 4 * ALT_DCDC_IPEAK ) :
-// 0: 31mA (min)
+//
+// 0: 46mA (min)
 // ...
-// 4: 47mA
+// 4: 70mA
 // ...
-// 7: 59mA (max)
+// 7: 87mA (max)
 #define CCFG_MODE_CONF_1_ALT_DCDC_IPEAK_W                                    3
 #define CCFG_MODE_CONF_1_ALT_DCDC_IPEAK_M                           0x00070000
 #define CCFG_MODE_CONF_1_ALT_DCDC_IPEAK_S                                   16
@@ -232,11 +254,7 @@
 
 // Field:     [3] DIS_TCXO
 //
-// Disable TCXO.
-// 0: TCXO functionality enabled.
-// 1: TCXO functionality disabled.
-// Note:
-// An external TCXO is required if DIS_TCXO = 0.
+// Deprecated. Must be set to 1.
 #define CCFG_SIZE_AND_DIS_FLAGS_DIS_TCXO                            0x00000008
 #define CCFG_SIZE_AND_DIS_FLAGS_DIS_TCXO_BITN                                3
 #define CCFG_SIZE_AND_DIS_FLAGS_DIS_TCXO_M                          0x00000008
@@ -368,16 +386,16 @@
 //                          EXT_LF_CLK.DIO. The RTC tick speed
 //                          AON_RTC:SUBSECINC is updated to
 //                          EXT_LF_CLK.RTC_INCREMENT (done in the
-//                          trimDevice() xxWare boot function). External
-//                          clock must always be running when the chip is
-//                          in standby for VDDR recharge timing.
-// XOSC_HF_DLF              31.25kHz clock derived from 24MHz XOSC (dividing
-//                          by 768 in HW). The RTC tick speed
-//                          [AON_RTC.SUBSECINC.*] is updated to 0x8637BD,
-//                          corresponding to a 31.25kHz clock (done in the
-//                          trimDevice() xxWare boot function). Standby
-//                          power mode is not supported when using this
-//                          clock source.
+//                          SetupTrimDevice() driverlib boot function).
+//                          External clock must always be running when the
+//                          chip is in standby for VDDR recharge timing.
+// XOSC_HF_DLF              31.25kHz clock derived from 48MHz XOSC or HPOSC.
+//                          The RTC tick speed AON_RTC:SUBSECINC is updated
+//                          to 0x8637BD, corresponding to a 31.25kHz clock
+//                          (done in the SetupTrimDevice() driverlib boot
+//                          function). The device must be blocked from
+//                          entering Standby mode when using this clock
+//                          source.
 #define CCFG_MODE_CONF_SCLK_LF_OPTION_W                                      2
 #define CCFG_MODE_CONF_SCLK_LF_OPTION_M                             0x00C00000
 #define CCFG_MODE_CONF_SCLK_LF_OPTION_S                                     22
@@ -415,17 +433,23 @@
 
 // Field: [19:18] XOSC_FREQ
 //
-// Selects high precision HF oscillator (activated when using the radio).
+// Selects which high frequency oscillator is used (required for radio usage).
 // ENUMs:
-// 24M                      24 MHz XOSC_HF
+// 24M                      24 MHz XOSC_HF. Not supported.
 // 48M                      48 MHz XOSC_HF
-// HPOSC                    HPOSC
+// HPOSC                    Internal high precision oscillator.
+// TCXO                     External 48Mhz TCXO.
+//                          Refer to
+//                          MODE_CONF_1.TCXO_MAX_START and
+//                          MODE_CONF_1.TCXO_TYPE bit fields for additional
+//                          configuration of TCXO.
 #define CCFG_MODE_CONF_XOSC_FREQ_W                                           2
 #define CCFG_MODE_CONF_XOSC_FREQ_M                                  0x000C0000
 #define CCFG_MODE_CONF_XOSC_FREQ_S                                          18
 #define CCFG_MODE_CONF_XOSC_FREQ_24M                                0x000C0000
 #define CCFG_MODE_CONF_XOSC_FREQ_48M                                0x00080000
 #define CCFG_MODE_CONF_XOSC_FREQ_HPOSC                              0x00040000
+#define CCFG_MODE_CONF_XOSC_FREQ_TCXO                               0x00000000
 
 // Field:    [17] XOSC_CAP_MOD
 //

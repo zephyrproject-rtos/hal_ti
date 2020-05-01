@@ -59,13 +59,14 @@ extern "C"
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../inc/hw_types.h"
-#include "../inc/hw_memmap.h"
-#include "../inc/hw_rfc_pwr.h"
-#include "../inc/hw_rfc_dbell.h"
-#include "../inc/hw_fcfg1.h"
-#include "../inc/hw_adi_3_refsys.h"
-#include "../inc/hw_adi.h"
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(inc/hw_types.h)
+#include DeviceFamily_constructPath(inc/hw_memmap.h)
+#include DeviceFamily_constructPath(inc/hw_rfc_pwr.h)
+#include DeviceFamily_constructPath(inc/hw_rfc_dbell.h)
+#include DeviceFamily_constructPath(inc/hw_fcfg1.h)
+#include DeviceFamily_constructPath(inc/hw_adi_3_refsys.h)
+#include DeviceFamily_constructPath(inc/hw_adi.h)
 #include "rf_common_cmd.h"
 #include "rf_prop_cmd.h"
 #include "rf_ble_cmd.h"
@@ -80,9 +81,9 @@ typedef struct {
 
 // Definition of maximum search depth used by the RFCOverrideUpdate function
 #define RFC_MAX_SEARCH_DEPTH     5
-#define RFC_PA_TYPE_ADDRESS		 0x21000345
+#define RFC_PA_TYPE_ADDRESS		 0x21000385
 #define RFC_PA_TYPE_MASK 		 0x04
-#define RFC_PA_GAIN_ADDRESS		 0x2100034C
+#define RFC_PA_GAIN_ADDRESS		 0x21000398
 #define RFC_PA_GAIN_MASK		 0x003FFFFF
 #define RFC_FE_MODE_ESCAPE_VALUE 0xFF
 #define RFC_FE_OVERRIDE_ADDRESS  0x0703
@@ -411,7 +412,7 @@ extern uint32_t RFCAnaDivTxOverride(uint8_t loDivider, uint8_t frontEndMode);
 //
 //*****************************************************************************
 #if !defined(DRIVERLIB_NOROM) && !defined(DOXYGEN)
-    #include "../driverlib/rom.h"
+    #include DeviceFamily_constructPath(driverlib/rom.h)
     #ifdef ROM_RFCCpeIntGetAndClear
         #undef  RFCCpeIntGetAndClear
         #define RFCCpeIntGetAndClear            ROM_RFCCpeIntGetAndClear

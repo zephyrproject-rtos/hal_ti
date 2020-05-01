@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,13 +52,13 @@
 #ifndef ti_drivers_power_PowerCC26XX_
 #define ti_drivers_power_PowerCC26XX_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/dpl/ClockP.h>
 #include <ti/drivers/Power.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* \cond */
 typedef uint8_t PowerCC26XX_Resource; /* Resource identifier */
@@ -319,14 +319,14 @@ typedef uint8_t PowerCC26XX_Resource; /* Resource identifier */
 
 /* \cond */
 /*! @brief Power resource database record format */
-typedef struct PowerCC26XX_ResourceRecord {
+typedef struct {
     uint8_t flags;          /* resource type | first parent */
     uint16_t driverlibID;   /* corresponding driverlib ID for this resource */
 } PowerCC26XX_ResourceRecord;
 /* \endcond */
 
 /*! @brief Global configuration structure */
-typedef struct PowerCC26XX_Config {
+typedef struct {
     /*!
      *  @brief The Power Policy's initialization function
      *
@@ -464,7 +464,7 @@ typedef struct PowerCC26XX_Config {
  *  Power manager state structure. The application must not access any members
  *  of this structure!
  */
-typedef struct PowerCC26XX_ModuleState {
+typedef struct {
     List_List notifyList;        /*!< Event notification list */
     uint32_t constraintMask;     /*!< Aggregate constraints mask */
     ClockP_Struct clockObj;       /*!< Clock object for scheduling wakeups */

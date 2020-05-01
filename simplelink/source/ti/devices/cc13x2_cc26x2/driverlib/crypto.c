@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       crypto.c
-*  Revised:        2017-12-20 16:40:03 +0100 (Wed, 20 Dec 2017)
-*  Revision:       50869
+*  Revised:        2020-01-07 14:06:28 +0100 (Tue, 07 Jan 2020)
+*  Revision:       56632
 *
 *  Description:    Driver for the Crypto module
 *
@@ -853,6 +853,7 @@ CRYPTOCcmInvAuthDecryptResultGet(uint32_t ui32AuthLength,
     uint32_t ui32TagIndex;
     uint32_t i;
     uint32_t ui32Idx;
+    uint8_t tempResult = 0;
 
     ui32TagIndex = ui32CipherTextLength - ui32AuthLength;
 
@@ -883,17 +884,16 @@ CRYPTOCcmInvAuthDecryptResultGet(uint32_t ui32AuthLength,
     HWREG(CRYPTO_BASE + CRYPTO_O_IRQCLR) = (CRYPTO_IRQCLR_DMA_IN_DONE |
                                             CRYPTO_IRQCLR_RESULT_AVAIL);
 
-    // Verify the Tag.
-    for(i = 0; i < ui32AuthLength; i++)
-    {
-        if(*((uint8_t *)pui32CcmTag + i) !=
-            (*((uint8_t *)pui32CipherText + ui32TagIndex + i)))
-        {
-            return CCM_AUTHENTICATION_FAILED;
-        }
+    /* XOR each byte of the computed tag with the provided tag and OR the results.
+     * If the OR'd result is non-zero, the tags do not match.
+     * There is no branch based on the content of the buffers here to avoid
+     * timing attacks.
+     */
+    for (i = 0; i < ui32AuthLength; i++) {
+        tempResult |= ((uint8_t *) (pui32CipherText))[ui32TagIndex + i] ^ ((uint8_t *)ui32Tag)[i];
     }
 
-    return AES_SUCCESS;
+    return tempResult == 0 ? AES_SUCCESS : CCM_AUTHENTICATION_FAILED;
 }
 
 //*****************************************************************************
