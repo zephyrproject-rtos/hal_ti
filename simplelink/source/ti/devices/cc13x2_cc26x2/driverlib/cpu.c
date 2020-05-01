@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       cpu.c
-*  Revised:        2018-05-08 10:04:01 +0200 (Tue, 08 May 2018)
-*  Revision:       51972
+*  Revised:        2019-05-27 15:23:10 +0200 (Mon, 27 May 2019)
+*  Revision:       55701
 *
 *  Description:    Instruction wrappers for special CPU instructions needed by
 *                  the drivers.
@@ -92,7 +92,7 @@ CPUcpsid(void)
     cpsid   i;
     bx      lr
 }
-#elif defined(__TI_COMPILER_VERSION__)
+#elif (defined(__TI_COMPILER_VERSION__) || defined(__clang__))
 uint32_t
 CPUcpsid(void)
 {
@@ -161,7 +161,7 @@ CPUprimask(void)
     mrs     r0, PRIMASK;
     bx      lr
 }
-#elif defined(__TI_COMPILER_VERSION__)
+#elif (defined(__TI_COMPILER_VERSION__) || defined(__clang__))
 uint32_t
 CPUprimask(void)
 {
@@ -230,7 +230,7 @@ CPUcpsie(void)
     cpsie   i;
     bx      lr
 }
-#elif defined(__TI_COMPILER_VERSION__)
+#elif (defined(__TI_COMPILER_VERSION__) || defined(__clang__))
 uint32_t
 CPUcpsie(void)
 {
@@ -299,7 +299,7 @@ CPUbasepriGet(void)
     mrs     r0, BASEPRI;
     bx      lr
 }
-#elif defined(__TI_COMPILER_VERSION__)
+#elif (defined(__TI_COMPILER_VERSION__) || defined(__clang__))
 uint32_t
 CPUbasepriGet(void)
 {
@@ -380,6 +380,16 @@ __asm("    .sect \".text:NOROM_CPUdelay\"\n"
       "    subs r0, #1\n"
       "    bne.n NOROM_CPUdelay\n"
       "    bx lr\n");
+#elif defined(__clang__)
+void
+CPUdelay(uint32_t ui32Count)
+{
+    // Loop the specified number of times
+    __asm("CPUdelay:\n"
+          "    subs    r0, #1\n"
+          "    bne.n   CPUdelay\n"
+          "    bx      lr");
+}
 #else
 // GCC
 void __attribute__((naked))

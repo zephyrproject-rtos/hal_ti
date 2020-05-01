@@ -1,11 +1,9 @@
 /******************************************************************************
 *  Filename:       rf_prop_cmd.h
-*  Revised:        2018-07-31 20:13:42 +0200 (Tue, 31 Jul 2018)
-*  Revision:       18572
 *
 *  Description:    CC13x2/CC26x2 API for Proprietary mode commands
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -545,6 +543,9 @@ struct __RFC_STRUCT rfc_CMD_PROP_RADIO_SETUP_s {
                                         //!<        Others: <i>Reserved</i>
       uint16_t bNoFsPowerUp:1;          //!< \brief 0: Power up frequency synth<br>
                                         //!<        1: Do not power up frequency synth
+      uint16_t :1;
+      uint16_t bSynthNarrowBand:1;      //!< \brief 0: Normal synth mode<br>
+                                        //!<        1: Narrow-band synth mode
    } config;                            //!<        Configuration options
    uint16_t txPower;                    //!<        Transmit power
    uint32_t* pRegOverride;              //!< \brief Pointer to a list of hardware and configuration registers to override. If NULL, no
@@ -648,6 +649,9 @@ struct __RFC_STRUCT rfc_CMD_PROP_RADIO_DIV_SETUP_s {
                                         //!<        Others: <i>Reserved</i>
       uint16_t bNoFsPowerUp:1;          //!< \brief 0: Power up frequency synth<br>
                                         //!<        1: Do not power up frequency synth
+      uint16_t :1;
+      uint16_t bSynthNarrowBand:1;      //!< \brief 0: Normal synth mode<br>
+                                        //!<        1: Narrow-band synth mode
    } config;                            //!<        Configuration options
    uint16_t txPower;                    //!<        Transmit power
    uint32_t* pRegOverride;              //!< \brief Pointer to a list of hardware and configuration registers to override. If NULL, no
@@ -894,7 +898,7 @@ struct __RFC_STRUCT rfc_CMD_PROP_RX_ADV_SNIFF_s {
 //! @{
 //! Proprietary Mode Radio Setup Command for 2.4 GHz with PA Switching Fields
 struct __RFC_STRUCT rfc_CMD_PROP_RADIO_SETUP_PA_s {
-   uint16_t commandNo;                  //!<        The command ID number
+   uint16_t commandNo;                  //!<        The command ID number 
    uint16_t status;                     //!< \brief An integer telling the status of the command. This value is
                                         //!<        updated by the radio CPU during operation and may be read by the
                                         //!<        system CPU at any time.
@@ -984,6 +988,9 @@ struct __RFC_STRUCT rfc_CMD_PROP_RADIO_SETUP_PA_s {
                                         //!<        Others: <i>Reserved</i>
       uint16_t bNoFsPowerUp:1;          //!< \brief 0: Power up frequency synth<br>
                                         //!<        1: Do not power up frequency synth
+      uint16_t :1;
+      uint16_t bSynthNarrowBand:1;      //!< \brief 0: Normal synth mode<br>
+                                        //!<        1: Narrow-band synth mode
    } config;                            //!<        Configuration options
    uint16_t txPower;                    //!<        Transmit power
    uint32_t* pRegOverride;              //!< \brief Pointer to a list of hardware and configuration registers to override. If NULL, no
@@ -1000,7 +1007,7 @@ struct __RFC_STRUCT rfc_CMD_PROP_RADIO_SETUP_PA_s {
 //! @{
 //! Proprietary Mode Radio Setup Command for All Frequency Bands with PA Switching Fields
 struct __RFC_STRUCT rfc_CMD_PROP_RADIO_DIV_SETUP_PA_s {
-   uint16_t commandNo;                  //!<        The command ID number
+   uint16_t commandNo;                  //!<        The command ID number 
    uint16_t status;                     //!< \brief An integer telling the status of the command. This value is
                                         //!<        updated by the radio CPU during operation and may be read by the
                                         //!<        system CPU at any time.
@@ -1090,6 +1097,9 @@ struct __RFC_STRUCT rfc_CMD_PROP_RADIO_DIV_SETUP_PA_s {
                                         //!<        Others: <i>Reserved</i>
       uint16_t bNoFsPowerUp:1;          //!< \brief 0: Power up frequency synth<br>
                                         //!<        1: Do not power up frequency synth
+      uint16_t :1;
+      uint16_t bSynthNarrowBand:1;      //!< \brief 0: Normal synth mode<br>
+                                        //!<        1: Narrow-band synth mode
    } config;                            //!<        Configuration options
    uint16_t txPower;                    //!<        Transmit power
    uint32_t* pRegOverride;              //!< \brief Pointer to a list of hardware and configuration registers to override. If NULL, no

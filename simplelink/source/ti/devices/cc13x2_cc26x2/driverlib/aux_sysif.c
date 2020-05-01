@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       aux_sysif.c
-*  Revised:        2018-04-17 14:54:06 +0200 (Tue, 17 Apr 2018)
-*  Revision:       51890
+*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
+*  Revision:       56760
 *
 *  Description:    Driver for the AUX System Interface
 *

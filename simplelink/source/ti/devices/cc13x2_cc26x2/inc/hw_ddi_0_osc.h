@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_ddi_0_osc_h
-*  Revised:        2018-05-14 12:24:52 +0200 (Mon, 14 May 2018)
-*  Revision:       51990
+*  Revised:        2019-03-08 14:23:17 +0100 (Fri, 08 Mar 2019)
+*  Revision:       55206
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -151,7 +151,10 @@
 
 // Field:    [14] HPOSC_MODE_EN
 //
-// Internal. Only to be used through TI provided API.
+// 0: HPOSC mode is not enabled. The 48 MHz crystal is required for radio
+// operation.
+// 1: Enables HPOSC mode. The internal HPOSC can be used as HF system clock and
+// for radio operation.
 #define DDI_0_OSC_CTL0_HPOSC_MODE_EN                                0x00004000
 #define DDI_0_OSC_CTL0_HPOSC_MODE_EN_M                              0x00004000
 #define DDI_0_OSC_CTL0_HPOSC_MODE_EN_S                                      14
@@ -243,7 +246,8 @@
 // XOSCLF                   Low frequency XOSC
 // RCOSCLF                  Low frequency RCOSC
 // XOSCHFDLF                Low frequency clock derived from High Frequency
-//                          XOSC
+//                          XOSC or HPOSC clk (use HPOSC when HPOSC_MODE_EN
+//                          = 1)
 // RCOSCHFDLF               Low frequency clock derived from High Frequency
 //                          RCOSC
 #define DDI_0_OSC_CTL0_SCLK_LF_SRC_SEL_W                                     2
@@ -258,7 +262,8 @@
 //
 // Source select for sclk_hf.
 // ENUMs:
-// XOSC                     High frequency XOSC clock
+// XOSC                     High frequency XOSC or HPOSC clk (use HPOSC when
+//                          HPOSC_MODE_EN = 1
 // RCOSC                    High frequency RCOSC clock
 #define DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL                              0x00000001
 #define DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL_M                            0x00000001

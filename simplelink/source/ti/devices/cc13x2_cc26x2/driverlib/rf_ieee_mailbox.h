@@ -1,11 +1,9 @@
 /******************************************************************************
 *  Filename:       rf_ieee_mailbox.h
-*  Revised:        2018-01-23 19:51:42 +0100 (Tue, 23 Jan 2018)
-*  Revision:       18189
 *
 *  Description:    Definitions for IEEE 802.15.4 interface
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -56,7 +54,7 @@
 #define IEEE_DONE_ACKPEND       0x2404  ///< ACK packet received with pending data bit set
 #define IEEE_DONE_TIMEOUT       0x2405  ///< Operation ended due to timeout
 #define IEEE_DONE_BGEND         0x2406  ///< FG operation ended because necessary background level
-                                        ///< operation ended
+                                        ///< operation ended 
 #define IEEE_DONE_ABORT         0x2407  ///< Operation aborted by command
 ///@}
 /// \name Operation finished with error

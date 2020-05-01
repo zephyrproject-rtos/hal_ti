@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       osc.c
-*  Revised:        2019-02-14 09:35:31 +0100 (Thu, 14 Feb 2019)
-*  Revision:       54539
+*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
+*  Revision:       56760
 *
 *  Description:    Driver for setting up the system Oscillators
 *
@@ -191,38 +191,49 @@ OSCHF_GetStartupTime( uint32_t timeUntilWakeupInMs )
    int32_t  deltaTempSinceXoscOn       ;
    uint32_t newStartupTimeInUs         ;
 
-   deltaTimeSinceXoscOnInMs = RTC_CV_TO_MS( AONRTCCurrentCompareValueGet() - oscHfGlobals.timeXoscOn_CV );
-   deltaTempSinceXoscOn     = AONBatMonTemperatureGetDegC() - oscHfGlobals.tempXoscOff;
+    // Check CCFG to determine if device is configured for TCXO.
+    if( ( HWREG( CCFG_BASE + CCFG_O_MODE_CONF ) & CCFG_MODE_CONF_XOSC_FREQ_M ) == CCFG_MODE_CONF_XOSC_FREQ_TCXO )
+    {
+        // Device configured for TCXO. Report fixed startup time located in CCFG with
+        // coversion from number of 100us to number of us.
+        newStartupTimeInUs = (( HWREG( CCFG_BASE + CCFG_O_MODE_CONF_1 ) & CCFG_MODE_CONF_1_TCXO_MAX_START_M ) >>
+                                                                          CCFG_MODE_CONF_1_TCXO_MAX_START_S ) * 100;
+    }
+    else
+    {
+       deltaTimeSinceXoscOnInMs = RTC_CV_TO_MS( AONRTCCurrentCompareValueGet() - oscHfGlobals.timeXoscOn_CV );
+       deltaTempSinceXoscOn     = AONBatMonTemperatureGetDegC() - oscHfGlobals.tempXoscOff;
 
-   if ( deltaTempSinceXoscOn < 0 ) {
-      deltaTempSinceXoscOn = -deltaTempSinceXoscOn;
-   }
+       if ( deltaTempSinceXoscOn < 0 ) {
+          deltaTempSinceXoscOn = -deltaTempSinceXoscOn;
+       }
 
-   if (  (( timeUntilWakeupInMs + deltaTimeSinceXoscOnInMs )     > 3000 ) ||
-         ( deltaTempSinceXoscOn                                  >    5 ) ||
-         ( oscHfGlobals.timeXoscStable_CV < oscHfGlobals.timeXoscOn_CV  ) ||
-         ( oscHfGlobals.previousStartupTimeInUs                  ==   0 )    )
-   {
-      newStartupTimeInUs = 2000;
-      if (( HWREG( CCFG_BASE + CCFG_O_SIZE_AND_DIS_FLAGS ) & CCFG_SIZE_AND_DIS_FLAGS_DIS_XOSC_OVR_M ) == 0 ) {
-         newStartupTimeInUs = (( HWREG( CCFG_BASE + CCFG_O_MODE_CONF_1 ) &
-            CCFG_MODE_CONF_1_XOSC_MAX_START_M ) >>
-            CCFG_MODE_CONF_1_XOSC_MAX_START_S ) * 125;
-            // Note: CCFG startup time is "in units of 100us" adding 25% margin results in *125
-      }
-   } else {
-      newStartupTimeInUs = RTC_CV_TO_US( oscHfGlobals.timeXoscStable_CV - oscHfGlobals.timeXoscOn_CV );
-      newStartupTimeInUs += ( newStartupTimeInUs >> 2 ); // Add 25 percent margin
-      if ( newStartupTimeInUs < oscHfGlobals.previousStartupTimeInUs ) {
-         newStartupTimeInUs = oscHfGlobals.previousStartupTimeInUs;
-      }
-   }
+       if (  (( timeUntilWakeupInMs + deltaTimeSinceXoscOnInMs )     > 3000 ) ||
+             ( deltaTempSinceXoscOn                                  >    5 ) ||
+             ( oscHfGlobals.timeXoscStable_CV < oscHfGlobals.timeXoscOn_CV  ) ||
+             ( oscHfGlobals.previousStartupTimeInUs                  ==   0 )    )
+       {
+          newStartupTimeInUs = 2000;
+          if (( HWREG( CCFG_BASE + CCFG_O_SIZE_AND_DIS_FLAGS ) & CCFG_SIZE_AND_DIS_FLAGS_DIS_XOSC_OVR_M ) == 0 ) {
+             newStartupTimeInUs = (( HWREG( CCFG_BASE + CCFG_O_MODE_CONF_1 ) &
+                CCFG_MODE_CONF_1_XOSC_MAX_START_M ) >>
+                CCFG_MODE_CONF_1_XOSC_MAX_START_S ) * 125;
+                // Note: CCFG startup time is "in units of 100us" adding 25% margin results in *125
+          }
+       } else {
+          newStartupTimeInUs = RTC_CV_TO_US( oscHfGlobals.timeXoscStable_CV - oscHfGlobals.timeXoscOn_CV );
+          newStartupTimeInUs += ( newStartupTimeInUs >> 2 ); // Add 25 percent margin
+          if ( newStartupTimeInUs < oscHfGlobals.previousStartupTimeInUs ) {
+             newStartupTimeInUs = oscHfGlobals.previousStartupTimeInUs;
+          }
+       }
 
-   if ( newStartupTimeInUs < 200 ) {
-      newStartupTimeInUs = 200;
-   }
-   if ( newStartupTimeInUs > 4000 ) {
-      newStartupTimeInUs = 4000;
+       if ( newStartupTimeInUs < 200 ) {
+          newStartupTimeInUs = 200;
+       }
+       if ( newStartupTimeInUs > 4000 ) {
+          newStartupTimeInUs = 4000;
+       }
    }
    return ( newStartupTimeInUs );
 }

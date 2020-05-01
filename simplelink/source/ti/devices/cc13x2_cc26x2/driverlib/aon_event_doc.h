@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       aon_event_doc.h
-*  Revised:        2017-08-09 16:56:05 +0200 (Wed, 09 Aug 2017)
-*  Revision:       49506
+*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
+*  Revision:       56760
 *
 *  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 *  All rights reserved.

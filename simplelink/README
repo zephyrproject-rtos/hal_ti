@@ -8,27 +8,32 @@ http://dev.ti.com/tirex/content/simplelink_cc32xx_sdk_2_40_01_01/docs/simplelink
 1. CC13x2/26x2 SDK
 
 The current version supported in Zephyr is the SimpleLink CC13x2 and CC26x2 SDK
-3.10.00.53, downloaded from:
+4.10.00.78, downloaded from:
 
   http://www.ti.com/tool/simplelink-cc13x2-26x2-sdk
 
 The driver library source is copied from the SDK, as follows:
 
   EXT_DIR=$HOME/hal_ti/simplelink/source/ti
-  pushd simplelink_cc13x2_26x2_sdk_3_10_00_53/source/ti
+  pushd simplelink_cc13x2_26x2_sdk_4_10_00_78/source/ti
   find devices/cc13x2_cc26x2/{driverlib,inc,rf_patches} -depth -name '*.[c|h]' -print0 | cpio --null -pvdm $EXT_DIR
   find devices/cc13x2_cc26x2/startup_files -depth -name ccfg.c -print0 | cpio --null -pvd $EXT_DIR
   cp -r drivers/power/* $EXT_DIR/drivers/power/.
+  mkdir $EXT_DIR/drivers/temperature
+  cp -r drivers/temperature/* $EXT_DIR/drivers/temperature/.
+  cp drivers/Temperature.* $EXT_DIR/drivers/.
   mkdir $EXT_DIR/drivers/rf
   cp drivers/rf/RF.h $EXT_DIR/drivers/rf/.
+  cp drivers/rf/RFCC26X2.h $EXT_DIR/drivers/rf/.
   cp drivers/rf/RFCC26X2_multiMode.c $EXT_DIR/drivers/rf/.
   find $EXT_DIR/devices/cc13x2_cc26x2 -name '*.[c|h]' -exec dos2unix {} \;
   find $EXT_DIR/drivers/power -name '*.[c|h]' -exec dos2unix {} \;
   find $EXT_DIR/drivers/rf -name '*.[c|h]' -exec dos2unix {} \;
+  find $EXT_DIR/drivers/temperature -name '*.[c|h]' -exec dos2unix {} \;
   popd
 
-The source file startup_files/ccfg.c has been modified to use the appropriate
-sections when linking.
+The source file devices/cc13x2_cc26x2/startup_files/ccfg.c has been
+modified to use the appropriate sections when linking.
 
 TI provides the driver library functions burned into ROM at the factory,
 or updated via a service pack patch, thus saving application code space.

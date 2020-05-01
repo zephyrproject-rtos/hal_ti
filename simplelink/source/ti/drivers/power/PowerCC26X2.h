@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
+ * Copyright (c) 2017-2020, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,14 +52,15 @@
 #ifndef ti_drivers_power_PowerCC26X2_
 #define ti_drivers_power_PowerCC26X2_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/dpl/ClockP.h>
 #include <ti/drivers/Power.h>
 #include <ti/drivers/power/PowerCC26XX.h>
+#include <ti/drivers/Temperature.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*! The latency to reserve for resume from STANDBY (usec). */
 #define PowerCC26X2_RESUMETIMESTANDBY  750
@@ -92,6 +93,11 @@ extern "C" {
 
 #define PowerCC26X2_PERIPH_UART1        PowerCC26XX_NUMRESOURCES + 1 /*!< Resource ID: UART1 */
 
+/*! The temperature delta in degrees C before the RTC is re-compensated when
+ *  SCLK_LF is derived from SCLK_HF and SCLK_HF is supplied by HPOSC.
+ */
+#define PowerCC26X2_HPOSC_RTC_COMPENSATION_DELTA 3
+
 /* \cond */
 #define PowerCC26X2_NUMRESOURCES   (PowerCC26XX_NUMRESOURCES + 2) /* Number of resources in database */
 /* \endcond */
@@ -111,7 +117,7 @@ extern "C" {
 
 
 /*! @brief Global configuration structure */
-typedef struct PowerCC26X2_Config {
+typedef struct {
     /*!
      *  @brief The Power Policy's initialization function
      *
@@ -184,6 +190,13 @@ typedef struct PowerCC26X2_Config {
      *  RCOSC_HF should be calibrated.
      */
     bool calibrateRCOSC_HF;
+    /*!
+     *  @brief The function to be used for enabling or disabling the TCXO
+     *
+     *  If TCXO is configured to be enabled in CCFG this function will
+     *  enable or disable the TCXO by asserting or deasserting power to it.
+     */
+    void (*enableTCXOFxn)(bool);
 } PowerCC26X2_Config;
 
 /*!
@@ -192,13 +205,18 @@ typedef struct PowerCC26X2_Config {
  *  Power manager state structure. The application must not access any members
  *  of this structure!
  */
-typedef struct PowerCC26X2_ModuleState {
+typedef struct {
     List_List notifyList;           /*!< Event notification list */
     uint32_t constraintMask;        /*!< Aggregate constraints mask */
     ClockP_Struct clockObj;         /*!< Clock object for scheduling wakeups */
     ClockP_Struct calibrationClock; /*!< Clock object for scheduling wakeups */
+    ClockP_Struct tcxoEnableClock;  /*!< Clock object for TCXO startup time */
     HwiP_Struct oscHwi;             /*!< Hwi object for oscillator stabilisation */
     HwiP_Struct tdcHwi;             /*!< Hwi object for RCOSC calibration */
+    Temperature_NotifyObj hposcRtcCompNotifyObj;
+    /*! Temperature notification to compensate the RTC when SCLK_LF is derived
+     *  from SCLK_HF when SCLK_HF is configured as HPOSC.
+     */
     int32_t nDeltaFreqCurr;         /*!< RCOSC calibration variable */
     int32_t nCtrimCurr;             /*!< RCOSC calibration variable */
     int32_t nCtrimFractCurr;        /*!< RCOSC calibration variable */
@@ -226,6 +244,18 @@ typedef struct PowerCC26X2_ModuleState {
     Power_PolicyFxn policyFxn;   /*!< The Power policy function */
 } PowerCC26X2_ModuleState;
 
+/*!
+ *  @brief Enable RTC compensation when SCLK_LF is derived from HPOSC
+ *
+ *  Enables automatic compensation for temperature based clock drift of the RTC
+ *  when SCLK_LF is derived from HPOSC.
+ *
+ *  It only needs to be called once after the system boots.
+ *
+ *  This function should only be called when SCLK_LF is configured to be drived
+ *  from HPOSC.
+ */
+void PowerCC26X2_enableHposcRtcCompensation(void);
 
 #ifdef __cplusplus
 }

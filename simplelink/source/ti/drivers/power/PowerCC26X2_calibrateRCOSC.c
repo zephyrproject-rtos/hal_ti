@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Texas Instruments Incorporated
+ * Copyright (c) 2017-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -87,7 +87,7 @@
 #define PowerCC26X2_STATE_CLEANUP   6
 
 /* FSM results */
-typedef enum PowerCC26X2_FsmResult_ {
+typedef enum {
     PowerCC26X2_FSM_RESULT_RUN_FSM,
     PowerCC26X2_FSM_RESULT_WAIT_FOR_TDC,
     PowerCC26X2_FSM_RESULT_DONE,

@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       sys_ctrl.c
-*  Revised:        2018-06-26 15:19:11 +0200 (Tue, 26 Jun 2018)
-*  Revision:       52220
+*  Revised:        2020-02-18 14:05:12 +0100 (Tue, 18 Feb 2020)
+*  Revision:       56796
 *
 *  Description:    Driver for the System Control.
 *
@@ -159,6 +159,10 @@ void SysCtrlShutdown(void)
 void SysCtrlStandby(bool retainCache, uint32_t vimsPdMode, uint32_t rechargeMode)
 {
     uint32_t modeVIMS;
+
+    // Handle compensation for improving RCOSC_LF stability at low temperatures
+    // as configured in CCFG
+    SysCtrlSetRechargeBeforePowerDown(XOSC_IN_HIGH_POWER_MODE);
 
     // Freeze the IOs on the boundary between MCU and AON
     AONIOCFreezeEnable();
