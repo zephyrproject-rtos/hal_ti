@@ -137,7 +137,7 @@ void ClockP_start(ClockP_Handle handle)
 		period = obj->period * 1000 / CONFIG_SYS_CLOCK_TICKS_PER_SEC;
 	}
 
-	k_timer_start(&obj->timer, timeout, period);
+	k_timer_start(&obj->timer, K_MSEC(timeout), K_MSEC(period));
 			
     obj->active = true;
 }
@@ -158,7 +158,7 @@ void ClockP_stop(ClockP_Handle handle)
  */
 void ClockP_usleep(uint32_t usec)
 {
-	k_sleep((s32_t)usec);
+	k_sleep(K_USEC(usec));
 }
 
 /*
