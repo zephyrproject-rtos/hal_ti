@@ -48,21 +48,16 @@ static SemaphoreP_Status dpl_sem_pool_free(struct k_sem *sem)
 }
 
 /* timeout comes in and out as milliSeconds: */
-static int32_t dpl_convert_timeout(uint32_t timeout)
+static k_timeout_t dpl_convert_timeout(uint32_t timeout)
 {
-	int32_t zephyr_timeout;
-
 	switch(timeout) {
 	case SemaphoreP_NO_WAIT:
-		zephyr_timeout = K_NO_WAIT;
-		break;
+		return K_NO_WAIT;
 	case SemaphoreP_WAIT_FOREVER:
-		zephyr_timeout = K_FOREVER;
-		break;
+		return K_FOREVER;
 	default:
-		zephyr_timeout = timeout;
+		return K_MSEC(timeout);
 	}
-	return zephyr_timeout;
 }
 
 
