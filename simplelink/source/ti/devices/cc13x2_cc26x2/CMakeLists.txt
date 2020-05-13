@@ -19,6 +19,9 @@ zephyr_library_sources(
   driverlib/driverlib_release.c
   )
 
+# Required for RFCDoorbellSendTo which is not in ROM
+zephyr_sources_ifdef(CONFIG_IEEE802154_CC13XX_CC26XX driverlib/rfc.c)
+
 if(CONFIG_SOC_CC1352R)
   # Required for RFCDoorbellSendTo which is not in ROM
   set_source_files_properties(driverlib/rfc.c
