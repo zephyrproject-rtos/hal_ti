@@ -109,8 +109,8 @@ void ClockP_setTimeout(ClockP_Handle handle, uint32_t timeout)
 void ClockP_start(ClockP_Handle handle)
 {
 	ClockP_Obj *obj = (ClockP_Obj *)handle;
-	s32_t timeout;
-	s32_t period;
+	int32_t timeout;
+	int32_t period;
 
 	__ASSERT_NO_MSG(obj->timeout /
 		CONFIG_SYS_CLOCK_TICKS_PER_SEC <= UINT32_MAX / 1000);
