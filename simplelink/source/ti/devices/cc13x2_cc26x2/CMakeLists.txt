@@ -20,10 +20,16 @@ zephyr_library_sources(
   )
 
 # Required for IEEE 802.15.4 support
-zephyr_sources_ifdef(CONFIG_IEEE802154_CC13XX_CC26XX
+zephyr_library_sources_ifdef(CONFIG_IEEE802154_CC13XX_CC26XX
 	rf_patches/rf_patch_cpe_ieee_802_15_4.c)
 # Required for RFCDoorbellSendTo which is not in ROM
-zephyr_sources_ifdef(CONFIG_IEEE802154_CC13XX_CC26XX driverlib/rfc.c)
+zephyr_library_sources_ifdef(CONFIG_IEEE802154_CC13XX_CC26XX driverlib/rfc.c)
+
+# Required for BLE support
+zephyr_library_sources_ifdef(CONFIG_BLE_CC13XX_CC26XX
+  rf_patches/rf_patch_cpe_bt5.c)
+# Required for RFCDoorbellSendTo which is not in ROM
+zephyr_library_sources_ifdef(CONFIG_BLE_CC13XX_CC26XX driverlib/rfc.c)
 
 if(CONFIG_SOC_CC1352R)
   # Required for RFCDoorbellSendTo which is not in ROM
