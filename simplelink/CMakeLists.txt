@@ -37,6 +37,10 @@ if(CONFIG_HAS_CC3220SDK)
       source/ti/drivers/net/wifi/porting/cc_pal.c
       source/ti/drivers/net/wifi/eventreg.c
       source/ti/drivers/net/wifi/source/sl_socket.c
+      source/ti/drivers/net/wifi/slnetif/slnetifwifi.c
+      source/ti/net/slnetif.c
+      source/ti/net/slnetsock.c
+      source/ti/net/slnetutils.c
 
       source/ti/devices/cc32xx/driverlib/timer.c
       source/ti/devices/cc32xx/driverlib/udma.c
