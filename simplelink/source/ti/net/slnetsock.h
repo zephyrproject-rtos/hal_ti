@@ -191,7 +191,14 @@ interface.  Some are mandatory, others are optional (but recommended).
 #define __SL_NET_SOCK_H__
 
 #include <stdint.h>
+/*
+ * Commented out to prevent zsock_timeval from being redefined
+ * Can remove this if support for CONFIG_NET_SOCKETS_POSIX_NAMES
+ * is dropped someday
+ */
+#ifndef CONFIG_NET_SOCKETS_POSIX_NAMES
 #include <sys/time.h>
+#endif
 
 #ifdef    __cplusplus
 extern "C" {
