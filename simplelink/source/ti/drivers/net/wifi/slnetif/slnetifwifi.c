@@ -436,7 +436,7 @@ int32_t matchModeByRole(SlNetIfAddressType_e addrType,
 {
     SlWlanConnStatusParam_t WlanConnectInfo;
     uint16_t Len;
-    int32_t retVal;
+    int32_t retVal = SLNETERR_RET_CODE_OK; /* prevent build warning */
 
     switch(addrType)
     {

@@ -46,7 +46,8 @@
 #include <ti/net/slneterr.h>
 
 /* POSIX Header files */
-#include <semaphore.h>
+/* Changed include path to match Zephyr posix */
+#include <posix/semaphore.h>
 
 /*****************************************************************************/
 /* Macro declarations                                                        */
