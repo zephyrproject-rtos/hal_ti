@@ -105,4 +105,9 @@ elseif(CONFIG_HAS_MSP432P4XXSDK)
   zephyr_include_directories(
     source
     )
+    
+elseif(CONFIG_HAS_MSP432E4XXSDK)
+  zephyr_include_directories(
+    source
+    )
 endif()
