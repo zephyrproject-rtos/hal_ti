@@ -80,7 +80,7 @@ uint32_t ClockP_getSystemTickPeriod()
 
 uint32_t ClockP_getSystemTicks()
 {
-	return (uint32_t)z_ms_to_ticks(k_uptime_get_32());
+	return (uint32_t)k_ms_to_ticks_ceil32(k_uptime_get_32());
 }
 
 /*
