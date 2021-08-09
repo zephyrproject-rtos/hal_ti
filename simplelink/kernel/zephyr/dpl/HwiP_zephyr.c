@@ -32,7 +32,7 @@ struct sl_isr_args
 	uintptr_t arg;
 };
 
-static void sl_isr(void *isr_arg)
+static void sl_isr(const void *isr_arg)
 {
 	HwiP_Fxn cb = ((struct sl_isr_args *)isr_arg)->cb;
 	uintptr_t arg =	 ((struct sl_isr_args *)isr_arg)->arg;
@@ -206,31 +206,31 @@ HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
 		sl_RFC_CPE_0_cb.cb = hwiFxn;
 		sl_RFC_CPE_0_cb.arg = arg;
 		obj->cb = &sl_RFC_CPE_0_cb;
-		IRQ_CONNECT(INT_RFC_CPE_0 - 16, priority, sl_isr, &sl_RFC_CPE_0_cb, 0);
+		irq_connect_dynamic(INT_RFC_CPE_0 - 16, priority, sl_isr, &sl_RFC_CPE_0_cb, 0);
 		break;
 	case INT_RFC_HW_COMB:
 		sl_RFC_HW_COMB_cb.cb = hwiFxn;
 		sl_RFC_HW_COMB_cb.arg = arg;
 		obj->cb = &sl_RFC_HW_COMB_cb;
-		IRQ_CONNECT(INT_RFC_HW_COMB - 16, priority, sl_isr, &sl_RFC_HW_COMB_cb, 0);
+		irq_connect_dynamic(INT_RFC_HW_COMB - 16, priority, sl_isr, &sl_RFC_HW_COMB_cb, 0);
 		break;
 	case INT_OSC_COMB:
 		sl_OSC_COMB_cb.cb = hwiFxn;
 		sl_OSC_COMB_cb.arg = arg;
 		obj->cb = &sl_OSC_COMB_cb;
-		IRQ_CONNECT(INT_OSC_COMB - 16, priority, sl_isr, &sl_OSC_COMB_cb, 0);
+		irq_connect_dynamic(INT_OSC_COMB - 16, priority, sl_isr, &sl_OSC_COMB_cb, 0);
 		break;
 	case INT_AUX_COMB:
 		sl_AUX_COMB_cb.cb = hwiFxn;
 		sl_AUX_COMB_cb.arg = arg;
 		obj->cb = &sl_AUX_COMB_cb;
-		IRQ_CONNECT(INT_AUX_COMB - 16, priority, sl_isr, &sl_AUX_COMB_cb, 0);
+		irq_connect_dynamic(INT_AUX_COMB - 16, priority, sl_isr, &sl_AUX_COMB_cb, 0);
 		break;
 	case INT_SWEV0:
 		sl_SWEV0_cb.cb = hwiFxn;
 		sl_SWEV0_cb.arg = arg;
 		obj->cb = &sl_SWEV0_cb;
-		IRQ_CONNECT(INT_SWEV0 - 16, priority, sl_isr, &sl_SWEV0_cb, 0);
+		irq_connect_dynamic(INT_SWEV0 - 16, priority, sl_isr, &sl_SWEV0_cb, 0);
 		break;
 	default:
 		return(NULL);
