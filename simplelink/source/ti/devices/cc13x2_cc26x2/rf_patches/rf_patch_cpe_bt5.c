@@ -67,16 +67,17 @@ extern "C"
 
 
 CPE_PATCH_TYPE patchImageBt5[] = {
-   0x21004325,
-   0x21004075,
-   0x21004091,
-   0x21004399,
-   0x210043d5,
-   0x210040c1,
-   0x210040cd,
-   0x210040d9,
-   0x21004461,
-   0x2100410d,
+   0x210043f9,
+   0x21004079,
+   0x21004095,
+   0x2100446d,
+   0x210044a9,
+   0x210040c5,
+   0x210040d1,
+   0x210040dd,
+   0x210040f9,
+   0x21004553,
+   0x21004145,
    0xd00507db,
    0xf803f000,
    0x70084902,
@@ -96,24 +97,37 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x40041108,
    0x0000592d,
    0x4700b570,
-   0xf9b0f000,
+   0xfa18f000,
    0x47004800,
    0x00007f57,
-   0xf9b0f000,
+   0xfa18f000,
    0x47004800,
    0x0000881b,
-   0x0a9b9b03,
+   0x0a889905,
+   0xd1052880,
+   0x78884913,
+   0x0f800780,
+   0xfa22f000,
+   0x47004800,
+   0x00006ed9,
+   0x4810b40f,
+   0x290088c1,
+   0x4610d002,
+   0xfa16f000,
+   0x0a9b9b07,
    0x2b834d08,
-   0x4c08d10a,
+   0x4c08d108,
    0x069b8923,
-   0xb407d506,
-   0xf805f000,
-   0xd0002800,
-   0xbc073542,
-   0xb5704728,
-   0x47004802,
+   0xf000d504,
+   0x2800f805,
+   0x3542d000,
+   0x4728bc0f,
+   0x4805b570,
+   0x00004700,
    0x00020b1f,
    0x21000160,
+   0x00020b1f,
+   0x21000380,
    0x000209eb,
    0x4a094808,
    0x429a6803,
@@ -130,6 +144,45 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x00001821,
    0x000035f1,
    0x000006bd,
+   0x4d1fb570,
+   0xb2c47828,
+   0x4780481e,
+   0x28037828,
+   0x2c03d134,
+   0x481cd032,
+   0x0d406880,
+   0x481a07c2,
+   0x31604601,
+   0x2a003080,
+   0x241fd003,
+   0x8845570c,
+   0x241ee002,
+   0x8805570c,
+   0xd01f2c00,
+   0x4a154813,
+   0x79006941,
+   0x10484341,
+   0x69494911,
+   0x49101840,
+   0x7f493940,
+   0x05404790,
+   0x42691540,
+   0xdb0d4288,
+   0xdc0b42a8,
+   0x69994b0c,
+   0x4602b288,
+   0x43620c09,
+   0x12520409,
+   0xb2801880,
+   0x61984308,
+   0x0000bd70,
+   0x210002e4,
+   0x00004179,
+   0x21000028,
+   0x21000380,
+   0x21000300,
+   0x000081cb,
+   0x40044040,
    0x4c86b510,
    0x31404621,
    0x28017d08,
@@ -148,7 +201,7 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x04090240,
    0x66604308,
    0x1c806fa0,
-   0xf968f000,
+   0xf980f000,
    0x4874e013,
    0x69803020,
    0x28006840,
@@ -273,11 +326,11 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x00023d8f,
    0x00023075,
    0x00022a15,
-   0x21004319,
-   0x210042a5,
-   0x21004247,
-   0x210041c7,
-   0x21004149,
+   0x210043ed,
+   0x21004379,
+   0x2100431b,
+   0x2100429b,
+   0x2100421d,
    0x490cb510,
    0x4a0c4788,
    0x5e512106,
@@ -301,7 +354,7 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x6ba26022,
    0x00520852,
    0x602163a2,
-   0xfe62f7ff,
+   0xfdfaf7ff,
    0x07006ba0,
    0x2001d408,
    0x60606020,
@@ -309,7 +362,7 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0xdbfc280c,
    0x62202014,
    0xf7ffbd10,
-   0xbd10fe53,
+   0xbd10fdeb,
    0x21000380,
    0x00005b3f,
    0x40046000,
@@ -328,7 +381,19 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x477081d1,
    0x210002e0,
    0x21000088,
-   0x47702000,
+   0x79c94908,
+   0x07d208ca,
+   0x40c1d008,
+   0x07c94806,
+   0x4906d001,
+   0x4906e000,
+   0x60c11c49,
+   0x20004770,
+   0x00004770,
+   0x210000e8,
+   0x21000028,
+   0x00000188,
+   0x00000150,
    0x07810882,
    0x0ec90092,
    0x78c0ca0c,
@@ -338,7 +403,7 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x06000a09,
    0x47704308,
 };
-#define _NWORD_PATCHIMAGE_BT5 270
+#define _NWORD_PATCHIMAGE_BT5 335
 
 CPE_PATCH_TYPE patchCpeHd[] = {
    0x00000000,
@@ -347,6 +412,7 @@ CPE_PATCH_TYPE patchCpeHd[] = {
 
 #define _NWORD_PATCHSYS_BT5 0
 
+#define _IRQ_PATCH_0 0x21004181
 
 
 #ifndef _BT5_SYSRAM_START
@@ -395,6 +461,7 @@ PATCH_FUN_SPEC void enterBt5SysPatch(void)
 PATCH_FUN_SPEC void configureBt5Patch(void)
 {
    uint8_t *pPatchTab = (uint8_t *) (_BT5_CPERAM_START + _BT5_PATCH_TAB_OFFSET);
+   uint32_t *pIrqPatch = (uint32_t *) (_BT5_CPERAM_START + _BT5_IRQPATCH_OFFSET);
 
 
    pPatchTab[1] = 0;
@@ -404,9 +471,12 @@ PATCH_FUN_SPEC void configureBt5Patch(void)
    pPatchTab[79] = 4;
    pPatchTab[140] = 5;
    pPatchTab[150] = 6;
-   pPatchTab[13] = 7;
-   pPatchTab[31] = 8;
-   pPatchTab[40] = 9;
+   pPatchTab[107] = 7;
+   pPatchTab[13] = 8;
+   pPatchTab[31] = 9;
+   pPatchTab[40] = 10;
+
+   pIrqPatch[1] = _IRQ_PATCH_0;
 }
 
 PATCH_FUN_SPEC void applyBt5Patch(void)
@@ -444,6 +514,7 @@ void rf_patch_cpe_bt5(void)
    applyBt5Patch();
 }
 
+#undef _IRQ_PATCH_0
 
 //*****************************************************************************
 //

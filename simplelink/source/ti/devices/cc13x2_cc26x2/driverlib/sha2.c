@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       sha2.c
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-09-14 11:12:36 +0200 (Mon, 14 Sep 2020)
+*  Revision:       58614
 *
 *  Description:    Driver for the SHA-2 functions of the crypto module
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -79,7 +79,6 @@ void SHA2StartDMAOperation(uint8_t *channel0Addr, uint32_t channel0Length,  uint
     if (channel0Addr) {
         // Configure the DMA controller - enable both DMA channels.
         HWREGBITW(CRYPTO_BASE + CRYPTO_O_DMACH0CTL, CRYPTO_DMACH0CTL_EN_BITN) = 1;
-
         // Base address of the payload data in ext. memory.
         HWREG(CRYPTO_BASE + CRYPTO_O_DMACH0EXTADDR) = (uint32_t)channel0Addr;
 

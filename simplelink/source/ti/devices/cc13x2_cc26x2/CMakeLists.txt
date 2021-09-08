@@ -17,6 +17,8 @@ zephyr_library_sources(
   driverlib/sys_ctrl.c
   driverlib/osc.c
   driverlib/driverlib_release.c
+  # Required for newer HAL TI >= 4.40 (for PRCMPowerDomainsAllOn)
+  driverlib/prcm.c
   )
 
 # Required for IEEE 802.15.4 support

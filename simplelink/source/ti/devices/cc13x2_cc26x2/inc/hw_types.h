@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       hw_types.h
-*  Revised:        2016-09-13 14:21:40 +0200 (Tue, 13 Sep 2016)
-*  Revision:       47152
+*  Revised:        2020-09-07 16:52:52 +0200 (Mon, 07 Sep 2020)
+*  Revision:       58514
 *
 *  Description:    Common types and macros.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -118,6 +118,5 @@ typedef unsigned int  __UINT32;
 #define HWREGBITB(x, b)                                                       \
         HWREGB(((unsigned long)(x) & 0xF0000000) | 0x02000000 |               \
                (((unsigned long)(x) & 0x000FFFFF) << 5) | ((b) << 2))
-
 
 #endif // __HW_TYPES_H__

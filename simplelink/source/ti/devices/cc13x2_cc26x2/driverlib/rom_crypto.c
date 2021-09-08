@@ -1,12 +1,12 @@
 /*******************************************************************************
 *  Filename:       rom_crypto.c
-*  Revised:        2020-02-14 14:37:11 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56770
+*  Revised:        2020-09-17 15:26:49 +0200 (Thu, 17 Sep 2020)
+*  Revision:       58682
 *
 *  Description:    This is the implementation for the API to the ECC functions
 *                  built into ROM on the CC13x2/CC26x2.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -42,28 +42,6 @@
 
 
 ////////////////////////////////////* ECC *////////////////////////////////////
-#ifdef ECC_PRIME_NIST256_CURVE
-//#define TEST_NIST256
-//#define PARAM_P NIST256_p;
-#define PARAM_P 0x100257d4;
-
-//#define PARAM_R NIST256_r;
-#define PARAM_R 0x100257f8;
-
-//#define PARAM_A NIST256_a;
-#define PARAM_A 0x1002581c;
-
-//#define PARAM_B NIST256_b;
-#define PARAM_B 0x10025840;
-
-//#define PARAM_GX NIST256_Gx;
-#define PARAM_GX 0x10025864;
-
-//#define PARAM_GY NIST256_Gy;
-#define PARAM_GY 0x10025888;
-
-#endif
-
 
 //*****************************************************************************
 // ECC_initialize
@@ -72,23 +50,23 @@ void
 ECC_initialize(uint32_t *pWorkzone)
 {
   // Initialize curve parameters
-  //data_p  = (uint32_t *)PARAM_P;
-  *((uint32_t **)0x20000138) = (uint32_t *)PARAM_P;
+  //data_p  = ECC_NISTP256_prime;
+  *((const uint32_t **)0x20000138) = ECC_NISTP256_prime;
 
-  //data_r  = (uint32_t *)PARAM_R;
-  *((uint32_t **)0x2000013c) = (uint32_t *)PARAM_R;
+  //data_r  = ECC_NISTP256_order;
+  *((const uint32_t **)0x2000013c) = ECC_NISTP256_order;
 
-  //data_a  = (uint32_t *)PARAM_A;
-  *((uint32_t **)0x20000140) = (uint32_t *)PARAM_A;
+  //data_a  = ECC_NISTP256_a;
+  *((const uint32_t **)0x20000140) = ECC_NISTP256_a;
 
-  //data_b  = (uint32_t *)PARAM_B;
-  *((uint32_t **)0x20000144) = (uint32_t *)PARAM_B;
+  //data_b  = ECC_NISTP256_b;
+  *((const uint32_t **)0x20000144) = ECC_NISTP256_b;
 
-  //data_Gx = (uint32_t *)PARAM_GX;
-  *((uint32_t **)0x2000012c) = (uint32_t *)PARAM_GX;
+  //data_Gx = ECC_NISTP256_generatorX;
+  *((const uint32_t **)0x2000012c) = ECC_NISTP256_generatorX;
 
-  //data_Gy = (uint32_t *)PARAM_GY;
-  *((uint32_t **)0x20000130) = (uint32_t *)PARAM_GY;
+  //data_Gy = ECC_NISTP256_generatorY;
+  *((const uint32_t **)0x20000130) = ECC_NISTP256_generatorY;
 
   // Initialize window size
   //win = (uint8_t) ECC_WINDOW_SIZE;
@@ -97,6 +75,47 @@ ECC_initialize(uint32_t *pWorkzone)
   // Initialize work zone
   //workzone = (uint32_t *) pWorkzone;
   *((uint32_t **)0x20000134) = (uint32_t *) pWorkzone;
+}
+
+//*****************************************************************************
+// ECC_init
+//*****************************************************************************
+void
+ECC_init(uint32_t *workzone,
+         uint8_t   windowSize,
+         const uint32_t *prime,
+         const uint32_t *order,
+         const uint32_t *a,
+         const uint32_t *b,
+         const uint32_t *generatorX,
+         const uint32_t *generatorY)
+{
+  // Initialize curve parameters
+  //data_p  = (uint32_t *)PARAM_P;
+  *((const uint32_t **)0x20000138) = prime;
+
+  //data_r  = (uint32_t *)PARAM_R;
+  *((const uint32_t **)0x2000013c) = order;
+
+  //data_a  = (uint32_t *)PARAM_A;
+  *((const uint32_t **)0x20000140) = a;
+
+  //data_b  = (uint32_t *)PARAM_B;
+  *((const uint32_t **)0x20000144) = b;
+
+  //data_Gx = (uint32_t *)PARAM_GX;
+  *((const uint32_t **)0x2000012c) = generatorX;
+
+  //data_Gy = (uint32_t *)PARAM_GY;
+  *((const uint32_t **)0x20000130) = generatorY;
+
+  // Initialize window size
+  //win = (uint8_t) windowSize;
+  *((uint8_t *)0x20000148) = windowSize;
+
+  // Initialize work zone
+  //workzone = (uint32_t *) pWorkzone;
+  *((uint32_t **)0x20000134) = workzone;
 }
 
 typedef uint8_t(*ecc_keygen_t)(uint32_t *, uint32_t *,uint32_t *, uint32_t *);

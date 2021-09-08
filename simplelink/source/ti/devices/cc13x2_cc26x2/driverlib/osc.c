@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       osc.c
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-12-11 09:58:05 +0100 (Fri, 11 Dec 2020)
+*  Revision:       59848
 *
 *  Description:    Driver for setting up the system Oscillators
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -36,12 +36,14 @@
 *
 ******************************************************************************/
 
+#include <stdlib.h>
 #include "../inc/hw_types.h"
 #include "../inc/hw_ccfg.h"
 #include "../inc/hw_fcfg1.h"
 #include "aon_batmon.h"
 #include "aon_rtc.h"
 #include "osc.h"
+#include "sys_ctrl.h"
 #include "setup_rom.h"
 
 //*****************************************************************************
@@ -67,10 +69,14 @@
     #define OSCHF_DebugGetCrystalAmplitude  NOROM_OSCHF_DebugGetCrystalAmplitude
     #undef  OSCHF_DebugGetExpectedAverageCrystalAmplitude
     #define OSCHF_DebugGetExpectedAverageCrystalAmplitude NOROM_OSCHF_DebugGetExpectedAverageCrystalAmplitude
-    #undef  OSC_HPOSC_Debug_InitFreqOffsetParams
-    #define OSC_HPOSC_Debug_InitFreqOffsetParams NOROM_OSC_HPOSC_Debug_InitFreqOffsetParams
+    #undef  OSCHF_DebugGetCrystalStartupTime
+    #define OSCHF_DebugGetCrystalStartupTime NOROM_OSCHF_DebugGetCrystalStartupTime
     #undef  OSC_HPOSCInitializeFrequencyOffsetParameters
     #define OSC_HPOSCInitializeFrequencyOffsetParameters NOROM_OSC_HPOSCInitializeFrequencyOffsetParameters
+    #undef  OSC_HPOSC_Debug_InitFreqOffsetParams
+    #define OSC_HPOSC_Debug_InitFreqOffsetParams NOROM_OSC_HPOSC_Debug_InitFreqOffsetParams
+    #undef  OSC_HPOSCInitializeSingleInsertionFreqOffsParams
+    #define OSC_HPOSCInitializeSingleInsertionFreqOffsParams NOROM_OSC_HPOSCInitializeSingleInsertionFreqOffsParams
     #undef  OSC_HPOSCRelativeFrequencyOffsetGet
     #define OSC_HPOSCRelativeFrequencyOffsetGet NOROM_OSC_HPOSCRelativeFrequencyOffsetGet
     #undef  OSC_AdjustXoscHfCapArray
@@ -80,18 +86,6 @@
     #undef  OSC_HPOSCRtcCompensate
     #define OSC_HPOSCRtcCompensate          NOROM_OSC_HPOSCRtcCompensate
 #endif
-
-//*****************************************************************************
-//
-// Global HPOSC curve fitting polynomials
-// Parameters found/calculated when calling function
-// OSC_HPOSCInitializeFrequencyOffsetParameters()
-// (or OSC_HPOSC_Debug_InitFreqOffsetParams() used for debugging only)
-// These global variables must be updated before using HPOSC
-//
-//*****************************************************************************
-
-static   int16_t  _hpOscPolynomials[ 4 ];
 
 //*****************************************************************************
 //
@@ -343,91 +337,192 @@ OSC_AdjustXoscHfCapArray( int32_t capArrDelta )
 //*****************************************************************************
 //
 // Initialize the frequency offset curve fitting parameters
-// These are either picked diretly from FCFG1:FREQ_OFFSET & FCFG1:MISC_CONF_2 or
-// calculated based on the FCFG1:HPOSC_MEAS_x parameters.
+// These are calculated based on the FCFG1:HPOSC_MEAS_x parameters.
 //
 //*****************************************************************************
+#define  D1OFFSET_25C         (-16)
+#define  D2OFFSET_85C         (-23)
+#define  D3OFFSET_n40C        (5)
 
-// Using the following hardcoded constants (Using temporary constants for now)
-#define  D1OFFSET_p25C    -24
-#define  D2OFFSET_p85C    -36
-#define  D3OFFSET_m40C     18
-#define  P3_POLYNOMIAL    -47
-#define  N_INSERTIONS       3
+#define  HPOSC_COEFF_BITS     (20) // HPOSC p1,p2,p3 coefficient precision
+#define  HPOSC_COEFF0_BITS    (16) // HPOSC p0 coefficient precision
+#define  HPOSC_D_BITS         (30) // HPOSC internal parameter
+#define  HPOSC_COEFF0_SHIFT   (HPOSC_COEFF_BITS - HPOSC_COEFF0_BITS) // HPOSC internal parameter
+#define  HPOSC_SHIFT1         (2*HPOSC_COEFF_BITS - HPOSC_D_BITS) // HPOSC internal parameter
+#define  HPOSC_DC_BIAS        (100000) // HPOSC internal parameter
 
-typedef struct {
-   int32_t  dFreq    ;
-   int32_t  temp     ;
-} insertion_t ;
+int32_t _hposcCoeffs[4] = {0};  // HPOSC polynomial coefficients
+
+typedef struct
+{
+    int32_t temp[3];
+    int32_t dFreq[3];
+} hposc_insertions_t;
+
+typedef struct
+{
+    uint8_t pu0b[4];
+    uint8_t pu1b[4];
+    uint8_t pu2b[4];
+    int64_t pu0c[4];
+    int64_t pu1c[4];
+    int64_t pu2c[4];
+} hposc_param_t;
 
 static void
-InitializeMeasurmentSet( insertion_t * pInsertion, uint32_t registerAddress, int32_t deltaOffset, int32_t p3PolOffset )
+multiplyColumns(int64_t *v1, int64_t *v2, int64_t *pBuf, uint8_t shift)
 {
-   // Doing the following adjustment to the deltaFrequence before finding the polynomials P0, P1, P2
-   // Dx = Dx + DxOFFSET - ((P3*Tx^3)/2^18)
-   uint32_t insertionData  = HWREG( registerAddress );
-   pInsertion->dFreq = (((int32_t)( insertionData << ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_D1_W - FCFG1_HPOSC_MEAS_1_HPOSC_D1_S )))
-                                                  >> ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_D1_W ));
-   pInsertion->temp  = (((int32_t)( insertionData << ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_T1_W - FCFG1_HPOSC_MEAS_1_HPOSC_T1_S )))
-                                                  >> ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_T1_W ));
-   pInsertion->dFreq = pInsertion->dFreq + deltaOffset - (( p3PolOffset * pInsertion->temp * pInsertion->temp * pInsertion->temp ) >> 18 );
+    pBuf[0] = (v1[1]*v2[2]) >> shift;
+    pBuf[1] = (v1[2]*v2[1]) >> shift;
+    pBuf[2] = (v1[0]*v2[2]) >> shift;
+    pBuf[3] = (v1[2]*v2[0]) >> shift;
+    pBuf[4] = (v1[0]*v2[1]) >> shift;
+    pBuf[5] = (v1[1]*v2[0]) >> shift;
+}
+
+static int64_t
+findDenominator(int64_t *col0, int64_t *col1, int64_t *col2)
+{
+    int64_t tmp, tmpBuf[6];
+
+    multiplyColumns(col1, col2, tmpBuf, HPOSC_SHIFT1); // Keep HPOSC_D_BITS precision
+
+    tmp = (tmpBuf[0]*col0[0] - tmpBuf[1]*col0[0] - tmpBuf[2]*col0[1] +
+           tmpBuf[3]*col0[1] + tmpBuf[4]*col0[2] - tmpBuf[5]*col0[2]) >> HPOSC_COEFF_BITS;
+
+    return tmp;
+}
+
+static int64_t
+findNumerator(int32_t *pInput, int64_t *pBuf)
+{
+    int64_t tmp;
+
+    tmp = ((int64_t)pInput[0]*pBuf[0]) - ((int64_t)pInput[0]*pBuf[1]) - ((int64_t)pInput[1]*pBuf[2]) +
+          ((int64_t)pInput[1]*pBuf[3]) + ((int64_t)pInput[2]*pBuf[4]) - ((int64_t)pInput[2]*pBuf[5]);
+
+    return tmp;
 }
 
 static void
-FindPolynomialsAndUpdateGlobals( insertion_t * pMeasurment )
+findHposcCoefficients(int32_t *pInput, int64_t *col0, int64_t *col1, int64_t *col2, hposc_param_t *pParam)
 {
-   uint32_t loopCount      ;
-   int32_t  polynomial_0   ;
-   int32_t  polynomial_1   ;
-   int32_t  polynomial_2   ;
+    int64_t d,c0,c1,c2,cn,tmpBuf[6];
+    int32_t inputBuf[3];
+    uint8_t i;
 
-   int32_t  Syi_     = 0   ;
-   int32_t  Sxi_     = 0   ;
-   int32_t  Sxi2_    = 0   ;
-   int32_t  Sxiyi_   = 0   ;
-   int32_t  Sxi2yi_  = 0   ;
-   int32_t  Sxi3_    = 0   ;
-   int32_t  Sxi4_    = 0   ;
+    if(col1 == NULL) /* 1 insertion */
+    {
+        inputBuf[0] = pInput[0] - HPOSC_DC_BIAS;
+        c0 = (((int64_t)inputBuf[0] << HPOSC_D_BITS) / col0[0]);
+        c1 = 0;
+        c2 = 0;
+    }
+    else /* 3 insertion */
+    {
+        /* Apply DC bias to input data */
+        for(i = 0; i < 3; i++)
+        {
+            inputBuf[i] = pInput[i] - HPOSC_DC_BIAS;
+        }
 
-   for ( loopCount = 0 ; loopCount < N_INSERTIONS ; loopCount++ ) {
-      int32_t  x     ;
-      int32_t  x2    ;
-      int32_t  y     ;
+        /* Solve intermediate parameters, d: HPOSC_D_BITS, c: HPOSC_COEFF_BITS*2 bits */
+        d = findDenominator(col0, col1, col2);
 
-      x  = pMeasurment[ loopCount ].temp   ;
-      x2 = ( x * x );
-      y  = pMeasurment[ loopCount ].dFreq  ;
+        multiplyColumns(col1, col2, tmpBuf, 0);
+        cn = findNumerator(inputBuf, tmpBuf);
+        c0 = cn / d;
 
-      Syi_     += ( y         );
-      Sxi_     += ( x         );
-      Sxi2_    += ( x2        );
-      Sxiyi_   += ( x  * y    );
-      Sxi2yi_  += ( x2 * y    );
-      Sxi3_    += ( x2 * x    );
-      Sxi4_    += ( x2 * x2   );
-   }
+        multiplyColumns(col0, col2, tmpBuf, 0);
+        cn = -1*findNumerator(inputBuf, tmpBuf);
+        c1 = cn / d;
 
-   int32_t  Sxx_     = ( Sxi2_   * N_INSERTIONS ) - ( Sxi_  * Sxi_  );
-   int32_t  Sxy_     = ( Sxiyi_  * N_INSERTIONS ) - ( Sxi_  * Syi_  );
-   int32_t  Sxx2_    = ( Sxi3_   * N_INSERTIONS ) - ( Sxi_  * Sxi2_ );
-   int32_t  Sx2y_    = ( Sxi2yi_ * N_INSERTIONS ) - ( Sxi2_ * Syi_  );
-   int32_t  Sx2x2_   = ( Sxi4_   * N_INSERTIONS ) - ( Sxi2_ * Sxi2_ );
+        multiplyColumns(col0, col1, tmpBuf, 0);
+        cn = findNumerator(inputBuf, tmpBuf);
+        c2 = cn / d;
+    }
 
-   int32_t  divisor = ((((int64_t) Sxx_ * Sx2x2_ ) - ((int64_t) Sxx2_ * Sxx2_ )) + (1<<9)) >> 10 ;
-   if ( divisor == 0 ) {
-      polynomial_2 = 0 ;
-      polynomial_1 = 0 ;
-   } else {
-      polynomial_2 = (((int64_t) Sx2y_ * Sxx_   ) - ((int64_t) Sxy_  * Sxx2_ )) / divisor ;
-      polynomial_1 = (((int64_t) Sxy_  * Sx2x2_ ) - ((int64_t) Sx2y_ * Sxx2_ )) / divisor ;
-   }
-   polynomial_0 = ( Syi_ - (((( polynomial_1 * Sxi_ ) + ( polynomial_2 * Sxi2_ )) + (1<<9)) >> 10 )) / N_INSERTIONS ;
-   polynomial_1 = ( polynomial_1 + (1<<6)) >> 7 ;
+    /* Compute TCF polynomial coefficients */
+    for(i = 0; i < 4; i++)
+    {
+        cn = (((pParam->pu0c[i]*c0) >> (pParam->pu0b[i] - HPOSC_COEFF_BITS)) +
+              ((pParam->pu1c[i]*c1) >> (pParam->pu1b[i] - HPOSC_COEFF_BITS)) +
+              ((pParam->pu2c[i]*c2) >> (pParam->pu2b[i] - HPOSC_COEFF_BITS))) >> HPOSC_SHIFT1;
 
-   _hpOscPolynomials[ 0 ] = polynomial_0  ;
-   _hpOscPolynomials[ 1 ] = polynomial_1  ;
-   _hpOscPolynomials[ 2 ] = polynomial_2  ;
-   _hpOscPolynomials[ 3 ] = P3_POLYNOMIAL ;
+        if(i<3)
+        {
+            _hposcCoeffs[3-i] = cn;
+        }
+        else
+        {
+            _hposcCoeffs[0] = (cn >> HPOSC_COEFF0_SHIFT) + ((int64_t)HPOSC_DC_BIAS << HPOSC_COEFF0_BITS); // p[0] is combined with the DC bias
+        }
+    }
+}
+
+static void
+findHposcPc(int64_t *pCoeff, uint8_t *pBits, int32_t *pTemp, uint8_t nTemp, int64_t *pOutput)
+{
+    uint8_t i;
+    int32_t t1,t2,t3;
+
+    for(i = 0; i < nTemp; i++)
+    {
+        t1 = pTemp[i];
+        t2 = t1*t1;
+        t3 = t2*t1;
+
+        pOutput[i] = (((int64_t)pCoeff[0]*t3)>>(pBits[0]-HPOSC_COEFF_BITS)) + (((int64_t)pCoeff[1]*t2)>>(pBits[1]-HPOSC_COEFF_BITS)) +
+                     (((int64_t)pCoeff[2]*t1)>>(pBits[2]-HPOSC_COEFF_BITS)) + (((int64_t)pCoeff[3]   )>>(pBits[3]-HPOSC_COEFF_BITS));
+    }
+}
+
+static void
+readTempAndFreq(uint32_t regAddr, int32_t *pTemp, int32_t *pdFreq, int32_t deltaFreq)
+{
+    uint32_t insertionData = HWREG(regAddr);
+
+    /* temp_stored = Temperature - 27, offset by -27C */
+    *pTemp = (((int32_t)( insertionData << ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_T1_W - FCFG1_HPOSC_MEAS_1_HPOSC_T1_S )))
+                                        >> ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_T1_W ));
+
+    /* dFreq_stored = round( (Freq/12e6 - 1) * 2^22 ), 12MHz is the ideal frequency */
+    *pdFreq = (((int32_t)( insertionData << ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_D1_W - FCFG1_HPOSC_MEAS_1_HPOSC_D1_S )))
+                                         >> ( 32 - FCFG1_HPOSC_MEAS_1_HPOSC_D1_W ));
+    *pdFreq = *pdFreq + deltaFreq;
+}
+
+//*****************************************************************************
+// The HPOSC initialization function
+// - Must be called before using HPOSC
+// - To be used when three temperature frequency offset measurements are available
+//*****************************************************************************
+void
+OSC_HPOSCInitializeFrequencyOffsetParameters( void )
+{
+    /* Initialize HPOSC internal parameter */
+    hposc_insertions_t  hposcMeas;
+    int64_t pu0[3],pu1[3],pu2[3] = {0};
+    hposc_param_t hposcParm =
+    {
+        .pu0b = {42, 32, 27, 20},
+        .pu0c = {-284,-184,536,-104798},
+        .pu1b = {36, 32, 27, 20},
+        .pu1c = {-1155,44130,-319090,-3563},
+        .pu2b = {36, 32, 27, 20},
+        .pu2c = {-3410,261727,-32194,-116627}
+    };
+
+    /* Retrieve insertions from FCFG */
+    readTempAndFreq(FCFG1_BASE + FCFG1_O_HPOSC_MEAS_1, &hposcMeas.temp[0], &hposcMeas.dFreq[0], D1OFFSET_25C);
+    readTempAndFreq(FCFG1_BASE + FCFG1_O_HPOSC_MEAS_2, &hposcMeas.temp[1], &hposcMeas.dFreq[1], D2OFFSET_85C);
+    readTempAndFreq(FCFG1_BASE + FCFG1_O_HPOSC_MEAS_3, &hposcMeas.temp[2], &hposcMeas.dFreq[2], D3OFFSET_n40C);
+
+    /* Compute HPOSC polynomial coefficients */
+    findHposcPc(hposcParm.pu0c, hposcParm.pu0b, &hposcMeas.temp[0], 3, pu0);
+    findHposcPc(hposcParm.pu1c, hposcParm.pu1b, &hposcMeas.temp[0], 3, pu1);
+    findHposcPc(hposcParm.pu2c, hposcParm.pu2b, &hposcMeas.temp[0], 3, pu2);
+    findHposcCoefficients(&hposcMeas.dFreq[0], pu0, pu1, pu2, &hposcParm);
 }
 
 //*****************************************************************************
@@ -436,34 +531,55 @@ FindPolynomialsAndUpdateGlobals( insertion_t * pMeasurment )
 void
 OSC_HPOSC_Debug_InitFreqOffsetParams( HposcDebugData_t * pDebugData )
 {
-   // Calculate the curve fitting parameters from temp insertion measurements
-   // But first adjust the measurements with constants found in characterization
-   insertion_t  pMeasurment[ 3 ];
+    /* Initialize HPOSC internal parameter */
+    hposc_insertions_t  hposcMeas;
+    int64_t pu0[3],pu1[3],pu2[3] = {0};
+    hposc_param_t hposcParm =
+    {
+        .pu0b = {42, 32, 27, 20},
+        .pu0c = {-284,-184,536,-104798},
+        .pu1b = {36, 32, 27, 20},
+        .pu1c = {-1155,44130,-319090,-3563},
+        .pu2b = {36, 32, 27, 20},
+        .pu2c = {-3410,261727,-32194,-116627}
+    };
 
-   InitializeMeasurmentSet( &pMeasurment[ 0 ], (uint32_t)&pDebugData->meas_1, pDebugData->offsetD1, pDebugData->polyP3 );
-   InitializeMeasurmentSet( &pMeasurment[ 1 ], (uint32_t)&pDebugData->meas_2, pDebugData->offsetD2, pDebugData->polyP3 );
-   InitializeMeasurmentSet( &pMeasurment[ 2 ], (uint32_t)&pDebugData->meas_3, pDebugData->offsetD3, pDebugData->polyP3 );
+    /* Retrieve insertions from FCFG */
+    readTempAndFreq((uint32_t)&pDebugData->meas_1, &hposcMeas.temp[0], &hposcMeas.dFreq[0], pDebugData->offsetD1);
+    readTempAndFreq((uint32_t)&pDebugData->meas_2, &hposcMeas.temp[1], &hposcMeas.dFreq[1], pDebugData->offsetD2);
+    readTempAndFreq((uint32_t)&pDebugData->meas_3, &hposcMeas.temp[2], &hposcMeas.dFreq[2], pDebugData->offsetD3);
 
-   FindPolynomialsAndUpdateGlobals( pMeasurment );
+    /* Compute HPOSC polynomial coefficients */
+    findHposcPc(hposcParm.pu0c, hposcParm.pu0b, &hposcMeas.temp[0], 3, pu0);
+    findHposcPc(hposcParm.pu1c, hposcParm.pu1b, &hposcMeas.temp[0], 3, pu1);
+    findHposcPc(hposcParm.pu2c, hposcParm.pu2b, &hposcMeas.temp[0], 3, pu2);
+    findHposcCoefficients(&hposcMeas.dFreq[0], pu0, pu1, pu2, &hposcParm);
 }
 
 //*****************************************************************************
-// The general HPOSC initialization function - Must always be called before using HPOSC
+// Special HPOSC initialization function
+// - Used when a single temperature offset measurement is available
+// - To get a better crystal performance (SW TCXO)
 //*****************************************************************************
 void
-OSC_HPOSCInitializeFrequencyOffsetParameters( void )
+OSC_HPOSCInitializeSingleInsertionFreqOffsParams( uint32_t measFieldAddress )
 {
-   {
-      // Calculate the curve fitting parameters from temp insertion measurements
-      // But first adjust the measurements with constants found in characterization
-      insertion_t  pMeasurment[ 3 ];
+    /* Initialize HPOSC internal parameter */
+    hposc_insertions_t  hposcMeas;
+    int64_t pu0;
+    hposc_param_t hposcParm =
+    {
+        /* Coefficients for SW-TCXO */
+        .pu0b = {44, 44, 27, 20},
+        .pu0c = {7322, -5021, -209, -104861}
+    };
 
-      InitializeMeasurmentSet( &pMeasurment[ 0 ], FCFG1_BASE + FCFG1_O_HPOSC_MEAS_1, D1OFFSET_p25C, P3_POLYNOMIAL );
-      InitializeMeasurmentSet( &pMeasurment[ 1 ], FCFG1_BASE + FCFG1_O_HPOSC_MEAS_2, D2OFFSET_p85C, P3_POLYNOMIAL );
-      InitializeMeasurmentSet( &pMeasurment[ 2 ], FCFG1_BASE + FCFG1_O_HPOSC_MEAS_3, D3OFFSET_m40C, P3_POLYNOMIAL );
+    /* Retrieve insertions from FCFG */
+    readTempAndFreq( measFieldAddress, &hposcMeas.temp[0], &hposcMeas.dFreq[0], 0);
 
-      FindPolynomialsAndUpdateGlobals( pMeasurment );
-   }
+    /* Compute HPOSC polynomial coefficients */
+    findHposcPc(hposcParm.pu0c, hposcParm.pu0b, &hposcMeas.temp[0], 1, &pu0);
+    findHposcCoefficients(&hposcMeas.dFreq[0], &pu0, NULL, NULL, &hposcParm);
 }
 
 //*****************************************************************************
@@ -474,29 +590,30 @@ OSC_HPOSCInitializeFrequencyOffsetParameters( void )
 int32_t
 OSC_HPOSCRelativeFrequencyOffsetGet( int32_t tempDegC )
 {
-   // Estimate HPOSC frequency, using temperature and curve fitting parameters
+    // Estimate HPOSC frequency offset, using temperature and curve fitting parameters
 
-   int32_t paramP0 = _hpOscPolynomials[ 0 ];
-   int32_t paramP1 = _hpOscPolynomials[ 1 ];
-   int32_t paramP2 = _hpOscPolynomials[ 2 ];
-   int32_t paramP3 = _hpOscPolynomials[ 3 ];
+    // Now we can find the HPOSC freq offset, given as a signed variable d, expressed by:
+    //
+    //    F_HPOSC = F_nom * (1 + d/(2^22))    , where: F_HPOSC = HPOSC frequency
+    //                                                 F_nom = nominal clock source frequency (e.g. 48.000 MHz)
+    //                                                 d = describes relative freq offset
 
-   // Now we can find the HPOSC freq offset, given as a signed variable d, expressed by:
-   //
-   //    F_HPOSC = F_nom * (1 + d/(2^22))    , where: F_HPOSC = HPOSC frequency
-   //                                                 F_nom = nominal clock source frequency (e.g. 48.000 MHz)
-   //                                                 d = describes relative freq offset
+    // We can estimate the d variable, using temperature compensation parameters:
+    //
+    //    d = P[3]*(t - T0)^3 + P[2]*(t - T0)^2 + P[1]*(t - T0) + P[0], where: P0,P1,P2,P3 are curve fitting parameters
+    //                                                                  t = current temperature (from temp sensor) in deg C
+    //                                                                  T0 = 27 deg C (fixed temperature constant)
 
-   // We can estimate the d variable, using temperature compensation parameters:
-   //
-   //    d = P0 + P1*(t - T0) + P2*(t - T0)^2 + P3*(t - T0)^3, where: P0,P1,P2,P3 are curve fitting parameters from FCFG1
-   //                                                 t = current temperature (from temp sensor) in deg C
-   //                                                 T0 = 27 deg C (fixed temperature constant)
-   int32_t tempDelta = (tempDegC - 27);
-   int32_t tempDeltaX2 = tempDelta * tempDelta;
-   int32_t d = paramP0 + ((tempDelta*paramP1)>>3) + ((tempDeltaX2*paramP2)>>10) + ((tempDeltaX2*tempDelta*paramP3)>>18);
+    int32_t d,t1,t2,t3;
 
-   return ( d );
+    t1 = tempDegC - 27;
+    t2 = t1 * t1;
+    t3 = t2 * t1;
+
+    d =  ((((int64_t)_hposcCoeffs[3]*t3 + (int64_t)_hposcCoeffs[2]*t2 + (int64_t)_hposcCoeffs[1]*t1) >> HPOSC_COEFF0_SHIFT) +
+            (int64_t)_hposcCoeffs[0]) >> HPOSC_COEFF0_BITS;
+
+    return ( d );
 }
 
 //*****************************************************************************
@@ -633,4 +750,25 @@ OSCHF_DebugGetExpectedAverageCrystalAmplitude( void )
                                   DDI_0_OSC_AMPCOMPTH1_HPMRAMP3_LTH_S ;
 
    return ((( highThreshold + lowThreshold ) * 15 ) >> 1 );
+}
+
+//*****************************************************************************
+//
+// Measure the crystal startup time - in number of LF clock edges
+//
+//*****************************************************************************
+uint32_t OSCHF_DebugGetCrystalStartupTime( void )
+{
+   uint32_t lfEdgesFound = 0 ;
+
+   // Start operation in sync with the LF clock
+   HWREG( AON_RTC_BASE + AON_RTC_O_SYNCLF );
+   OSCHF_TurnOnXosc();
+   while ( ! OSCHF_AttemptToSwitchToXosc() ) {
+      HWREG( AON_RTC_BASE + AON_RTC_O_SYNCLF );
+      lfEdgesFound ++ ;
+   }
+   OSCHF_SwitchToRcOscTurnOffXosc();
+
+   return ( lfEdgesFound );
 }

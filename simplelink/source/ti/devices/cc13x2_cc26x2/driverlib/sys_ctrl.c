@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       sys_ctrl.c
-*  Revised:        2020-02-18 14:05:12 +0100 (Tue, 18 Feb 2020)
-*  Revision:       56796
+*  Revised:        2020-12-10 16:31:27 +0100 (Thu, 10 Dec 2020)
+*  Revision:       59841
 *
 *  Description:    Driver for the System Control.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -160,6 +160,9 @@ void SysCtrlStandby(bool retainCache, uint32_t vimsPdMode, uint32_t rechargeMode
 {
     uint32_t modeVIMS;
 
+    // In external regulator mode:
+    // Set static recharge timing to approximately 500 milliseconds
+    // Else:
     // Handle compensation for improving RCOSC_LF stability at low temperatures
     // as configured in CCFG
     SysCtrlSetRechargeBeforePowerDown(XOSC_IN_HIGH_POWER_MODE);
@@ -191,27 +194,26 @@ void SysCtrlStandby(bool retainCache, uint32_t vimsPdMode, uint32_t rechargeMode
     // Request uLDO during standby
     PRCMMcuUldoConfigure(1);
 
-   // Check the regulator mode
-   if (HWREG(AON_PMCTL_BASE + AON_PMCTL_O_PWRCTL) & AON_PMCTL_PWRCTL_EXT_REG_MODE)
-   {
-       // In external regulator mode the recharge functionality is disabled
-       HWREG(AON_PMCTL_BASE + AON_PMCTL_O_RECHARGECFG) = 0x00000000;
-   }
-   else
-   {
-       // In internal regulator mode the recharge functionality is set up with
-       // adaptive recharge mode and fixed parameter values
-       if(rechargeMode == SYSCTRL_PREFERRED_RECHARGE_MODE)
-       {
-           // Enable the Recharge Comparator
-           HWREG(AON_PMCTL_BASE + AON_PMCTL_O_RECHARGECFG) = AON_PMCTL_RECHARGECFG_MODE_COMPARATOR;
-       }
-       else
-       {
-           // Set requested recharge mode
-           HWREG(AON_PMCTL_BASE + AON_PMCTL_O_RECHARGECFG) = rechargeMode;
-       }
-   }
+    // In external regulator mode:
+    // - Setting the AON_PMCTL_O_RECHARGECFG register is already handled above.
+    //   (in function SysCtrlSetRechargeBeforePowerDown() )
+    // Else:
+    // - Set the AON_PMCTL_O_RECHARGECFG register as described below.
+    if ((HWREG(AON_PMCTL_BASE + AON_PMCTL_O_PWRCTL) & AON_PMCTL_PWRCTL_EXT_REG_MODE)==0)
+    {
+        // In internal regulator mode the recharge functionality is set up with
+        // adaptive recharge mode and fixed parameter values
+        if(rechargeMode == SYSCTRL_PREFERRED_RECHARGE_MODE)
+        {
+            // Enable the Recharge Comparator
+            HWREG(AON_PMCTL_BASE + AON_PMCTL_O_RECHARGECFG) = AON_PMCTL_RECHARGECFG_MODE_COMPARATOR;
+        }
+        else
+        {
+            // Set requested recharge mode
+            HWREG(AON_PMCTL_BASE + AON_PMCTL_O_RECHARGECFG) = rechargeMode;
+        }
+    }
 
     // Ensure all writes have taken effect
     SysCtrlAonSync();
@@ -221,7 +223,7 @@ void SysCtrlStandby(bool retainCache, uint32_t vimsPdMode, uint32_t rechargeMode
 
     // Ensure power domains have been turned off.
     // CPU power domain will power down when PRCMDeepSleep() executes.
-    while (PRCMPowerDomainStatus(PRCM_DOMAIN_RFCORE | PRCM_DOMAIN_SERIAL | PRCM_DOMAIN_PERIPH) != PRCM_DOMAIN_POWER_OFF) {;}
+    while (PRCMPowerDomainsAllOff(PRCM_DOMAIN_RFCORE | PRCM_DOMAIN_SERIAL | PRCM_DOMAIN_PERIPH) != PRCM_DOMAIN_POWER_OFF) {;}
 
     // Turn off cache retention if requested
     if (retainCache == false) {
@@ -254,6 +256,14 @@ SysCtrlSetRechargeBeforePowerDown( uint32_t xoscPowerMode )
 {
    uint32_t          ccfg_ModeConfReg        ;
 
+   // If external regulator mode we shall:
+   // - Set static recharge timing in AON_PMCTL_RECHARGECFG (MODE_STATIC)
+   // - Set recharge period to approximately 500 mS (perM=31, perE=5 => 0xFD)
+   if ( HWREG( AON_PMCTL_BASE + AON_PMCTL_O_PWRCTL ) & AON_PMCTL_PWRCTL_EXT_REG_MODE ) {
+      HWREG( AON_PMCTL_BASE + AON_PMCTL_O_RECHARGECFG ) = ( AON_PMCTL_RECHARGECFG_MODE_STATIC | 0x000000FD );
+      return;
+   }
+
    // read the MODE_CONF register in CCFG
    ccfg_ModeConfReg = HWREG( CCFG_BASE + CCFG_O_MODE_CONF );
    // Do temperature compensation if enabled
@@ -274,8 +284,9 @@ SysCtrlSetRechargeBeforePowerDown( uint32_t xoscPowerMode )
       if ( tcDelta > vddrSleepDelta ) {
          vddrSleepDelta = tcDelta ;
       }
-      vddrSleepTrim = (( HWREG( FLASH_CFG_BASE + FCFG1_OFFSET + FCFG1_O_MISC_TRIM ) & FCFG1_MISC_TRIM_TRIM_RECHARGE_COMP_REFLEVEL_M ) >>
-                                                                                      FCFG1_MISC_TRIM_TRIM_RECHARGE_COMP_REFLEVEL_S ) ;
+      vddrSleepTrim = (( HWREG( FCFG1_BASE + FCFG1_O_MISC_TRIM ) & FCFG1_MISC_TRIM_TRIM_RECHARGE_COMP_REFLEVEL_M ) >>
+                                                                   FCFG1_MISC_TRIM_TRIM_RECHARGE_COMP_REFLEVEL_S ) ;
+
       vddrSleepTrim -= vddrSleepDelta ;
       if ( vddrSleepTrim >  15 ) vddrSleepTrim =  15 ;
       if ( vddrSleepTrim <   1 ) vddrSleepTrim =   1 ;

@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       gpio.h
-*  Revised:        2018-05-02 11:11:40 +0200 (Wed, 02 May 2018)
-*  Revision:       51951
+*  Revised:        2020-09-09 19:57:34 +0200 (Wed, 09 Sep 2020)
+*  Revision:       58572
 *
 *  Description:    Defines and prototypes for the GPIO.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

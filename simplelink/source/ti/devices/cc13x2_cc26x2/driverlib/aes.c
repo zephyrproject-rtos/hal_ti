@@ -1,12 +1,12 @@
 
 /******************************************************************************
 *  Filename:       crypto.c
-*  Revised:        2019-01-25 13:11:50 +0100 (Fri, 25 Jan 2019)
-*  Revision:       54285
+*  Revised:        2020-08-25 16:10:23 +0200 (Tue, 25 Aug 2020)
+*  Revision:       58298
 *
 *  Description:    Driver for the aes functions of the crypto module
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

@@ -1,12 +1,12 @@
 /******************************************************************************
 *  Filename:       aux_adc.h
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-10-02 17:15:55 +0200 (Fri, 02 Oct 2020)
+*  Revision:       58927
 *
 *  Description:    Defines and prototypes for the AUX Analog-to-Digital
 *                  Converter
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -87,6 +87,7 @@ extern "C"
     #define AUXADCDisable                   NOROM_AUXADCDisable
     #define AUXADCEnableAsync               NOROM_AUXADCEnableAsync
     #define AUXADCEnableSync                NOROM_AUXADCEnableSync
+    #define AUXADCEnableSyncNoBugWorkaround NOROM_AUXADCEnableSyncNoBugWorkaround
     #define AUXADCDisableInputScaling       NOROM_AUXADCDisableInputScaling
     #define AUXADCFlushFifo                 NOROM_AUXADCFlushFifo
     #define AUXADCReadFifo                  NOROM_AUXADCReadFifo
@@ -132,7 +133,6 @@ extern "C"
 #define AUXADC_TRIGGER_GPT2B                (EVENT_AUXSEL0_EV_GPT2B)
 #define AUXADC_TRIGGER_GPT3A                (EVENT_AUXSEL0_EV_GPT3A)
 #define AUXADC_TRIGGER_GPT3B                (EVENT_AUXSEL0_EV_GPT3B)
-// Additional triggers specific for cc26x2 and cc13x2 devices
 #define AUXADC_TRIGGER_GPT0A_CMP            (EVENT_AUXSEL0_EV_GPT0A_CMP)
 #define AUXADC_TRIGGER_GPT0B_CMP            (EVENT_AUXSEL0_EV_GPT0B_CMP)
 #define AUXADC_TRIGGER_GPT1A_CMP            (EVENT_AUXSEL0_EV_GPT1A_CMP)
@@ -270,6 +270,63 @@ extern void AUXADCEnableAsync(uint32_t refSource, uint32_t trigger);
 //
 //*****************************************************************************
 extern void AUXADCEnableSync(uint32_t refSource, uint32_t sampleTime, uint32_t trigger);
+
+//*****************************************************************************
+//
+//! The device can hang if we generate a manual ADC trigger
+//! immediately after enabling the ADC with this function and the Sensor
+//! Controller turns on or off the XOSC_HF as a reference for the TDC at the
+//! same time.
+//!
+//! An application should be calling AUXADCEnableSync() instead.
+//!
+//! \brief Enables the ADC for synchronous operation.
+//!
+//! In synchronous operation, the ADC is idle between a conversion and
+//! subsequent samplings.
+//!
+//! The ADC trigger starts sampling with specified duration, followed by the
+//! conversion. Note that the first conversion may be invalid if the initial
+//! sampling period is too short.
+//!
+//! ADC input scaling is enabled by default after device reset, and is also re-
+//! enabled by \ref AUXADCDisable(). To disable input scaling, call
+//! \ref AUXADCDisableInputScaling() before calling \ref AUXADCEnableSync().
+//!
+//!
+//! \param refSource
+//!     ADC reference source:
+//!     - \ref AUXADC_REF_FIXED (nominally 4.3 V)
+//!     - \ref AUXADC_REF_VDDS_REL (nominally VDDS)
+//! \param sampleTime
+//!     ADC sampling time:
+//!     - \ref AUXADC_SAMPLE_TIME_2P7_US
+//!     - \ref AUXADC_SAMPLE_TIME_5P3_US
+//!     - \ref AUXADC_SAMPLE_TIME_10P6_US
+//!     - \ref AUXADC_SAMPLE_TIME_21P3_US
+//!     - \ref AUXADC_SAMPLE_TIME_42P6_US
+//!     - \ref AUXADC_SAMPLE_TIME_85P3_US
+//!     - \ref AUXADC_SAMPLE_TIME_170_US
+//!     - \ref AUXADC_SAMPLE_TIME_341_US
+//!     - \ref AUXADC_SAMPLE_TIME_682_US
+//!     - \ref AUXADC_SAMPLE_TIME_1P37_MS
+//!     - \ref AUXADC_SAMPLE_TIME_2P73_MS
+//!     - \ref AUXADC_SAMPLE_TIME_5P46_MS
+//!     - \ref AUXADC_SAMPLE_TIME_10P9_MS
+//! \param trigger
+//!     ADC conversion trigger:
+//!     - \ref AUXADC_TRIGGER_MANUAL
+//!     - \ref AUXADC_TRIGGER_GPT0A
+//!     - \ref AUXADC_TRIGGER_GPT0B
+//!     - \ref AUXADC_TRIGGER_GPT1A
+//!     - \ref AUXADC_TRIGGER_GPT1B
+//!     - \ref AUXADC_TRIGGER_GPT2A
+//!     - \ref AUXADC_TRIGGER_GPT2B
+//!     - \ref AUXADC_TRIGGER_GPT3A
+//!     - \ref AUXADC_TRIGGER_GPT3B
+//
+//*****************************************************************************
+extern void AUXADCEnableSyncNoBugWorkaround(uint32_t refSource, uint32_t sampleTime, uint32_t trigger);
 
 //*****************************************************************************
 //
@@ -536,6 +593,10 @@ extern int32_t AUXADCUnadjustValueForGainAndOffset(int32_t adcValue, int32_t gai
     #ifdef ROM_AUXADCEnableSync
         #undef  AUXADCEnableSync
         #define AUXADCEnableSync                ROM_AUXADCEnableSync
+    #endif
+    #ifdef ROM_AUXADCEnableSyncNoBugWorkaround
+        #undef  AUXADCEnableSyncNoBugWorkaround
+        #define AUXADCEnableSyncNoBugWorkaround ROM_AUXADCEnableSyncNoBugWorkaround
     #endif
     #ifdef ROM_AUXADCDisableInputScaling
         #undef  AUXADCDisableInputScaling

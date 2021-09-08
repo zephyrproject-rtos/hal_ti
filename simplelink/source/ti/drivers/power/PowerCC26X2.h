@@ -213,10 +213,6 @@ typedef struct {
     ClockP_Struct tcxoEnableClock;  /*!< Clock object for TCXO startup time */
     HwiP_Struct oscHwi;             /*!< Hwi object for oscillator stabilisation */
     HwiP_Struct tdcHwi;             /*!< Hwi object for RCOSC calibration */
-    Temperature_NotifyObj hposcRtcCompNotifyObj;
-    /*! Temperature notification to compensate the RTC when SCLK_LF is derived
-     *  from SCLK_HF when SCLK_HF is configured as HPOSC.
-     */
     int32_t nDeltaFreqCurr;         /*!< RCOSC calibration variable */
     int32_t nCtrimCurr;             /*!< RCOSC calibration variable */
     int32_t nCtrimFractCurr;        /*!< RCOSC calibration variable */

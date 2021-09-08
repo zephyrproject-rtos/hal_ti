@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_ioc_h
-*  Revised:        2018-05-14 12:24:52 +0200 (Mon, 14 May 2018)
-*  Revision:       51990
+*  Revised:        2020-10-15 14:13:13 +0200 (Thu, 15 Oct 2020)
+*  Revision:       59086
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -369,6 +369,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO0
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -736,6 +738,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO1
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -1103,6 +1107,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO2
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -1470,6 +1476,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO3
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -1837,6 +1845,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO4
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -2204,6 +2214,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO5
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -2571,6 +2583,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO6
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -2938,6 +2952,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO7
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -3305,6 +3321,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO8
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -3672,6 +3690,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO9
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -4039,6 +4059,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO10
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -4406,6 +4428,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO11
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -4773,6 +4797,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO12
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -5140,6 +5166,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO13
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -5507,6 +5535,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO14
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -5874,6 +5904,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO15
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -6241,6 +6273,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO16
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -6608,6 +6642,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO17
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -6975,6 +7011,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO18
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -7342,6 +7380,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO19
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -7709,6 +7749,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO20
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -8076,6 +8118,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO21
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -8443,6 +8487,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO22
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -8810,6 +8856,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO23
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -9177,6 +9225,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO24
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -9544,6 +9594,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO25
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -9911,6 +9963,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO26
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -10278,6 +10332,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO27
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -10645,6 +10701,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO28
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -11012,6 +11070,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO29
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -11379,6 +11439,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO30
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out
@@ -11746,6 +11808,8 @@
 // Field:   [5:0] PORT_ID
 //
 // Selects usage for DIO31
+// Note: This field should not be written other than the times when PORT_ID
+// value is specifically required to change.
 // ENUMs:
 // RFC_SMI_CL_IN            RF Core SMI Command Link In
 // RFC_SMI_CL_OUT           RF Core SMI Command Link Out

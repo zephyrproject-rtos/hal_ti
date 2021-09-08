@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       ssi.h
-*  Revised:        2017-05-23 12:08:52 +0200 (Tue, 23 May 2017)
-*  Revision:       49048
+*  Revised:        2020-07-14 12:55:48 +0200 (Tue, 14 Jul 2020)
+*  Revision:       57992
 *
 *  Description:    Defines and macros for the SSI.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

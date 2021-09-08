@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       sys_ctrl.h
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-08-19 12:18:33 +0200 (Wed, 19 Aug 2020)
+*  Revision:       58172
 *
 *  Description:    Defines and prototypes for the System Controller.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -491,7 +491,7 @@ SysCtrlSystemReset( void )
 __STATIC_INLINE void
 SysCtrlClockLossResetEnable(void)
 {
-    // Set clock loss enable bit in AON_SYSCTRL using bit banding
+    // Set clock loss enable bit in AON_SYSCTRL
     HWREGBITW(AON_PMCTL_BASE + AON_PMCTL_O_RESETCTL, AON_PMCTL_RESETCTL_CLK_LOSS_EN_BITN) = 1;
 }
 
@@ -511,7 +511,7 @@ SysCtrlClockLossResetEnable(void)
 __STATIC_INLINE void
 SysCtrlClockLossResetDisable(void)
 {
-    // Clear clock loss enable bit in AON_SYSCTRL using bit banding
+    // Clear clock loss enable bit in AON_SYSCTRL
     HWREGBITW(AON_PMCTL_BASE + AON_PMCTL_O_RESETCTL, AON_PMCTL_RESETCTL_CLK_LOSS_EN_BITN) = 0;
 }
 

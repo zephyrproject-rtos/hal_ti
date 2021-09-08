@@ -1,12 +1,12 @@
 /******************************************************************************
 *  Filename:       rom_crypto.h
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-09-17 15:26:49 +0200 (Thu, 17 Sep 2020)
+*  Revision:       58682
 *
 *  Description:    This header file is the API to the crypto functions
 *                  built into ROM on the CC13xx/CC26xx.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,35 @@ extern "C"
 #endif
 
 ////////////////////////////////////* ECC */////////////////////////////////////
+
+/* Curve Parameters in ROM */
+
+/* Curve parameters for the NISTP256 curve. These curve parameters are stored
+ * in ROM and can be accessed via the pointers below.
+ * Each curve parameter starts with the 32-bit word 0x08 followed by the actual
+ * parameter encoded in 32 bytes as a little-endian integer.
+ */
+#define ECC_NISTP256_prime ((const uint32_t *) 0x100257d4)
+#define ECC_NISTP256_order ((const uint32_t *) 0x100257f8)
+#define ECC_NISTP256_a ((const uint32_t *) 0x1002581c)
+#define ECC_NISTP256_b ((const uint32_t *) 0x10025840)
+#define ECC_NISTP256_generatorX ((const uint32_t *) 0x10025864)
+#define ECC_NISTP256_generatorY ((const uint32_t *) 0x10025888)
+
+/* Length in bytes of NISTP256 curve parameters excluding the prepended length
+ * word.
+ */
+#define ECC_NISTP256_PARAM_LENGTH_BYTES 32
+
+/* Length in words of NISTP256 curve parameters excluding the prepended length
+ * word.
+ */
+#define ECC_NISTP256_PARAM_LENGTH_WORDS (ECC_NISTP256_PARAM_LENGTH_BYTES / sizeof(uint32_t))
+
+/* Number of bytes for the length word prepended before all parameters passed
+ * into the ECC functions.
+ */
+#define ECC_LENGTH_OFFSET_BYTES 4
 
 /* Window size, valid values are 2,3,4,5.
  * Higher the value, faster the computation at the expense of memory usage.
@@ -114,7 +143,12 @@ extern "C"
 
 //*****************************************************************************
 /*!
- * \brief Pass pointer to ECC memory allocation to ECC engine.
+ * \brief Initialize elliptic curve parameters to default values and specify workzone.
+ *
+ * This function initializes the elliptic curve parameters to default values.
+ * The default elliptic curve used is NIST-P256.
+ *
+ * The workzone defaults to an expected window size of 3.
  *
  * This function can be called again to point the ECC workzone at
  * a different memory buffer.
@@ -126,7 +160,38 @@ extern "C"
  * \return None
  */
 //*****************************************************************************
- extern void ECC_initialize(uint32_t *pWorkzone);
+extern void ECC_initialize(uint32_t *pWorkzone);
+
+//*****************************************************************************
+/*!
+ *  \brief Initialize elliptic curve parameters to specified values and specify workzone.
+ *
+ *  This function may be used to explicitly specify the curve parameters used
+ *  by the ECC in ROM implementation.
+ *
+ *  All curve parameters must be prepended with a length word specifying the
+ *  length of the parameter in 32-bit words excluding the length word itself.
+ *  For NIST-P256, the length word is 8.
+ *
+ *  @param workzone   Pointer to memory allocated for computations, input.
+ *                    See description at beginning of ECC section for
+ *                    memory requirements.
+ *  @param windowSize Window size of \c workzone. Default value is 3.
+ *  @param prime      Curve prime
+ *  @param order      Curve order
+ *  @param a          Curve a value
+ *  @param b          Curve b value
+ *  @param generatorX X coordinate of generator point
+ *  @param generatorY Y coordinate of generator point
+ */
+extern void ECC_init(uint32_t *workzone,
+                     uint8_t   windowSize,
+                     const uint32_t *prime,
+                     const uint32_t *order,
+                     const uint32_t *a,
+                     const uint32_t *b,
+                     const uint32_t *generatorX,
+                     const uint32_t *generatorY);
 
 //*****************************************************************************
  /*!

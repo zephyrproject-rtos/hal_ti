@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       prcm.c
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-08-19 12:18:33 +0200 (Wed, 19 Aug 2020)
+*  Revision:       58172
 *
 *  Description:    Driver for the PRCM.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -73,8 +73,10 @@
     #define PRCMPeripheralDeepSleepEnable   NOROM_PRCMPeripheralDeepSleepEnable
     #undef  PRCMPeripheralDeepSleepDisable
     #define PRCMPeripheralDeepSleepDisable  NOROM_PRCMPeripheralDeepSleepDisable
-    #undef  PRCMPowerDomainStatus
-    #define PRCMPowerDomainStatus           NOROM_PRCMPowerDomainStatus
+    #undef  PRCMPowerDomainsAllOff
+    #define PRCMPowerDomainsAllOff          NOROM_PRCMPowerDomainsAllOff
+    #undef  PRCMPowerDomainsAllOn
+    #define PRCMPowerDomainsAllOn           NOROM_PRCMPowerDomainsAllOn
     #undef  PRCMDeepSleep
     #define PRCMDeepSleep                   NOROM_PRCMDeepSleep
 #endif
@@ -399,7 +401,7 @@ PRCMAudioClockConfigOverride(uint8_t  ui8SamplingEdge,
 //*****************************************************************************
 void PRCMAudioClockInternalSource(void)
 {
-    HWREGBITW(PRCM_BASE + PRCM_O_I2SBCLKSEL, PRCM_I2SBCLKSEL_SRC_BITN)     = 1;
+    HWREG(PRCM_BASE + PRCM_O_I2SBCLKSEL) = PRCM_I2SBCLKSEL_SRC;
 }
 
 //*****************************************************************************
@@ -409,7 +411,7 @@ void PRCMAudioClockInternalSource(void)
 //*****************************************************************************
 void PRCMAudioClockExternalSource(void)
 {
-    HWREGBITW(PRCM_BASE + PRCM_O_I2SBCLKSEL, PRCM_I2SBCLKSEL_SRC_BITN)     = 0;
+    HWREG(PRCM_BASE + PRCM_O_I2SBCLKSEL) = 0;
 }
 
 //*****************************************************************************
@@ -589,11 +591,52 @@ PRCMPeripheralDeepSleepDisable(uint32_t ui32Peripheral)
 
 //*****************************************************************************
 //
-// Get the status for a specific power domain
+// Return PRCM_DOMAIN_POWER_OFF if all power domains are off
 //
 //*****************************************************************************
 uint32_t
-PRCMPowerDomainStatus(uint32_t ui32Domains)
+PRCMPowerDomainsAllOff(uint32_t ui32Domains)
+{
+    bool bStatus;
+    uint32_t ui32StatusRegister0;
+    uint32_t ui32StatusRegister1;
+
+    // Check the arguments.
+    ASSERT((ui32Domains & (PRCM_DOMAIN_RFCORE |
+                           PRCM_DOMAIN_SERIAL |
+                           PRCM_DOMAIN_PERIPH)));
+
+    bStatus = false;
+    ui32StatusRegister0 = HWREG(PRCM_BASE + PRCM_O_PDSTAT0);
+    ui32StatusRegister1 = HWREG(PRCM_BASE + PRCM_O_PDSTAT1);
+
+    // Return the correct power status.
+    if(ui32Domains & PRCM_DOMAIN_RFCORE)
+    {
+       bStatus = bStatus ||
+                 ((ui32StatusRegister0 & PRCM_PDSTAT0_RFC_ON) ||
+                  (ui32StatusRegister1 & PRCM_PDSTAT1_RFC_ON));
+    }
+    if(ui32Domains & PRCM_DOMAIN_SERIAL)
+    {
+        bStatus = bStatus || (ui32StatusRegister0 & PRCM_PDSTAT0_SERIAL_ON);
+    }
+    if(ui32Domains & PRCM_DOMAIN_PERIPH)
+    {
+        bStatus = bStatus || (ui32StatusRegister0 & PRCM_PDSTAT0_PERIPH_ON);
+    }
+
+    // Return the status.
+    return (bStatus ? PRCM_DOMAIN_POWER_ON : PRCM_DOMAIN_POWER_OFF);
+}
+
+//*****************************************************************************
+//
+// Return PRCM_DOMAIN_POWER_ON if all power domains are on
+//
+//*****************************************************************************
+uint32_t
+PRCMPowerDomainsAllOn(uint32_t ui32Domains)
 {
     bool bStatus;
     uint32_t ui32StatusRegister0;

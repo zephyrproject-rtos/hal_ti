@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       flash.h
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-06-07 13:30:55 +0200 (Sun, 07 Jun 2020)
+*  Revision:       57689
 *
 *  Description:    Defines and prototypes for the Flash driver.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -124,7 +124,8 @@ extern "C"
 #define FLASH_PWR_ACTIVE_MODE   0x00000000
 #define FLASH_PWR_OFF_MODE      0x00000001
 #define FLASH_PWR_DEEP_STDBY_MODE \
-                                0x00000002
+                                0x00000002  // Deprecated. Will force same
+                                            // power mode as for FLASH_PWR_OFF_MODE
 
 //*****************************************************************************
 //
@@ -213,6 +214,7 @@ typedef enum
 //
 //*****************************************************************************
 #define FW_WRT_TRIMMED         0x00000001
+#define FW_PWRMODE_DEPRECATED  0x00000002
 
 //*****************************************************************************
 //
@@ -305,6 +307,10 @@ FlashSizeGet(void)
 //! counter is a clock divided by 16 from input HCLK. This parameter is ignored
 //! if \c ui32PowerMode is equal to \ref FLASH_PWR_ACTIVE_MODE.
 //!
+//! Note: The \ref FLASH_PWR_DEEP_STDBY_MODE power mode is deprecated and
+//! shall not be used. When used this mode will force the same power mode as
+//! for \ref FLASH_PWR_OFF_MODE.
+//!
 //! Changing the power mode of the flash module must be a part within a
 //! device power mode transition requiring configuration of multiple modules.
 //! Refer to documents describing the device power modes.
@@ -313,7 +319,7 @@ FlashSizeGet(void)
 //! The defined flash power modes are:
 //! - \ref FLASH_PWR_ACTIVE_MODE
 //! - \ref FLASH_PWR_OFF_MODE
-//! - \ref FLASH_PWR_DEEP_STDBY_MODE
+//! - \ref FLASH_PWR_DEEP_STDBY_MODE  (Not to be used. This mode is deprecated.)
 //! \param ui32BankGracePeriod is the starting count value for the bank grace
 //! period down counter.
 //! \param ui32PumpGracePeriod is the starting count value for the pump grace
@@ -336,7 +342,7 @@ extern void FlashPowerModeSet(uint32_t ui32PowerMode,
 //! The defined power modes are:
 //! - \ref FLASH_PWR_ACTIVE_MODE
 //! - \ref FLASH_PWR_OFF_MODE
-//! - \ref FLASH_PWR_DEEP_STDBY_MODE
+//! - \ref FLASH_PWR_DEEP_STDBY_MODE  (Not to be used. This mode is deprecated.)
 //
 //*****************************************************************************
 extern uint32_t FlashPowerModeGet(void);
