@@ -6,7 +6,7 @@
 *  Description:    Driver for the Debug functionality (NB. This is a stub which
 *                  should never be included in a release).
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

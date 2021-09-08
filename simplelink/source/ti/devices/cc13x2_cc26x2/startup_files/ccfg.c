@@ -6,7 +6,7 @@
 *  Description:    Customer Configuration for:
 *                  CC13x2, CC13x4, CC26x2, CC26x4 device family (HW rev 2).
 *
-*  Copyright (C) 2018 Texas Instruments Incorporated - http://www.ti.com/
+*  Copyright (C) 2018 - 2020, Texas Instruments Incorporated - http://www.ti.com/
 *
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -85,6 +85,7 @@
 //#####################################
 // Force VDDR high setting (Higher output power but also higher power consumption)
 // This is also called "boost mode"
+// WARNING: CCFG_FORCE_VDDR_HH must not be set to 1 if running in external regulator mode.
 //#####################################
 
 #ifndef CCFG_FORCE_VDDR_HH

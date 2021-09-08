@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       aux_adc.c
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-08-19 12:18:33 +0200 (Wed, 19 Aug 2020)
+*  Revision:       58172
 *
 *  Description:    Driver for the AUX Time to Digital Converter interface.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -56,6 +56,8 @@
     #define AUXADCEnableAsync               NOROM_AUXADCEnableAsync
     #undef  AUXADCEnableSync
     #define AUXADCEnableSync                NOROM_AUXADCEnableSync
+    #undef  AUXADCEnableSyncNoBugWorkaround
+    #define AUXADCEnableSyncNoBugWorkaround NOROM_AUXADCEnableSyncNoBugWorkaround
     #undef  AUXADCDisableInputScaling
     #define AUXADCDisableInputScaling       NOROM_AUXADCDisableInputScaling
     #undef  AUXADCFlushFifo
@@ -144,9 +146,11 @@ AUXADCEnableAsync(uint32_t refSource, uint32_t trigger)
 //
 // Enables the ADC for synchronous operation
 //
+// On CC26X2, this function needs a different name to enable a wrapper function
+// in flash to implement a workaround for a HW bug.
 //*****************************************************************************
 void
-AUXADCEnableSync(uint32_t refSource, uint32_t sampleTime, uint32_t trigger)
+AUXADCEnableSyncNoBugWorkaround(uint32_t refSource, uint32_t sampleTime, uint32_t trigger)
 {
     // Enable the ADC reference, with the following options:
     // - SRC: Set when using relative reference
@@ -175,6 +179,37 @@ AUXADCEnableSync(uint32_t refSource, uint32_t sampleTime, uint32_t trigger)
     ADI8BitsSet(AUX_ADI4_BASE, ADI_4_AUX_O_ADC0, sampleTime << ADI_4_AUX_ADC0_SMPL_CYCLE_EXP_S);
 
     // Release reset and enable the ADC
+    ADI8BitsSet(AUX_ADI4_BASE, ADI_4_AUX_O_ADC0, ADI_4_AUX_ADC0_EN_M | ADI_4_AUX_ADC0_RESET_N_M);
+}
+
+//*****************************************************************************
+//
+// Enables the ADC for synchronous operation
+//
+//*****************************************************************************
+void
+AUXADCEnableSync(uint32_t refSource, uint32_t sampleTime, uint32_t trigger)
+{
+    // The original AUXADCEnableSync() implementation requires a workaround,
+    // consisting of a delay, after its invocation. This delay is implemented by
+    // repeating the last ADI write operation three times.
+    //
+    // We need to make a call to the ROM symbol directly. Otherwise, the
+    // current build process will call the implementation in flash instead even
+    // if a ROM version is available.
+#if defined(ROM_AUXADCEnableSyncNoBugWorkaround) && !defined(DRIVERLIB_NOROM) && !defined(DOXYGEN)
+    ROM_AUXADCEnableSyncNoBugWorkaround(refSource, sampleTime, trigger);
+#else
+    AUXADCEnableSyncNoBugWorkaround(refSource, sampleTime, trigger);
+#endif
+
+
+    // Repeat this write another three times to add a delay. This is required
+    // to prevent the device from hanging if we generate a manual ADC trigger
+    // immediately after enabling the ADC and the Sensor Controller turns on
+    // or off the XOSC_HF as a reference for the TDC at the same time.
+    ADI8BitsSet(AUX_ADI4_BASE, ADI_4_AUX_O_ADC0, ADI_4_AUX_ADC0_EN_M | ADI_4_AUX_ADC0_RESET_N_M);
+    ADI8BitsSet(AUX_ADI4_BASE, ADI_4_AUX_O_ADC0, ADI_4_AUX_ADC0_EN_M | ADI_4_AUX_ADC0_RESET_N_M);
     ADI8BitsSet(AUX_ADI4_BASE, ADI_4_AUX_O_ADC0, ADI_4_AUX_ADC0_EN_M | ADI_4_AUX_ADC0_RESET_N_M);
 }
 

@@ -1,9 +1,9 @@
 /******************************************************************************
 *  Filename:       sha2_doc.h
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-09-14 11:12:36 +0200 (Mon, 14 Sep 2020)
+*  Revision:       58614
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 //! \section sec_sha2 Introduction
 //!
 //! The SHA-2 (Secure Hash Algorithm) API provides access to the SHA-2
-//!	functionality of the crypto core. The AES accelerator and keystore are
+//! functionality of the crypto core. The AES accelerator and keystore are
 //! also contained  within the crypto core. Hence, only one of SHA-2 and AES
 //! may be used at the same time.
 //! This module offers hardware acceleration for the SHA-2 family of hash
@@ -54,7 +54,7 @@
 //!
 //! The crypto core does not have retention and all configuration settings
 //! are lost when going into standby or shutdown. If you wish to continue
-//!	a hash operation after going into standby or shutdown, you must load
+//! a hash operation after going into standby or shutdown, you must load
 //! the intermediate hash into system RAM before entering standby or shutdown
 //! and load the intermediate hash back into the crypto module after resuming
 //! operation.

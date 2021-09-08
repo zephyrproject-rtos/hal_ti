@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       rom.h
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-09-17 15:26:49 +0200 (Thu, 17 Sep 2020)
+*  Revision:       58682
 *
 *  Description:    Prototypes for the ROM utility functions.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -74,6 +74,7 @@ typedef uint32_t     (* FPTR_RESERVED2_T)          ( void );
 typedef uint32_t     (* FPTR_RESERVED3_T)          ( uint8_t*                          ,\
                                                      uint32_t                          ,\
                                                      uint32_t                          );
+
 typedef void         (* FPTR_RESETDEV_T)           ( void );
 
 typedef uint32_t     (* FPTR_FLETCHER32_T)         ( uint16_t*    /* pui16Data       */,\
@@ -262,7 +263,6 @@ typedef struct
 #define ROM_API_UART_TABLE       ((uint32_t*) (ROM_API_TABLE[20]))
 #define ROM_API_UDMA_TABLE       ((uint32_t*) (ROM_API_TABLE[21]))
 #define ROM_API_VIMS_TABLE       ((uint32_t*) (ROM_API_TABLE[22]))
-#define ROM_API_CRYPTO_TABLE     ((uint32_t*) (ROM_API_TABLE[23]))
 #define ROM_API_OSC_TABLE        ((uint32_t*) (ROM_API_TABLE[24]))
 #define ROM_API_AUX_ADC_TABLE    ((uint32_t*) (ROM_API_TABLE[25]))
 #define ROM_API_SYS_CTRL_TABLE   ((uint32_t*) (ROM_API_TABLE[26]))
@@ -331,14 +331,6 @@ typedef struct
 
 
 // FLASH FUNCTIONS
-#define ROM_FlashPowerModeSet \
-    ((void (*)(uint32_t ui32PowerMode, uint32_t ui32BankGracePeriod, uint32_t ui32PumpGracePeriod)) \
-    ROM_API_FLASH_TABLE[0])
-
-#define ROM_FlashPowerModeGet \
-    ((uint32_t (*)(void)) \
-    ROM_API_FLASH_TABLE[1])
-
 #define ROM_FlashProtectionSet \
     ((void (*)(uint32_t ui32SectorAddress, uint32_t ui32ProtectMode)) \
     ROM_API_FLASH_TABLE[2])
@@ -535,10 +527,6 @@ typedef struct
     ((void (*)(uint32_t ui32Peripheral)) \
     ROM_API_PRCM_TABLE[12])
 
-#define ROM_PRCMPowerDomainStatus \
-    ((uint32_t (*)(uint32_t ui32Domains)) \
-    ROM_API_PRCM_TABLE[13])
-
 #define ROM_PRCMDeepSleep \
     ((void (*)(void)) \
     ROM_API_PRCM_TABLE[14])
@@ -729,7 +717,7 @@ typedef struct
     ((void (*)(uint32_t refSource, uint32_t trigger)) \
     ROM_API_AUX_ADC_TABLE[3])
 
-#define ROM_AUXADCEnableSync \
+#define ROM_AUXADCEnableSyncNoBugWorkaround \
     ((void (*)(uint32_t refSource, uint32_t sampleTime, uint32_t trigger)) \
     ROM_API_AUX_ADC_TABLE[4])
 

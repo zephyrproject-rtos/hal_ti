@@ -673,6 +673,8 @@ struct __RFC_STRUCT rfc_CMD_PATTERN_CHECK_s {
 
 //! @}
 
+#define CMD_RADIO_SETUP_PA                                 CMD_RADIO_SETUP
+
 //! \addtogroup CMD_RADIO_SETUP_PA
 //! @{
 //! Radio Setup Command for Pre-Defined Schemes with PA Switching Fields

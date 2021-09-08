@@ -689,6 +689,7 @@ extern "C" {
 #define   RF_EventTxEntryDone         (1 << 10)  ///< Tx queue data entry state changed to Finished
 #define   RF_EventTxBufferChange      (1 << 11)  ///< A buffer change is complete
 #define   RF_EventPaChanged           (1 << 14)  ///< The PA was reconfigured on the fly.
+#define   RF_EventSamplesEntryDone    (1 << 15)  ///< CTE data has been copied, only valid if autocopy feature is enabled
 #define   RF_EventRxOk                (1 << 16)  ///< Packet received with CRC OK, payload, and not to be ignored
 #define   RF_EventRxNOk               (1 << 17)  ///< Packet received with CRC error
 #define   RF_EventRxIgnored           (1 << 18)  ///< Packet received with CRC OK, but to be ignored
@@ -1667,10 +1668,10 @@ typedef struct {
  */
 typedef enum
 {
-    RF_ConflictNone   = 0,
-    RF_ConflictReject = 1,
-    RF_ConflictAbort  = 2,
-} RF_Conflict;
+    RF_ExecuteActionNone             = 0,  ///< Execute if no conflict, let current command finish if conflict.
+    RF_ExecuteActionRejectIncoming   = 1,  ///< Abort the incoming command, letting the ongoing command finish.
+    RF_ExecuteActionAbortOngoing     = 2,  ///< Abort the ongoing command and run dispatcher again.
+} RF_ExecuteAction;
 
 /** @brief Describes the location within the pend queue where the new command was inserted by the scheduler.
  */
@@ -1705,18 +1706,23 @@ typedef enum
 typedef RF_ScheduleStatus (*RF_SubmitHook)(RF_Cmd* pCmdNew, RF_Cmd* pCmdBg, RF_Cmd* pCmdFg, List_List* pPendQueue, List_List* pDoneQueue);
 
 /**
- *  @brief Defines the conflict resolution in runtime.
+ *  @brief Defines the execution and conflict resolution hook  at runtime.
  *
- *  The function is invoked if a conflict is identified before the start-time of the next radio command in
- *  the pending queue. The return value of type #RF_Conflict determines the policy to be followed by the RF driver.
+ *  The function is invoked before a scheduled command is about to be executed.
+ *  If a conflict is identified before the start-time of the next radio command
+ *  in the pending queue, this information is passed to the hook. The return
+ *  value of type #RF_ExecuteAction determines the policy to be followed by the RF
+ *  driver.
  *
  *  The arguments are:
  *      - \a pCmdBg is the running background command.
  *      - \a pCmdFg is the running foreground command.
  *      - \a pPendQueue points to the head structure of pend queue.
  *      - \a pDoneQueue points to the head structure of done queue.
+ *      - \a bConflict whether the incoming command conflicts with ongoing.
+ *      - \a conflictCmd command that conflicts with ongoing.
  */
-typedef RF_Conflict (*RF_ConflictHook)(RF_Cmd* pCmdBg, RF_Cmd* pCmdFg, List_List* pPendQueue, List_List* pDoneQueue);
+typedef RF_ExecuteAction (*RF_ExecuteHook)(RF_Cmd* pCmdBg, RF_Cmd* pCmdFg, List_List* pPendQueue, List_List* pDoneQueue, bool bConflict, RF_Cmd* conflictCmd);
 
 /** @brief RF scheduler policy.
  *
@@ -1725,7 +1731,7 @@ typedef RF_Conflict (*RF_ConflictHook)(RF_Cmd* pCmdBg, RF_Cmd* pCmdFg, List_List
  */
 typedef struct {
   RF_SubmitHook   submitHook;   ///< Function hook implements the scheduling policy to be executed at the time of RF_scheduleCmd API call.
-  RF_ConflictHook conflictHook; ///< Function hook implements the runtime conflict resolution, if any identified at the start time of next command.
+  RF_ExecuteHook  executeHook; ///< Function hook implements the runtime last second go-no-go execute decision
 } RFCC26XX_SchedulerPolicy;
 
 /** @brief Controls the behavior of the RF_scheduleCmd() API.
@@ -2018,15 +2024,17 @@ extern RF_CmdHandle RF_postCmd(RF_Handle h, RF_Op *pOp, RF_Priority ePri, RF_Cal
 extern RF_ScheduleStatus RF_defaultSubmitPolicy(RF_Cmd* pCmdNew, RF_Cmd* pCmdBg, RF_Cmd* pCmdFg, List_List* pPendQueue, List_List* pDoneQueue);
 
 /**
- *  @brief  Makes a final decision when a conflict in run-time is identified.
+ *  @brief  Makes a final decision before dispatching a scheduled command.
  *
- *  @param pCmdBg     Running background command.
- *  @param pCmdFg     Running foreground command.
- *  @param pPendQueue Pointer to the head structure of pend queue.
- *  @param pDoneQueue Pointer to the head structure of done queue..
- *  @return           RF_defaultSubmitPolicy identifies the success or failure of queuing.
+ *  @param pCmdBg       Running background command.
+ *  @param pCmdFg       Running foreground command.
+ *  @param pPendQueue   Pointer to the head structure of pend queue.
+ *  @param pDoneQueue   Pointer to the head structure of done queue.
+ *  @param bConflict    Whether the incoming command conflicts with the ongoing.
+ *  @param conflictCmd  Command that conflicts with ongoing.
+ *  @return             RF_defaultSubmitPolicy identifies the success or failure of queuing.
  */
-extern RF_Conflict RF_defaultConflictPolicy(RF_Cmd* pCmdBg, RF_Cmd* pCmdFg, List_List* pPendQueue, List_List* pDoneQueue);
+extern RF_ExecuteAction RF_defaultExecutionPolicy(RF_Cmd* pCmdBg, RF_Cmd* pCmdFg, List_List* pPendQueue, List_List* pDoneQueue, bool bConflict, RF_Cmd* conflictCmd);
 
 
 /**
@@ -2583,4 +2591,3 @@ extern void RF_enableHPOSCTemperatureCompensation(void);
 //! @}
 //
 //*****************************************************************************
-

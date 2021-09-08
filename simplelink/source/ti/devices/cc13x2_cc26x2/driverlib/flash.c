@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       flash.c
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-05-14 17:23:02 +0200 (Thu, 14 May 2020)
+*  Revision:       57519
 *
 *  Description:    Driver for on chip Flash.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -121,6 +121,11 @@ FlashPowerModeSet(uint32_t ui32PowerMode, uint32_t ui32BankGracePeriod,
     ASSERT(ui32BankGracePeriod <= 0xFF);
     ASSERT(ui32PumpGracePeriod <= 0xFFFF);
 
+    // Initialize flag requesting deprecated power mode
+    HWREG(FLASH_BASE + FLASH_O_FWLOCK) = 5;
+    HWREG(FLASH_BASE + FLASH_O_FWFLAG) &= ~FW_PWRMODE_DEPRECATED;
+    HWREG(FLASH_BASE + FLASH_O_FWLOCK) = 0;
+
     switch(ui32PowerMode)
     {
     case FLASH_PWR_ACTIVE_MODE:
@@ -134,6 +139,12 @@ FlashPowerModeSet(uint32_t ui32PowerMode, uint32_t ui32BankGracePeriod,
             (HWREG(FLASH_BASE + FLASH_O_FPAC1) & ~FLASH_FPAC1_PUMPPWR_M) | (1 << FLASH_FPAC1_PUMPPWR_S);
         break;
 
+    case FLASH_PWR_DEEP_STDBY_MODE:
+        // Deprecated power mode requested. Set flag.
+        HWREG(FLASH_BASE + FLASH_O_FWLOCK) = 5;
+        HWREG(FLASH_BASE + FLASH_O_FWFLAG) |= FW_PWRMODE_DEPRECATED;
+        HWREG(FLASH_BASE + FLASH_O_FWLOCK) = 0;
+        // Fall through to force FLASH_PWR_OFF_MODE power mode
     case FLASH_PWR_OFF_MODE:
         // Set bank grace period.
         HWREG(FLASH_BASE + FLASH_O_FBAC) =
@@ -150,26 +161,6 @@ FlashPowerModeSet(uint32_t ui32PowerMode, uint32_t ui32BankGracePeriod,
 
         // Set charge pump power mode to SLEEP mode.
         HWREG(FLASH_BASE + FLASH_O_FPAC1) &= ~FLASH_FPAC1_PUMPPWR_M;
-        break;
-
-    case FLASH_PWR_DEEP_STDBY_MODE:
-        // Set bank grace period.
-        HWREG(FLASH_BASE + FLASH_O_FBAC) =
-            (HWREG(FLASH_BASE + FLASH_O_FBAC) & (~FLASH_FBAC_BAGP_M)) |
-            ((ui32BankGracePeriod << FLASH_FBAC_BAGP_S) & FLASH_FBAC_BAGP_M);
-
-        // Set pump grace period.
-        HWREG(FLASH_BASE + FLASH_O_FPAC2) =
-            (HWREG(FLASH_BASE + FLASH_O_FPAC2) & (~FLASH_FPAC2_PAGP_M)) |
-            ((ui32PumpGracePeriod << FLASH_FPAC2_PAGP_S) & FLASH_FPAC2_PAGP_M);
-
-        // Set bank power mode to DEEP STANDBY mode.
-        HWREG(FLASH_BASE + FLASH_O_FBFALLBACK) =
-            (HWREG(FLASH_BASE + FLASH_O_FBFALLBACK) &
-             ~FLASH_FBFALLBACK_BANKPWR0_M) | FBFALLBACK_DEEP_STDBY;
-
-        // Set charge pump power mode to STANDBY mode.
-        HWREG(FLASH_BASE + FLASH_O_FPAC1) |= FLASH_FPAC1_PUMPPWR_M;
         break;
     }
 }
@@ -188,13 +179,15 @@ FlashPowerModeGet(void)
     ui32BankPwrMode = HWREG(FLASH_BASE + FLASH_O_FBFALLBACK) &
                       FLASH_FBFALLBACK_BANKPWR0_M;
 
-    if(ui32BankPwrMode == FBFALLBACK_SLEEP)
-    {
-        ui32PowerMode = FLASH_PWR_OFF_MODE;
-    }
-    else if(ui32BankPwrMode == FBFALLBACK_DEEP_STDBY)
+    if((ui32BankPwrMode == FBFALLBACK_SLEEP) &&
+       ((HWREG(FLASH_BASE + FLASH_O_FWFLAG) & FW_PWRMODE_DEPRECATED) == FW_PWRMODE_DEPRECATED))
     {
         ui32PowerMode = FLASH_PWR_DEEP_STDBY_MODE;
+    }
+    else if((ui32BankPwrMode == FBFALLBACK_SLEEP) &&
+            ((HWREG(FLASH_BASE + FLASH_O_FWFLAG) & FW_PWRMODE_DEPRECATED) == 0))
+    {
+        ui32PowerMode = FLASH_PWR_OFF_MODE;
     }
     else
     {

@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       pka.c
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-09-14 11:11:23 +0200 (Mon, 14 Sep 2020)
+*  Revision:       58613
 *
 *  Description:    Driver for the PKA module
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -37,65 +37,6 @@
 ******************************************************************************/
 
 #include "pka.h"
-
-//*****************************************************************************
-//
-// Handle support for DriverLib in ROM:
-// This section will undo prototype renaming made in the header file
-//
-//*****************************************************************************
-#if !defined(DOXYGEN)
-    #undef  PKAClearPkaRam
-    #define PKAClearPkaRam                  NOROM_PKAClearPkaRam
-    #undef  PKAGetOpsStatus
-    #define PKAGetOpsStatus                 NOROM_PKAGetOpsStatus
-    #undef  PKAArrayAllZeros
-    #define PKAArrayAllZeros                NOROM_PKAArrayAllZeros
-    #undef  PKAZeroOutArray
-    #define PKAZeroOutArray                 NOROM_PKAZeroOutArray
-    #undef  PKABigNumModStart
-    #define PKABigNumModStart               NOROM_PKABigNumModStart
-    #undef  PKABigNumModGetResult
-    #define PKABigNumModGetResult           NOROM_PKABigNumModGetResult
-    #undef  PKABigNumDivideStart
-    #define PKABigNumDivideStart            NOROM_PKABigNumDivideStart
-    #undef  PKABigNumDivideGetQuotient
-    #define PKABigNumDivideGetQuotient      NOROM_PKABigNumDivideGetQuotient
-    #undef  PKABigNumDivideGetRemainder
-    #define PKABigNumDivideGetRemainder     NOROM_PKABigNumDivideGetRemainder
-    #undef  PKABigNumCmpStart
-    #define PKABigNumCmpStart               NOROM_PKABigNumCmpStart
-    #undef  PKABigNumCmpGetResult
-    #define PKABigNumCmpGetResult           NOROM_PKABigNumCmpGetResult
-    #undef  PKABigNumInvModStart
-    #define PKABigNumInvModStart            NOROM_PKABigNumInvModStart
-    #undef  PKABigNumInvModGetResult
-    #define PKABigNumInvModGetResult        NOROM_PKABigNumInvModGetResult
-    #undef  PKABigNumMultiplyStart
-    #define PKABigNumMultiplyStart          NOROM_PKABigNumMultiplyStart
-    #undef  PKABigNumMultGetResult
-    #define PKABigNumMultGetResult          NOROM_PKABigNumMultGetResult
-    #undef  PKABigNumAddStart
-    #define PKABigNumAddStart               NOROM_PKABigNumAddStart
-    #undef  PKABigNumAddGetResult
-    #define PKABigNumAddGetResult           NOROM_PKABigNumAddGetResult
-    #undef  PKABigNumSubStart
-    #define PKABigNumSubStart               NOROM_PKABigNumSubStart
-    #undef  PKABigNumSubGetResult
-    #define PKABigNumSubGetResult           NOROM_PKABigNumSubGetResult
-    #undef  PKAEccMultiplyStart
-    #define PKAEccMultiplyStart             NOROM_PKAEccMultiplyStart
-    #undef  PKAEccMontgomeryMultiplyStart
-    #define PKAEccMontgomeryMultiplyStart   NOROM_PKAEccMontgomeryMultiplyStart
-    #undef  PKAEccMultiplyGetResult
-    #define PKAEccMultiplyGetResult         NOROM_PKAEccMultiplyGetResult
-    #undef  PKAEccAddStart
-    #define PKAEccAddStart                  NOROM_PKAEccAddStart
-    #undef  PKAEccAddGetResult
-    #define PKAEccAddGetResult              NOROM_PKAEccAddGetResult
-    #undef  PKAEccVerifyPublicKeyWeierstrassStart
-    #define PKAEccVerifyPublicKeyWeierstrassStart NOROM_PKAEccVerifyPublicKeyWeierstrassStart
-#endif
 
 //*****************************************************************************
 //

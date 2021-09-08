@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       setup.c
-*  Revised:        2020-02-14 13:45:15 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56765
+*  Revised:        2020-12-11 09:58:05 +0100 (Fri, 11 Dec 2020)
+*  Revision:       59848
 *
 *  Description:    Setup file for CC13xx/CC26xx devices.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

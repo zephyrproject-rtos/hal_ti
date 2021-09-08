@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       prcm.h
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
+*  Revised:        2020-08-19 12:18:33 +0200 (Wed, 19 Aug 2020)
+*  Revision:       58172
 *
 *  Description:    Defines and prototypes for the PRCM
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -100,7 +100,8 @@ extern "C"
     #define PRCMPeripheralSleepDisable      NOROM_PRCMPeripheralSleepDisable
     #define PRCMPeripheralDeepSleepEnable   NOROM_PRCMPeripheralDeepSleepEnable
     #define PRCMPeripheralDeepSleepDisable  NOROM_PRCMPeripheralDeepSleepDisable
-    #define PRCMPowerDomainStatus           NOROM_PRCMPowerDomainStatus
+    #define PRCMPowerDomainsAllOff          NOROM_PRCMPowerDomainsAllOff
+    #define PRCMPowerDomainsAllOn           NOROM_PRCMPowerDomainsAllOn
     #define PRCMDeepSleep                   NOROM_PRCMDeepSleep
 #endif
 
@@ -331,7 +332,7 @@ __STATIC_INLINE void
 PRCMMcuUldoConfigure(uint32_t ui32Enable)
 {
     // Enable or disable the uLDO request signal.
-    HWREGBITW(PRCM_BASE + PRCM_O_VDCTL, PRCM_VDCTL_ULDO_BITN) = ui32Enable;
+    HWREG(PRCM_BASE + PRCM_O_VDCTL) = ui32Enable;
 }
 
 //*****************************************************************************
@@ -717,8 +718,8 @@ PRCMDomainDisable(uint32_t ui32Domains)
 //!                 initiate a power down of the SRAM and BUS power domains, unless
 //!                 RF Core is requesting them to be on.
 //!
-//! \note After a call to this function the status of the power domain should
-//! be checked using either \ref PRCMPowerDomainStatus().
+//! \note After a call to this function the status of the power domain should be checked
+//! using either \ref PRCMPowerDomainsAllOff() or \ref PRCMPowerDomainsAllOn().
 //! Any write operation to a power domain which is still not operational can
 //! result in unexpected behavior.
 //!
@@ -775,7 +776,7 @@ __STATIC_INLINE void
 PRCMRfPowerDownWhenIdle(void)
 {
     // Configure the RF power domain.
-    HWREGBITW(PRCM_BASE + PRCM_O_PDCTL0RFC, PRCM_PDCTL0RFC_ON_BITN) = 0;
+    HWREG(PRCM_BASE + PRCM_O_PDCTL0RFC) = 0;
 }
 
 //*****************************************************************************
@@ -1043,12 +1044,33 @@ extern void PRCMPeripheralDeepSleepDisable(uint32_t ui32Peripheral);
 //! - \ref PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S, DMA, UART1
 //!
 //! \return Returns status of the requested domains:
-//! - \ref PRCM_DOMAIN_POWER_ON  : The specified domains are \b all powered up.
-//! This status is unconditional and the powered up status is guaranteed.
-//! - \ref PRCM_DOMAIN_POWER_OFF : Any of the domains are powered down.
+//! - \ref PRCM_DOMAIN_POWER_OFF : The specified domains are \b all powered down.
+//! This status is unconditional and the powered down status is guaranteed.
+//! - \ref PRCM_DOMAIN_POWER_OFF : Any of the domains are still powered up.
 //
 //*****************************************************************************
-extern uint32_t PRCMPowerDomainStatus(uint32_t ui32Domains);
+extern uint32_t PRCMPowerDomainsAllOff(uint32_t ui32Domains);
+
+//*****************************************************************************
+//
+//! \brief Get the status for a specific power domain.
+//!
+//! Use this function to retrieve the current power status of one or more
+//! power domains.
+//!
+//! \param ui32Domains determines which domain to get the power status for.
+//! The parameter must be an OR'ed combination of one or several of:
+//! - \ref PRCM_DOMAIN_RFCORE : RF Core.
+//! - \ref PRCM_DOMAIN_SERIAL : SSI0, UART0, I2C0
+//! - \ref PRCM_DOMAIN_PERIPH : GPT0, GPT1, GPT2, GPT3, GPIO, SSI1, I2S, DMA, UART1
+//!
+//! \return Returns status of the requested domains:
+//! - \ref PRCM_DOMAIN_POWER_ON  : The specified domains are \b all powered up.
+//! This status is unconditional and the powered up status is guaranteed.
+//! - \ref PRCM_DOMAIN_POWER_OFF : Any of the domains are still powered down.
+//
+//*****************************************************************************
+extern uint32_t PRCMPowerDomainsAllOn(uint32_t ui32Domains);
 
 //*****************************************************************************
 //
@@ -1204,9 +1226,13 @@ PRCMCacheRetentionDisable( void )
         #undef  PRCMPeripheralDeepSleepDisable
         #define PRCMPeripheralDeepSleepDisable  ROM_PRCMPeripheralDeepSleepDisable
     #endif
-    #ifdef ROM_PRCMPowerDomainStatus
-        #undef  PRCMPowerDomainStatus
-        #define PRCMPowerDomainStatus           ROM_PRCMPowerDomainStatus
+    #ifdef ROM_PRCMPowerDomainsAllOff
+        #undef  PRCMPowerDomainsAllOff
+        #define PRCMPowerDomainsAllOff          ROM_PRCMPowerDomainsAllOff
+    #endif
+    #ifdef ROM_PRCMPowerDomainsAllOn
+        #undef  PRCMPowerDomainsAllOn
+        #define PRCMPowerDomainsAllOn           ROM_PRCMPowerDomainsAllOn
     #endif
     #ifdef ROM_PRCMDeepSleep
         #undef  PRCMDeepSleep

@@ -1,11 +1,11 @@
 /******************************************************************************
 *  Filename:       chipinfo.c
-*  Revised:        2020-02-17 10:51:36 +0100 (Mon, 17 Feb 2020)
-*  Revision:       56781
+*  Revised:        2020-10-08 13:53:12 +0200 (Thu, 08 Oct 2020)
+*  Revision:       58979
 *
 *  Description:    Collection of functions returning chip information.
 *
-*  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -83,8 +83,8 @@ ChipInfo_GetPackageType( void )
                           FCFG1_USER_ID_PKG_M ) >>
                           FCFG1_USER_ID_PKG_S ) ;
 
-   if (( packType < PACKAGE_4x4    ) ||
-       ( packType > PACKAGE_7x7_Q1 )    )
+   if (( packType < PACKAGE_4x4     ) ||
+       ( packType > PACKAGE_7x7_SIP )    )
    {
       packType = PACKAGE_Unknown;
    }
@@ -130,27 +130,38 @@ ChipInfo_GetChipType( void )
    uint32_t       fcfg1Cc13      = (( fcfg1UserId & FCFG1_USER_ID_CC13_M ) >>
                                                     FCFG1_USER_ID_CC13_S ) ;
    uint32_t       fcfg1Pa        = (( fcfg1UserId & FCFG1_USER_ID_PA_M ) >>
-                                                    FCFG1_USER_ID_PA_S ) ;
+                                                    FCFG1_USER_ID_PA_S )   ;
+   uint32_t       fcfg1Hposc     = (( fcfg1UserId & 0x01000000 ) >> 24 ) ;
 
    if ( chipFam == FAMILY_CC13x2_CC26x2 ) {
       switch ( fcfg1Protocol ) {
       case 0xF :
-         if( fcfg1Cc13 ) {
+         if ( fcfg1Cc13 ) {
             if ( fcfg1Pa ) {
                chipType = CHIP_TYPE_CC1352P  ;
             } else {
                chipType = CHIP_TYPE_CC1352   ;
             }
          } else {
-            if ( fcfg1Pa ) {
+            // ! fcfg1Cc13
+            if ( fcfg1Pa && fcfg1Hposc ) {
+               chipType = CHIP_TYPE_CC2652PB ;
+            }
+            // ! fcfg1Hposc
+            else if ( fcfg1Pa ) {
                chipType = CHIP_TYPE_CC2652P  ;
-            } else {
+            }
+            // ! fcfg1Pa
+            else if ( fcfg1Hposc ) {
+               chipType = CHIP_TYPE_CC2652RB;
+            }
+            else {
                chipType = CHIP_TYPE_CC2652   ;
             }
          }
          break;
       case 0x9 :
-         if( fcfg1Pa ) {
+         if ( fcfg1Pa ) {
             chipType = CHIP_TYPE_unused      ;
          } else {
             chipType = CHIP_TYPE_CC2642      ;
