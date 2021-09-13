@@ -81,7 +81,7 @@ elseif(CONFIG_HAS_CC13X2_CC26X2_SDK)
     kernel/zephyr/dpl/QueueP_zephyr.c
     )
 
-  if(CONFIG_SOC_CC1352R)
+  if(CONFIG_SOC_CC1352R OR CONFIG_SOC_CC1352P)
     set_source_files_properties(source/ti/drivers/power/PowerCC26X2.c
       PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC13X2;${COMPILER}" )
     set_source_files_properties(source/ti/drivers/power/PowerCC26X2_calibrateRCOSC.c
@@ -90,7 +90,7 @@ elseif(CONFIG_HAS_CC13X2_CC26X2_SDK)
       PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC13X2;${COMPILER}" )
     set_source_files_properties(source/ti/drivers/temperature/TemperatureCC26X2.c
       PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC13X2;${COMPILER}" )
-  elseif(CONFIG_SOC_CC2652R)
+  elseif(CONFIG_SOC_CC2652R OR CONFIG_SOC_CC2652P)
     set_source_files_properties(source/ti/drivers/power/PowerCC26X2.c
       PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC26X2;${COMPILER}" )
     set_source_files_properties(source/ti/drivers/power/PowerCC26X2_calibrateRCOSC.c
