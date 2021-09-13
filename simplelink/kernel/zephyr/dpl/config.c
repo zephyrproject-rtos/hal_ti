@@ -20,7 +20,8 @@
 
 #include "ti/drivers/rf/RF.h"
 
-#ifdef CONFIG_HAS_CC13X2_CC26X2_SDK
+#if defined(CONFIG_HAS_CC13X2_CC26X2_SDK) && !defined(CONFIG_CC13X2_CC26X2_HAS_CUSTOM_RF_HWATTRS)
+
 const RFCC26XX_HWAttrsV2 RFCC26XX_hwAttrs = {
     .hwiPriority        = INT_PRI_LEVEL7,  // Lowest HWI priority:  INT_PRI_LEVEL7
                                            // Highest HWI priority: INT_PRI_LEVEL1
@@ -31,4 +32,5 @@ const RFCC26XX_HWAttrsV2 RFCC26XX_hwAttrs = {
     .xoscHfAlwaysNeeded = true             // Power driver always starts XOSC-HF:       true
                                            // RF driver will request XOSC-HF if needed: false
 };
-#endif /* CONFIG_HAS_CC13X2_CC26X2_SDK */
+
+#endif /* CONFIG_HAS_CC13X2_CC26X2_SDK && !CONFIG_CC13X2_CC26X2_HAS_CUSTOM_RF_HWATTRS */
