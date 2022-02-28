@@ -71,7 +71,7 @@
 #include DeviceFamily_constructPath(driverlib/setup.h)
 #include DeviceFamily_constructPath(driverlib/ccfgread.h)
 
-#include <pm/pm.h>
+#include <pm/policy.h>
 
 static unsigned int configureXOSCHF(unsigned int action);
 static unsigned int nopResourceHandler(unsigned int action);
@@ -461,10 +461,10 @@ int_fast16_t Power_releaseConstraint(uint_fast16_t constraintId)
     /* forward constraint release to Zephyr */
     switch (constraintId) {
     case PowerCC26XX_DISALLOW_STANDBY:
-        pm_constraint_release(PM_STATE_STANDBY);
+        pm_policy_state_lock_put(PM_STATE_STANDBY);
         break;
     case PowerCC26XX_DISALLOW_IDLE:
-        pm_constraint_release(PM_STATE_RUNTIME_IDLE);
+        pm_policy_state_lock_put(PM_STATE_RUNTIME_IDLE);
         break;
     default:
         break;
@@ -578,10 +578,10 @@ int_fast16_t Power_setConstraint(uint_fast16_t constraintId)
     /* forward constraint set to Zephyr */
     switch (constraintId) {
     case PowerCC26XX_DISALLOW_STANDBY:
-        pm_constraint_set(PM_STATE_STANDBY);
+        pm_policy_state_lock_get(PM_STATE_STANDBY);
         break;
     case PowerCC26XX_DISALLOW_IDLE:
-        pm_constraint_set(PM_STATE_RUNTIME_IDLE);
+        pm_policy_state_lock_get(PM_STATE_RUNTIME_IDLE);
         break;
     default:
         break;
