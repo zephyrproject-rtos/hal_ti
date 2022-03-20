@@ -196,7 +196,8 @@ interface.  Some are mandatory, others are optional (but recommended).
  * Can remove this if support for CONFIG_NET_SOCKETS_POSIX_NAMES
  * is dropped someday
  */
-#ifndef CONFIG_NET_SOCKETS_POSIX_NAMES
+#if defined(CONFIG_NET_SOCKETS_POSIX_NAMES) || defined(CONFIG_POSIX_CLOCK) \
+    || defined(CONFIG_POSIX_API)
 #include <sys/time.h>
 #endif
 
