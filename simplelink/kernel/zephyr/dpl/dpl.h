@@ -4,6 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define MEM_ALIGN (sizeof(uint32_t))
+#include <errno.h>
 
-extern int *__errno(void);
+#define MEM_ALIGN (sizeof(uint32_t))
