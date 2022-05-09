@@ -71,7 +71,7 @@
 #include DeviceFamily_constructPath(driverlib/setup.h)
 #include DeviceFamily_constructPath(driverlib/ccfgread.h)
 
-#include <pm/policy.h>
+#include <zephyr/pm/policy.h>
 
 static unsigned int configureXOSCHF(unsigned int action);
 static unsigned int nopResourceHandler(unsigned int action);
