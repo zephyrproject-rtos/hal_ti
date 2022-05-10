@@ -44,7 +44,7 @@
 
 #include <stdint.h>
 #include <ti/devices/msp432p4xx/inc/msp.h>
-#include <devicetree.h>
+#include <zephyr/devicetree.h>
 
 /*--------------------- Configuration Instructions ----------------------------
    1. If you prefer to halt the Watchdog Timer, set __HALT_WDT to 1:

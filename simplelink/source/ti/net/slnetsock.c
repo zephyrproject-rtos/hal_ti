@@ -47,7 +47,7 @@
 
 /* POSIX Header files */
 /* Changed include path to match Zephyr posix */
-#include <posix/semaphore.h>
+#include <zephyr/posix/semaphore.h>
 
 /*****************************************************************************/
 /* Macro declarations                                                        */

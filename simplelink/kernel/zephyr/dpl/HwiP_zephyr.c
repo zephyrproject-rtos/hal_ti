@@ -5,8 +5,8 @@
  */
 
 
-#include <zephyr.h>
-#include <sys/__assert.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/sys/__assert.h>
 #include <kernel/zephyr/dpl/dpl.h>
 #include <ti/drivers/dpl/HwiP.h>
 

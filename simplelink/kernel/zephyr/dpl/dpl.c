@@ -8,11 +8,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <zephyr.h>
-#include <device.h>
-#include <init.h>
-#include <sys/util.h>
-#include <sys/__assert.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/device.h>
+#include <zephyr/init.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/sys/__assert.h>
 
 #include <inc/hw_types.h>
 #include <inc/hw_ints.h>
