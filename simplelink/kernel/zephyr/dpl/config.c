@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <zephyr.h>
+#include <zephyr/zephyr.h>
 
 #include "stubs.h"
 

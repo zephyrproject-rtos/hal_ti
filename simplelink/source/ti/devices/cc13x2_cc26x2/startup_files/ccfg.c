@@ -47,7 +47,7 @@
 #include "../inc/hw_ccfg_simple_struct.h"
 
 /* Required for Zephyr __ti_ccfg_section macro */
-#include <linker/sections.h>
+#include <zephyr/linker/sections.h>
 
 //*****************************************************************************
 //
