@@ -41,6 +41,9 @@ zephyr_library_sources_ifdef(CONFIG_BLE_CC13XX_CC26XX
 # Required for RFCDoorbellSendTo which is not in ROM
 zephyr_library_sources_ifdef(CONFIG_BLE_CC13XX_CC26XX driverlib/rfc.c)
 
+# Required for on-chip flash support
+zephyr_library_sources_ifdef(CONFIG_SOC_FLASH_CC13XX_CC26XX driverlib/flash.c)
+
 if(CONFIG_SOC_CC1352R)
   # Required for RFCDoorbellSendTo which is not in ROM
   set_source_files_properties(driverlib/rfc.c
