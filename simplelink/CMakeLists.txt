@@ -59,6 +59,13 @@ if(CONFIG_HAS_CC3220SDK)
   endif()
 
 elseif(CONFIG_HAS_CC13X2_CC26X2_SDK)
+
+  if(CONFIG_SOC_CC1352R OR CONFIG_SOC_CC1352P)
+    zephyr_compile_definitions(DeviceFamily_CC13X2 ${COMPILER})
+  elseif(CONFIG_SOC_CC2652R OR CONFIG_SOC_CC2652P)
+    zephyr_compile_definitions(DeviceFamily_CC26X2 ${COMPILER})
+  endif()
+
   zephyr_include_directories(
     .
     source
@@ -80,26 +87,6 @@ elseif(CONFIG_HAS_CC13X2_CC26X2_SDK)
     kernel/zephyr/dpl/SemaphoreP_zephyr.c
     kernel/zephyr/dpl/QueueP_zephyr.c
     )
-
-  if(CONFIG_SOC_CC1352R OR CONFIG_SOC_CC1352P)
-    set_source_files_properties(source/ti/drivers/power/PowerCC26X2.c
-      PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC13X2;${COMPILER}" )
-    set_source_files_properties(source/ti/drivers/power/PowerCC26X2_calibrateRCOSC.c
-      PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC13X2;${COMPILER}" )
-    set_source_files_properties(source/ti/drivers/rf/RFCC26X2_multiMode.c
-      PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC13X2;${COMPILER}" )
-    set_source_files_properties(source/ti/drivers/temperature/TemperatureCC26X2.c
-      PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC13X2;${COMPILER}" )
-  elseif(CONFIG_SOC_CC2652R OR CONFIG_SOC_CC2652P)
-    set_source_files_properties(source/ti/drivers/power/PowerCC26X2.c
-      PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC26X2;${COMPILER}" )
-    set_source_files_properties(source/ti/drivers/power/PowerCC26X2_calibrateRCOSC.c
-      PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC26X2;${COMPILER}" )
-    set_source_files_properties(source/ti/drivers/rf/RFCC26X2_multiMode.c
-      PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC26X2;${COMPILER}" )
-    set_source_files_properties(source/ti/drivers/temperature/TemperatureCC26X2.c
-      PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC26X2;${COMPILER}" )
-  endif()
 
 elseif(CONFIG_HAS_MSP432P4XXSDK)
   zephyr_include_directories(
