@@ -5,7 +5,7 @@ zephyr_include_directories(
   )
 
 zephyr_library()
-zephyr_library_compile_definitions(${COMPILER})
+
 zephyr_library_sources(
   # Required for SystemTrimDevice which is not in ROM
   driverlib/setup.c
@@ -45,13 +45,3 @@ zephyr_library_sources_ifdef(CONFIG_BLE_CC13XX_CC26XX driverlib/rfc.c)
 
 # Required for on-chip flash support
 zephyr_library_sources_ifdef(CONFIG_SOC_FLASH_CC13XX_CC26XX driverlib/flash.c)
-
-if(CONFIG_SOC_CC1352R OR CONFIG_SOC_CC1352P)
-  # Required for RFCDoorbellSendTo which is not in ROM
-  set_source_files_properties(driverlib/rfc.c
-    PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC13X2;${COMPILER}" )
-elseif(CONFIG_SOC_CC2652R OR CONFIG_SOC_CC2652P)
-  # Required for RFCDoorbellSendTo which is not in ROM
-  set_source_files_properties(driverlib/rfc.c
-    PROPERTIES COMPILE_DEFINITIONS "DeviceFamily_CC26X2;${COMPILER}" )
-endif()
