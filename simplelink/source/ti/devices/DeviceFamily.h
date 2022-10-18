@@ -101,6 +101,11 @@ extern "C" {
     #define DeviceFamily_DIRECTORY      cc13x2_cc26x2
     #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X2_CC26X2
 
+#elif defined(DeviceFamily_CC13X2X7)
+    #define DeviceFamily_ID             DeviceFamily_ID_CC13X2
+    #define DeviceFamily_DIRECTORY      cc13x2x7_cc26x2x7
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X2_CC26X2
+
 #elif defined(DeviceFamily_CC26X0)
     #define DeviceFamily_ID             DeviceFamily_ID_CC26X0
     #define DeviceFamily_DIRECTORY      cc26x0

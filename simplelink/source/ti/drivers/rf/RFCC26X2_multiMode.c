@@ -4113,7 +4113,8 @@ static void RF_detachOverrides(uint32_t* baseOverride, uint32_t* newOverride)
 static bool RF_decodeOverridePointers(RF_RadioSetup* radioSetup, uint16_t** pTxPower, uint32_t** pRegOverride, uint32_t** pRegOverrideTxStd, uint32_t** pRegOverrideTx20)
 {
     /* Decode if High Gain PA is even available. */
-    bool tx20FeatureAvailable = (ChipInfo_GetChipType() == CHIP_TYPE_CC1352P) || (ChipInfo_GetChipType() == CHIP_TYPE_CC2652P);
+    bool tx20FeatureAvailable = (ChipInfo_GetChipType() == CHIP_TYPE_CC1352P) || (ChipInfo_GetChipType() == CHIP_TYPE_CC1352P7) ||
+                                (ChipInfo_GetChipType() == CHIP_TYPE_CC2652P);
 
     /* Only decode the offset of those fields which exist on this device. */
     if (tx20FeatureAvailable)
