@@ -58,10 +58,12 @@ if(CONFIG_HAS_CC3220SDK)
       PROPERTIES COMPILE_FLAGS -Wno-incompatible-pointer-types) # driver.c warns on incompatible-pointer-types
   endif()
 
-elseif(CONFIG_HAS_CC13X2_CC26X2_SDK)
+elseif(CONFIG_HAS_CC13X2_CC26X2_SDK OR CONFIG_HAS_CC13X2X7_CC26X2X7_SDK)
 
   if(CONFIG_SOC_CC1352R OR CONFIG_SOC_CC1352P)
     zephyr_compile_definitions(DeviceFamily_CC13X2 ${COMPILER})
+  elseif(CONFIG_SOC_CC1352R7 OR CONFIG_SOC_CC1352P7)
+    zephyr_compile_definitions(DeviceFamily_CC13X2X7 ${COMPILER})
   elseif(CONFIG_SOC_CC2652R OR CONFIG_SOC_CC2652P)
     zephyr_compile_definitions(DeviceFamily_CC26X2 ${COMPILER})
   endif()
