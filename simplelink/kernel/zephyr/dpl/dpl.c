@@ -110,7 +110,7 @@ int dpl_set_errno(int err)
 	 * __errno() is a Zephyr function returning a pointer to the
 	 * current thread's errno variable.
 	 */
-	*__errno() = (err < 0? -err : err);
+	errno = (err < 0? -err : err);
 	return -1;
 }
 #endif
