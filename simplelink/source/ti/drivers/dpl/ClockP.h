@@ -61,7 +61,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 
 #ifdef __cplusplus
 extern "C" {

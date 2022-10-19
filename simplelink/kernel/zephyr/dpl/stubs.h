@@ -1,7 +1,7 @@
 #ifndef STUBS_H_
 #define STUBS_H_
 
-#include <zephyr/zephyr.h>
+#include <zephyr/sys/printk.h>
 
 #define STUB(fmt, args...) printk("%s(): %d: STUB: " fmt "\n", __func__, __LINE__, ##args)
 
