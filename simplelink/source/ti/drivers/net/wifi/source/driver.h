@@ -460,7 +460,7 @@ extern void _SlDrvSleep(_u16 DurationInMsec);
 #endif
 
 #if defined(SL_PLATFORM_MULTI_THREADED)
-extern void * pthread_self(void);
+/* Note: pthread_self() previously declared here */
 #endif
 
 extern _SlReturnVal_t _SlNetAppHandleAsync_DnsGetHostByName(void *pVoidBuf);
