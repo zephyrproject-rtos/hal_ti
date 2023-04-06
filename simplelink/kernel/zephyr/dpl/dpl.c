@@ -52,7 +52,7 @@ K_MSGQ_DEFINE(spawn_msgq, sizeof(tSimpleLinkSpawnMsg), SPAWN_QUEUE_SIZE,\
  * SimpleLink does not have an init hook, so we export this function to
  * be called early during system initialization.
  */
-static int dpl_zephyr_init(const struct device *port)
+static int dpl_zephyr_init(void)
 {
 	(void)k_thread_create(&spawn_task_data, spawn_task_stack,
 			SPAWN_TASK_STACKSIZE, spawn_task,
