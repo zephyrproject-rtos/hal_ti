@@ -1785,9 +1785,9 @@ void RF_powerConstraintRelease(RF_PowerConstraintSrc src)
     RF_powerConstraint &= ~src;
 
     /* Check if all constraints are clear. */
-    if (!(RF_powerConstraint & RF_PowerConstraintCmdQ))
-    {
-        /* Initiate power down if the above criterion is met.
+    if (RF_core.status != RF_CoreStatusPoweringDown &&
+	!(RF_powerConstraint & RF_PowerConstraintCmdQ)) {
+	/* Initiate power down if the above criterion is met.
            The RAT timer though might will prevent us to proceed. */
         SwiP_or(&RF_swiFsmObj, RF_FsmEventPowerDown);
     }
@@ -3526,8 +3526,17 @@ static void RF_fsmActiveState(RF_Object *pObj, RF_FsmEvent e)
     }
     else if (e & RF_FsmEventPowerDown)
     {
+        RF_CoreStatus previousStatus;
+
         /* Enter critical section. */
         key = HwiP_disable();
+
+        /* Store the previous status in case the transition will be rejected */
+        previousStatus = RF_core.status;
+
+        /* Indicate that the RF core is being powered down from now.
+           This must be done early on to avoid nesting. */
+        RF_core.status = RF_CoreStatusPoweringDown;
 
         /* Verify if the decision has not been reverted in the meantime. */
         transitionAllowed = RF_isStateTransitionAllowed();
@@ -3542,9 +3551,6 @@ static void RF_fsmActiveState(RF_Object *pObj, RF_FsmEvent e)
         /* If there is nothing prevent us to power down, proceed. */
         if (transitionAllowed)
         {
-            /* Indicate that the RF core is being powered down from now */
-            RF_core.status = RF_CoreStatusPoweringDown;
-
             /* Stop inactivity timer. */
             ClockP_stop(&RF_clkInactivityObj);
 
@@ -3600,6 +3606,9 @@ static void RF_fsmActiveState(RF_Object *pObj, RF_FsmEvent e)
         }
         else
         {
+            /* Restore the previous status. */
+            RF_core.status = previousStatus;
+
             /* Exit ritical setion. */
             HwiP_restore(key);
         }
