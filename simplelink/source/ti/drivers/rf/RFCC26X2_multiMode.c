@@ -3531,15 +3531,15 @@ static void RF_fsmActiveState(RF_Object *pObj, RF_FsmEvent e)
         /* Enter critical section. */
         key = HwiP_disable();
 
+        /* Verify if the decision has not been reverted in the meantime. */
+        transitionAllowed = RF_isStateTransitionAllowed();
+
         /* Store the previous status in case the transition will be rejected */
         previousStatus = RF_core.status;
 
         /* Indicate that the RF core is being powered down from now.
            This must be done early on to avoid nesting. */
         RF_core.status = RF_CoreStatusPoweringDown;
-
-        /* Verify if the decision has not been reverted in the meantime. */
-        transitionAllowed = RF_isStateTransitionAllowed();
 
         /* If possible, put the running RAT channels into pending state allowing to
            power down the RF core. */
