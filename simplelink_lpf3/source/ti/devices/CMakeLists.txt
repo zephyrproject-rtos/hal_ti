@@ -1,0 +1,1 @@
+add_subdirectory_ifdef(CONFIG_HAS_CC23X0_SDK cc23x0r5)
