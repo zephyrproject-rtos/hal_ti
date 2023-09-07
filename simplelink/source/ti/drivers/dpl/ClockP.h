@@ -68,6 +68,15 @@ extern "C" {
 #endif
 
 #define US_PER_S 1000000UL
+#define MS_PER_S 1000UL
+
+/* Divide and round up. */
+#define CLOCKP_DIV_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
+
+/* Divide and round to the closest value (only works if both, n and d, are
+ * positive).
+ */
+#define CLOCKP_DIV_ROUND(n, d)	(((n) + ((d) / 2)) / (d))
 
 /*!
  *  @brief  Prototype for a ClockP function.
@@ -124,8 +133,6 @@ typedef  void *ClockP_Handle;
 
 #define ClockP_handle(x) ((ClockP_Handle)(x))
 
-extern uint32_t ClockP_tickPeriod;
-
 /*!
  *  @brief    Basic ClockP Parameters
  *
@@ -146,7 +153,7 @@ extern uint32_t ClockP_tickPeriod;
  */
 typedef struct {
     bool      startFlag; /*!< Start immediately after instance is created. */
-    uint32_t  period;    /*!< Period of clock object. */
+    uint32_t  period;    /*!< Period of clock object in system ticks. */
     uintptr_t arg;       /*!< Argument passed into the clock function. */
 } ClockP_Params;
 
@@ -210,7 +217,175 @@ extern void ClockP_delete(ClockP_Handle handle);
 extern void ClockP_getCpuFreq(ClockP_FreqHz *freq);
 
 /*!
+ *  @brief  Get the system tick frequency in Hz (ticks per second).
+ *
+ *  @note This is a Zephyr specific addition to TI's original clock API to
+ *  support precision timing.
+ *
+ *  @return The kernel's system tick frequency in Hz.
+ */
+extern uint32_t ClockP_getSystemTickFreq();
+
+/*!
+ *  @brief Convert system ticks to milliseconds (rounded).
+ *
+ *  @note This is a Zephyr specific addition to TI's original clock API to
+ *  support precision timing.
+ *
+ *  @return Ticks converted to milliseconds and rounded to the closest integer
+ *  value. If the value cannot be represented with 32 bits, ~0 is returned.
+ */
+static inline uint32_t ClockP_convertSystemTicksToMsRound(uint32_t ticks)
+{
+    uint64_t ms = CLOCKP_DIV_ROUND((uint64_t)ticks * MS_PER_S, ClockP_getSystemTickFreq());
+
+    if(unlikely(ms > (uint32_t)ms))
+    {
+        return UINT32_MAX;
+    }
+
+    return ms;
+}
+
+/*!
+ *  @brief Convert milliseconds to system ticks (rounded).
+ *
+ *  @note This is a Zephyr specific addition to TI's original clock API to
+ *  support precision timing.
+ *
+ *  @return Milliseconds converted to ticks and rounded to the closest integer
+ *  value. If the value cannot be represented with 32 bits, ~0 is returned.
+ */
+static inline uint32_t ClockP_convertMsToSystemTicksRound(uint32_t ms)
+{
+    uint64_t ticks;
+
+    if(ms == 0)
+    {
+        return 0;
+    }
+
+    ticks = CLOCKP_DIV_ROUND_UP((uint64_t)ms * ClockP_getSystemTickFreq(), MS_PER_S);
+
+    if (unlikely(ticks > (uint32_t)ticks))
+    {
+        return UINT32_MAX;
+    }
+
+    return ticks;
+}
+
+/*!
+ *  @brief Convert system ticks to microseconds (rounded).
+ *
+ *  @note This is a Zephyr specific addition to TI's original clock API to
+ *  support precision timing.
+ *
+ *  @return Ticks converted to microseconds and rounded to the closest integer
+ *  value. If the value cannot be represented with 32 bits, ~0 is returned.
+ */
+static inline uint32_t ClockP_convertSystemTicksToUsRound(uint32_t ticks)
+{
+    uint64_t us = CLOCKP_DIV_ROUND((uint64_t)ticks * US_PER_S, ClockP_getSystemTickFreq());
+
+    if(unlikely(us > (uint32_t)us))
+    {
+        return UINT32_MAX;
+    }
+
+    return us;
+}
+
+/*!
+ *  @brief Convert microseconds to system ticks (rounded down).
+ *
+ *  @note This is a Zephyr specific addition to TI's original clock API to
+ *  support precision timing.
+ *
+ *  @return Microseconds converted to ticks and rounded down. If the value
+ *  cannot be represented with 32 bits, ~0 is returned.
+ */
+static inline uint32_t ClockP_convertUsToSystemTicksFloor(uint32_t us)
+{
+    uint64_t ticks;
+
+    if(us == 0)
+    {
+        return 0;
+    }
+
+    ticks = ((uint64_t)us * ClockP_getSystemTickFreq()) / US_PER_S;
+
+    if (unlikely(ticks > (uint32_t)ticks))
+    {
+        return UINT32_MAX;
+    }
+
+    return ticks;
+}
+
+/*!
+ *  @brief Convert microseconds to system ticks (rounded up).
+ *
+ *  @note This is a Zephyr specific addition to TI's original clock API to
+ *  support precision timing.
+ *
+ *  @return Microseconds converted to ticks and rounded up. If the value cannot
+ *  be represented with 32 bits, ~0 is returned.
+ */
+static inline uint32_t ClockP_convertUsToSystemTicksCeil(uint32_t us)
+{
+    uint64_t ticks;
+
+    if(us == 0)
+    {
+        return 0;
+    }
+
+    ticks = CLOCKP_DIV_ROUND_UP((uint64_t)us * ClockP_getSystemTickFreq(), US_PER_S);
+
+    if (unlikely(ticks > (uint32_t)ticks))
+    {
+        return UINT32_MAX;
+    }
+
+    return ticks;
+}
+
+/*!
+ *  @brief Convert microseconds to system ticks (rounded).
+ *
+ *  @note This is a Zephyr specific addition to TI's original clock API to
+ *  support precision timing.
+ *
+ *  @return Microseconds converted to ticks and rounded to the closest integer.
+ *  If the value cannot be represented with 32 bits, ~0 is returned.
+ */
+static inline uint32_t ClockP_convertUsToSystemTicksRound(uint32_t us)
+{
+    uint64_t ticks;
+
+    if(us == 0)
+    {
+        return 0;
+    }
+
+    ticks = CLOCKP_DIV_ROUND((uint64_t)us * ClockP_getSystemTickFreq(), US_PER_S);
+
+    if (unlikely(ticks > (uint32_t)ticks))
+    {
+        return UINT32_MAX;
+    }
+
+    return ticks;
+}
+
+/*!
  *  @brief  Get the system tick period in microseconds.
+ *
+ *  @warning This may be rounded down to the next matching integer which amounts
+ *  to ~17250 ppm error if equal to the LF clock (32768 Hz). Use one of the
+ *  from/to tick conversion helpers above if precise timing is needed.
  *
  *  @return The kernel's system tick period in microseconds.
  */

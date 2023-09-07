@@ -1228,9 +1228,10 @@ extern  _i16 os_Spawn(P_OS_SPAWN_ENTRY pEntry, void *pValue, unsigned long flags
 
     \return Number of ticks in 10ms
     \note
-    \warning
+    \warning This calculation is not precise as rounding takes place in the
+             order of 1000 ppm if the system tick is the LF clock (32768 Hz).
 */
-#define SL_TIMESTAMP_TICKS_IN_10_MILLISECONDS     (10000/ClockP_getSystemTickPeriod())
+#define SL_TIMESTAMP_TICKS_IN_10_MILLISECONDS     DIV_ROUND_UP(ClockP_getSystemTickFreq(), 100)
 /*!
  *
  Close the Doxygen group.

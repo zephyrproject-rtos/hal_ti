@@ -55,25 +55,6 @@ extern Button_Config Button_config[];
 /* Local functions */
 
 /*
- *  ======== ticksToMs ========
- * Convert system ticks to milliseconds(ms). If the value cannot be represented
- * with 32 bits, ~0 is returned.
- */
-static uint32_t ticksToMs(uint32_t ticks)
-{
-    uint64_t ms = (ticks * ClockP_getSystemTickPeriod()) / 1000;
-
-    if((uint64_t)ms > (uint32_t)ms)
-    {
-        return((uint32_t)~0);
-    }
-    else
-    {
-        return((uint32_t)ms);
-    }
-}
-
-/*
  *  ======== timediff ========
  *  Calculates time difference between input system tick and current system
  *  tick value. If more than 32 bits of ticks have passed, this function is
@@ -91,27 +72,6 @@ static uint32_t timediff(uint32_t startTick)
         /* System tick value overflowed */
         return(currentTick + ((uint32_t)(~0) - startTick));
     }
-}
-
-/*
- *  ======== msToTicks ========
- * Convert milliseconds to system ticks
- */
-static uint32_t msToTicks(uint32_t ms)
-{
-    uint32_t ticks;
-
-    if(ms == 0)
-    {
-        return(0);
-    }
-
-    ticks = (ms * 1000)/ClockP_getSystemTickPeriod();
-    if(ticks == 0)
-    {
-        ticks = 1;
-    }
-    return(ticks);
 }
 
 /*
@@ -451,10 +411,10 @@ Button_Handle Button_open(uint_least8_t buttonIndex,
     }
 
     /* Set internal variables */
-    obj->debounceDuration            = msToTicks(params->debounceDuration);
-    obj->longPressDuration           = msToTicks(params->longPressDuration);
-    obj->doublePressDetectiontimeout = msToTicks(params->
-                                                 doublePressDetectiontimeout);
+    obj->debounceDuration = ClockP_convertMsToSystemTicksRound(params->debounceDuration);
+    obj->longPressDuration = ClockP_convertMsToSystemTicksRound(params->longPressDuration);
+    obj->doublePressDetectiontimeout =
+        ClockP_convertMsToSystemTicksRound(params->doublePressDetectiontimeout);
     obj->buttonCallback              = buttonCallback;
     obj->buttonEventMask             = params->buttonEventMask;
 
@@ -540,5 +500,5 @@ extern uint32_t Button_getLastPressedDuration(Button_Handle handle)
 {
     uint32_t ticks = ((Button_Object *)(handle->object))->
         buttonStateVariables.lastPressedDuration;
-    return(ticksToMs(ticks));
+    return(ClockP_convertSystemTicksToMsRound(ticks));
 }

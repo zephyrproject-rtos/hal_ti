@@ -83,29 +83,6 @@ static void clockTimeoutHandler(uintptr_t arg)
     }
 }
 
-/*
- *  ======== msToTicks ========
- * Convert milliseconds to system ticks.
- * If passed zero, returns zero. If passed a ms value that converts to less
- * than one system tick, returns one.
- */
-static uint32_t msToTicks(uint32_t ms)
-{
-    uint32_t ticks;
-
-    if(ms == 0)
-    {
-        return(0);
-    }
-
-    ticks = (ms * 1000)/ClockP_getSystemTickPeriod();
-    if(ticks == 0)
-    {
-        ticks = 1;
-    }
-    return(ticks);
-}
-
 /* API functions: */
 
 /*
@@ -440,7 +417,7 @@ void LED_startBlinking(LED_Handle ledHandle,
             obj->blinkCount = 2 * blinkCount;
         }
 
-        obj->togglePeriod = msToTicks(blinkPeriod/2);
+        obj->togglePeriod = ClockP_convertMsToSystemTicksRound(blinkPeriod/2);
         ClockP_setTimeout(obj->clockHandle, obj->togglePeriod);
         ClockP_start(obj->clockHandle);
         obj->state = LED_STATE_BLINKING;

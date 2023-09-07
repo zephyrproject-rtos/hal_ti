@@ -273,7 +273,7 @@ int_fast16_t SDSPI_initialize(SD_Handle handle)
                  * completed.
                  */
                 status = SD_STATUS_ERROR;
-                timeout = 1000000/ClockP_getSystemTickPeriod();
+                timeout = ClockP_getSystemTickFreq();
                 startTime = ClockP_getSystemTicks();
 
                 do {
@@ -320,7 +320,7 @@ int_fast16_t SDSPI_initialize(SD_Handle handle)
          * completed.
          */
         status = SD_STATUS_ERROR;
-        timeout = 1000000/ClockP_getSystemTickPeriod();
+        timeout = ClockP_getSystemTickFreq();
         startTime = ClockP_getSystemTicks();
         do {
             if (cardType == SD_SDSC) {
@@ -610,7 +610,7 @@ static bool recvDataBlock(SPI_Handle handle, void *buf, uint32_t count)
      * Wait for SD card to be ready up to 1s.  SD card is ready when the
      * START_BLOCK_TOKEN is received.
      */
-    timeout = 1000000/ClockP_getSystemTickPeriod();
+    timeout = ClockP_getSystemTickFreq();
     startTime = ClockP_getSystemTicks();
     do {
         status = spiTransfer(handle, &rxBuf, &txBuf, 1);
@@ -788,7 +788,7 @@ static bool waitUntilReady(SPI_Handle handle)
     uint32_t     timeout;
 
     /* Wait up to 1s for data packet */
-    timeout = 1000000/ClockP_getSystemTickPeriod();
+    timeout = ClockP_getSystemTickFreq();
     startTime = ClockP_getSystemTicks();
     do {
         status = spiTransfer(handle, &rxDummy, &txDummy, 1);
