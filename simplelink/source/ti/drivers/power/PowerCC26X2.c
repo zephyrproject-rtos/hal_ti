@@ -296,7 +296,7 @@ int_fast16_t Power_init()
          */
         ClockP_construct(&PowerCC26X2_module.tcxoEnableClock,
                          (ClockP_Fxn)&switchToTCXO,
-                         (CCFGRead_TCXO_MAX_START()*100)/ClockP_getSystemTickPeriod(),
+                         (CCFGRead_TCXO_MAX_START() * ClockP_getSystemTickFreq()) / 10000UL,
                          NULL);
 
         HWREG(AUX_DDI0_OSC_BASE + DDI_O_CLR + DDI_0_OSC_O_CTL0) = DDI_0_OSC_CTL0_XTAL_IS_24M;

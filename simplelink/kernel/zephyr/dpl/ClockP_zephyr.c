@@ -69,7 +69,19 @@ ClockP_Handle ClockP_construct(ClockP_Struct *handle, ClockP_Fxn clockFxn,
 }
 
 /*
+ *  ======== ClockP_getSystemTickFreq ========
+ */
+inline uint32_t ClockP_getSystemTickFreq()
+{
+   return CONFIG_SYS_CLOCK_TICKS_PER_SEC;
+}
+
+/*
  *  ======== ClockP_getSystemTickPeriod ========
+ *
+ *  This implementation rounds the system tick period down by ~17250ppm
+ *  which makes it useless for any precision timing. Use
+ *  (timeUs * ClockP_getSystemTickFreq() for these purposes instead.
  */
 inline uint32_t ClockP_getSystemTickPeriod()
 {

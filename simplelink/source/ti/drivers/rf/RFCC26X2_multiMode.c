@@ -788,10 +788,8 @@ static bool RF_cmdDispatchTime(uint32_t* dispatchTimeClockTicks, bool conflict, 
 
             /* Calculate the remained time until this absolute event. The calculation takes
                into account the minimum power cycle time. */
-            *dispatchTimeClockTicks = RF_calculateDeltaTimeUs(pCmd->startTime, nTotalDuration);
-
-            /* Scale the value to clock ticks*/
-            *dispatchTimeClockTicks /= ClockP_getSystemTickPeriod();
+            *dispatchTimeClockTicks = ClockP_convertUsToSystemTicksFloor(
+                RF_calculateDeltaTimeUs(pCmd->startTime, nTotalDuration));
         }
         else
         {
@@ -1044,7 +1042,7 @@ static bool RF_ratDispatchTime(uint32_t* dispatchTimeClockTicks)
                                                                (RF_RAT_COMPENSATION_TIME_US * RF_ratModule.numActiveChannels));
 
                 /* Scale the value to clock ticks. */
-                uint32_t deltaTimeClockTicks = deltaTimeUs / ClockP_getSystemTickPeriod();
+                uint32_t deltaTimeClockTicks = deltaTimeUs * 1000ULL / 30500;
 
                 /* If this is the closest RAT event, update the timer. */
                 if (deltaTimeClockTicks < (*dispatchTimeClockTicks))
@@ -1374,7 +1372,8 @@ static uint8_t RF_wakeupNotification(uint8_t eventType, uint32_t *eventArg, uint
     if ((eventType == PowerCC26XX_AWAKE_STANDBY) && (ClockP_isActive(&RF_clkPowerUpObj)))
     {
         /* Calculate time (in us) until next trigger (assume next trigger is max ~70 min away) */
-        uint32_t timeInUsUntilNextTrig = ClockP_getSystemTickPeriod() * ClockP_getTimeout(&RF_clkPowerUpObj);
+        uint32_t timeInUsUntilNextTrig =
+            ClockP_convertSystemTicksToUsRound(ClockP_getTimeout(&RF_clkPowerUpObj));
 
         /* Check if the next trig time is close enough to the actual power up */
         if (timeInUsUntilNextTrig < RF_WAKEUP_DETECTION_WINDOW_IN_US)
@@ -2884,7 +2883,8 @@ static void RF_setInactivityTimeout(void)
     else if (inactivityTimeUs != SemaphoreP_WAIT_FOREVER)
     {
         /* Reprogram and start inactivity timer */
-        RF_restartClockTimeout(&RF_clkInactivityObj, inactivityTimeUs/ClockP_getSystemTickPeriod());
+        RF_restartClockTimeout(&RF_clkInactivityObj,
+            ClockP_convertUsToSystemTicksCeil(inactivityTimeUs));
     }
 }
 
@@ -3220,7 +3220,8 @@ static void RF_fsmXOSCState(RF_Object *pObj, RF_FsmEvent e)
         else
         {
             /* Clock source not yet switched to XOSC_HF: schedule new polling */
-            RF_restartClockTimeout(&RF_clkPowerUpObj, RF_XOSC_HF_SWITCH_CHECK_PERIOD_US/ClockP_getSystemTickPeriod());
+            RF_restartClockTimeout(&RF_clkPowerUpObj,
+                ClockP_convertUsToSystemTicksRound(RF_XOSC_HF_SWITCH_CHECK_PERIOD_US));
         }
     }
 }
@@ -5640,7 +5641,8 @@ RF_Stat RF_requestAccess(RF_Handle h, RF_AccessParams *pParams)
         RF_Sch.accReq[clientIdx].priority = pParams->priority;
 
         /* Start timeout of the request. */
-        RF_restartClockTimeout(&h->state.clkReqAccess, durationInUs/ClockP_getSystemTickPeriod());
+        RF_restartClockTimeout(&h->state.clkReqAccess,
+            ClockP_convertUsToSystemTicksCeil(durationInUs));
 
         /* Set status to success after the access was granted. */
         status = RF_StatSuccess;

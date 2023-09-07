@@ -1088,7 +1088,7 @@ static void startTxFifoEmptyClk(UART_Handle handle, unsigned int numData)
      *       - 8 - for maximum data length
      *       - 3 - for one start bit and maximum of two stop bits
      */
-    ticksPerSec = 1000000 / ClockP_getSystemTickPeriod();
+    ticksPerSec = ClockP_getSystemTickFreq();
     writeTimeout = ((numData * (8 + 3) * ticksPerSec) + object->baudRate - 1)
                            / object->baudRate;
 
