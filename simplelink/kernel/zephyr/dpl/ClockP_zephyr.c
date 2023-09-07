@@ -9,7 +9,6 @@
 #include <kernel/zephyr/dpl/dpl.h>
 #include <ti/drivers/dpl/ClockP.h>
 
-#include "stubs.h"
 
 /* 
  * ClockP_STRUCT_SIZE in ClockP.h must be updated to match the size of this

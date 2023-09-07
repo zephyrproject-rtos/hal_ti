@@ -3,7 +3,6 @@
 
 #include <zephyr/kernel.h>
 
-#include "stubs.h"
 
 #if defined(CONFIG_HAS_CC13X2_CC26X2_SDK) || defined(CONFIG_HAS_CC13X2X7_CC26X2X7_SDK)
 #include "ti/devices/cc13x2_cc26x2/driverlib/interrupt.h"
