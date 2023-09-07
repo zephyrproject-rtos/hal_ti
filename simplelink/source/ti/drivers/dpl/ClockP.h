@@ -67,6 +67,8 @@
 extern "C" {
 #endif
 
+#define US_PER_S 1000000UL
+
 /*!
  *  @brief  Prototype for a ClockP function.
  */
