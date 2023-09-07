@@ -45,7 +45,7 @@ static SemaphoreP_Status dpl_sem_pool_free(struct k_sem *sem)
 	return SemaphoreP_OK;
 }
 
-/* timeout comes in and out as milliSeconds: */
+/* timeout comes in and out in ticks */
 static k_timeout_t dpl_convert_timeout(uint32_t timeout)
 {
 	switch(timeout) {
@@ -54,7 +54,7 @@ static k_timeout_t dpl_convert_timeout(uint32_t timeout)
 	case SemaphoreP_WAIT_FOREVER:
 		return K_FOREVER;
 	default:
-		return K_MSEC(timeout);
+		return K_TICKS(timeout);
 	}
 }
 

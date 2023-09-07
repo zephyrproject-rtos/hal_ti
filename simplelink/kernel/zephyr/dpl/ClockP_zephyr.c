@@ -17,8 +17,8 @@ typedef struct _ClockP_Obj {
 	struct k_timer timer;
 	ClockP_Fxn clock_fxn;
 	uintptr_t arg;
-	uint32_t timeout;
-	uint32_t period;
+	uint32_t timeout; /* in sys clock uptime ticks */
+	uint32_t period; /* in sys clock uptime ticks */
 	bool active;
 } ClockP_Obj;
 
@@ -37,6 +37,7 @@ static void expiry_fxn(struct k_timer *timer_id)
 
 /*
  *  ======== ClockP_construct ========
+ *  @param timeout in sys clock uptime ticks
  */
 ClockP_Handle ClockP_construct(ClockP_Struct *handle, ClockP_Fxn clockFxn,
         uint32_t timeout, ClockP_Params *params)
@@ -53,7 +54,7 @@ ClockP_Handle ClockP_construct(ClockP_Struct *handle, ClockP_Fxn clockFxn,
 
 	obj->clock_fxn = clockFxn;
 	obj->arg = params->arg;
-	obj->period = params->period * ClockP_getSystemTickPeriod() / 1000;
+	obj->period = params->period;
 	obj->timeout = timeout;
 	obj->active = false;
 	
@@ -93,6 +94,7 @@ void ClockP_Params_init(ClockP_Params *params)
 
 /*
  *  ======== ClockP_setTimeout ========
+ *  @param timeout in sys clock uptime ticks
  */
 void ClockP_setTimeout(ClockP_Handle handle, uint32_t timeout)
 {
@@ -108,7 +110,7 @@ void ClockP_start(ClockP_Handle handle)
 {
 	ClockP_Obj *obj = (ClockP_Obj *)handle;
 
-	k_timer_start(&obj->timer, K_MSEC(obj->timeout), K_MSEC(obj->period));
+	k_timer_start(&obj->timer, K_TICKS(obj->timeout), K_TICKS(obj->period));
 	obj->active = true;
 }
 
@@ -136,7 +138,7 @@ void ClockP_usleep(uint32_t usec)
  */
 uint32_t ClockP_getTimeout(ClockP_Handle handle) {
     ClockP_Obj *obj = (ClockP_Obj *)handle;
-    return k_timer_remaining_get(&obj->timer) * CONFIG_SYS_CLOCK_TICKS_PER_SEC / 1000;
+    return obj->active ? k_timer_remaining_ticks(&obj->timer) : obj->timeout;
 }
 
 /*
