@@ -5,10 +5,9 @@
  */
 
 #include <zephyr/kernel.h>
-#include <zephyr/sys/__assert.h>
-#include <kernel/zephyr/dpl/dpl.h>
 #include <ti/drivers/dpl/ClockP.h>
 
+#define CLOCKP_TICK_PERIOD (US_PER_S / CONFIG_SYS_CLOCK_TICKS_PER_SEC);
 
 /* 
  * ClockP_STRUCT_SIZE in ClockP.h must be updated to match the size of this
@@ -71,15 +70,15 @@ ClockP_Handle ClockP_construct(ClockP_Struct *handle, ClockP_Fxn clockFxn,
 /*
  *  ======== ClockP_getSystemTickPeriod ========
  */
-uint32_t ClockP_tickPeriod = (1000000 / CONFIG_SYS_CLOCK_TICKS_PER_SEC);
-uint32_t ClockP_getSystemTickPeriod()
+inline uint32_t ClockP_getSystemTickPeriod()
 {
-   return ClockP_tickPeriod;
+   return CLOCKP_TICK_PERIOD;
 }
 
 uint32_t ClockP_getSystemTicks()
 {
-	return (uint32_t)k_ms_to_ticks_ceil32(k_uptime_get_32());
+	/* may wrap */
+	return k_uptime_ticks();
 }
 
 /*
@@ -108,37 +107,9 @@ void ClockP_setTimeout(ClockP_Handle handle, uint32_t timeout)
 void ClockP_start(ClockP_Handle handle)
 {
 	ClockP_Obj *obj = (ClockP_Obj *)handle;
-	int32_t timeout;
-	int32_t period;
 
-	__ASSERT_NO_MSG(obj->timeout /
-		CONFIG_SYS_CLOCK_TICKS_PER_SEC <= UINT32_MAX / 1000);
-	__ASSERT_NO_MSG(obj->period /
-		CONFIG_SYS_CLOCK_TICKS_PER_SEC <= UINT32_MAX / 1000);
-
-	/* Avoid overflow */
-	if (obj->timeout > UINT32_MAX / 1000) {
-		timeout = obj->timeout / CONFIG_SYS_CLOCK_TICKS_PER_SEC * 1000;
-	} else if ((obj->timeout != 0) &&
-		(obj->timeout < CONFIG_SYS_CLOCK_TICKS_PER_SEC / 1000)) {
-		/* For small timeouts we use 1 msec */
-		timeout = 1;		
-	} else {
-		timeout = obj->timeout * 1000 / CONFIG_SYS_CLOCK_TICKS_PER_SEC;
-	}
-
-	if (obj->period > UINT32_MAX / 1000) {
-		period = obj->period / CONFIG_SYS_CLOCK_TICKS_PER_SEC * 1000;
-	} else if ((obj->period != 0) &&
-		(obj->period < CONFIG_SYS_CLOCK_TICKS_PER_SEC / 1000)) {
-		period = 1;		
-	} else {
-		period = obj->period * 1000 / CONFIG_SYS_CLOCK_TICKS_PER_SEC;
-	}
-
-	k_timer_start(&obj->timer, K_MSEC(timeout), K_MSEC(period));
-			
-    obj->active = true;
+	k_timer_start(&obj->timer, K_MSEC(obj->timeout), K_MSEC(obj->period));
+	obj->active = true;
 }
 
 /*
