@@ -18,8 +18,6 @@
 #endif
 #include <driverlib/interrupt.h>
 
-#include "stubs.h"
-
 /*
  * IRQ_CONNECT requires we know the ISR signature and argument
  * at build time; whereas SimpleLink plugs the interrupts

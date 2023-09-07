@@ -9,8 +9,6 @@
 #include <kernel/zephyr/dpl/dpl.h>
 #include <ti/drivers/dpl/SemaphoreP.h>
 
-#include "stubs.h"
-
 /*
  * Zephyr kernel object pools:
  *
