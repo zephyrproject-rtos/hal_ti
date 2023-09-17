@@ -1,0 +1,17 @@
+# Copyright (c) 2022, Croxel
+# SPDX-License-Identifier: Apache-2.0
+
+description: TI CC31XX WiFi module
+
+compatible: "ti,cc31xx"
+
+include: spi-device.yaml
+
+properties:
+    irq-gpios:
+      type: phandle-array
+      required: true
+
+    nhib-gpios:
+      type: phandle-array
+      required: true

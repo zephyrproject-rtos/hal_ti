@@ -22,14 +22,14 @@
 
 /* Define a Mutex pool: */
 #define DPL_MAX_MUTEXES	 4  /* From simplelink driver code inspection */
-K_MEM_SLAB_DEFINE(mutex_slab, sizeof(struct k_mutex), DPL_MAX_MUTEXES,\
+static K_MEM_SLAB_DEFINE(_mutex_slab, sizeof(struct k_mutex), DPL_MAX_MUTEXES,\
 		  MEM_ALIGN);
 
 static struct k_mutex *dpl_mutex_pool_alloc()
 {
 	struct k_mutex *mutex_ptr = NULL;
 
-	if (k_mem_slab_alloc(&mutex_slab, (void **)&mutex_ptr,
+	if (k_mem_slab_alloc(&_mutex_slab, (void **)&mutex_ptr,
 			     K_NO_WAIT) < 0) {
 		/*
 		 * We assert, as this is a logic error, due to a change in #
@@ -43,7 +43,7 @@ static struct k_mutex *dpl_mutex_pool_alloc()
 
 static MutexP_Status dpl_mutex_pool_free(struct k_mutex *mutex)
 {
-	k_mem_slab_free(&mutex_slab, (void **)&mutex);
+	k_mem_slab_free(&_mutex_slab, (void **)&mutex);
 	return MutexP_OK;
 }
 
