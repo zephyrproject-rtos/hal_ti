@@ -4,10 +4,36 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 #include <zephyr/kernel.h>
 #include <zephyr/sys/__assert.h>
-#include <zephyr/sys_clock.h>
+#include <kernel/zephyr/dpl/dpl.h>
 #include <ti/drivers/dpl/ClockP.h>
+#include <ti/drivers/dpl/HwiP.h>
+
+/* Driverlib includes*/
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(inc/hw_types.h)
+#include DeviceFamily_constructPath(inc/hw_memmap.h)
+#include DeviceFamily_constructPath(inc/hw_systim.h)
+
+/** Max number of ClockP ticks into the future supported by this ClockP
+ * implementation.
+ *
+ * Under the hood, ClockP uses the SysTimer whose events trigger immediately if
+ * the compare value is less than 2^22 systimer ticks in the past
+ * (4.194sec at 1us resolution). Therefore, the max number of SysTimer ticks you
+ * can schedule into the future is 2^32 - 2^22 - 1 ticks (~= 4290 sec at 1us
+ * resolution). */
+#define ClockP_PERIOD_MAX     (0xFFBFFFFFU / ClockP_TICK_PERIOD)
+/** Max number of seconds into the future supported by this ClockP
+ * implementation.
+ *
+ * This limit affects ClockP_sleep() */
+#define ClockP_PERIOD_MAX_SEC 4290U
+
+/* Get the current ClockP tick value */
+#define getClockPTick() (HWREG(SYSTIM_BASE + SYSTIM_O_TIME1U) / ClockP_TICK_PERIOD)
 
 /*
  * ClockP_STRUCT_SIZE in ClockP.h must be updated to match the size of this
@@ -35,6 +61,58 @@ static void expiry_fxn(struct k_timer *timer_id)
 
     obj->clock_fxn(obj->arg);
 }
+
+#ifdef CONFIG_DYNAMIC_DPL_OBJECTS
+
+/* We can't easily dynamically allocate kernel objects so we use memory slabs */
+#define DPL_MAX_CLOCKS 5
+K_MEM_SLAB_DEFINE(clock_slab, sizeof(ClockP_Obj), DPL_MAX_CLOCKS,\
+          MEM_ALIGN);
+
+static ClockP_Obj *dpl_clock_pool_alloc()
+{
+    ClockP_Obj  *clock_ptr = NULL;
+
+    if (k_mem_slab_alloc(&clock_slab, (void **)&clock_ptr, K_NO_WAIT) < 0) {
+
+         __ASSERT(0, "Increase size of DPL clock pool");
+    }
+    return clock_ptr;
+}
+
+static void dpl_clock_pool_free(ClockP_Obj *clock)
+{
+    k_mem_slab_free(&clock_slab, (void *)&clock);
+
+    return;
+}
+
+/*
+ *  ======== ClockP_create ========
+ */
+ClockP_Handle ClockP_create(ClockP_Fxn clkFxn, uint32_t timeout, ClockP_Params *params)
+{
+    ClockP_Handle handle;
+
+    handle = (ClockP_Handle)dpl_clock_pool_alloc();
+
+    /* ClockP_construct will check handle for NULL, no need here */
+    handle = ClockP_construct((ClockP_Struct *)handle, clkFxn, timeout, params);
+
+    return (handle);
+}
+
+/*
+ *  ======== ClockP_delete ========
+ */
+void ClockP_delete(ClockP_Handle handle)
+{
+    ClockP_destruct((ClockP_Struct *)handle);
+
+    dpl_clock_pool_free((ClockP_Obj*) handle);
+}
+
+#endif /* CONFIG_DYNAMIC_DPL_OBJECTS */
 
 /*
  *  ======== ClockP_construct ========
@@ -161,6 +239,37 @@ void ClockP_stop(ClockP_Handle handle)
 }
 
 /*
+ *  ======== ClockP_setFunc ========
+ */
+void ClockP_setFunc(ClockP_Handle handle, ClockP_Fxn clockFxn, uintptr_t arg)
+{
+    ClockP_Obj *obj = (ClockP_Obj *)handle;
+
+    uintptr_t key = HwiP_disable();
+
+    obj->clock_fxn = clockFxn;
+    obj->arg = arg;
+
+    HwiP_restore(key);
+}
+
+/*
+ *  ======== ClockP_sleep ========
+ */
+void ClockP_sleep(uint32_t sec)
+{
+    uint32_t ticksToSleep;
+
+    if (sec > ClockP_PERIOD_MAX_SEC)
+    {
+        sec = ClockP_PERIOD_MAX_SEC;
+    }
+    /* Convert from seconds to number of ticks */
+    ticksToSleep = (sec * USEC_PER_SEC) / ClockP_TICK_PERIOD;
+    k_sleep(K_TICKS(ticksToSleep));
+}
+
+/*
  *  ======== ClockP_usleep ========
  */
 void ClockP_usleep(uint32_t usec)
@@ -184,6 +293,15 @@ bool ClockP_isActive(ClockP_Handle handle)
 {
     ClockP_Obj *obj = (ClockP_Obj *)handle;
     return obj->active;
+}
+
+/*
+ *  ======== ClockP_getCpuFreq ========
+ */
+void ClockP_getCpuFreq(ClockP_FreqHz *freq)
+{
+    freq->lo = (uint32_t)CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC;
+    freq->hi = 0;
 }
 
 void ClockP_destruct(ClockP_Struct *clockP)

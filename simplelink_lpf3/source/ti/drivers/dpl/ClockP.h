@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020, Texas Instruments Incorporated
+ * Copyright (c) 2016-2024, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@
 extern "C" {
 #endif
 
-#define CLOCKP_TICK_PERIOD (USEC_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PER_SEC)
+#define ClockP_TICK_PERIOD (USEC_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PER_SEC)
 
 /*!
  *  @brief  Prototype for a ClockP function.
@@ -230,7 +230,7 @@ extern uint32_t ClockP_getSystemTicks();
  *  @brief  Get number of ClockP tick periods expected to expire between
  *          now and the next interrupt from the timer peripheral
  *
- *  Returns the number of ClockP tick periods that are expected to expore
+ *  Returns the number of ClockP tick periods that are expected to expire
  *  between now and the next interrupt from the timer peripheral.
  *
  *  Used internally by PowerCC26XX module
@@ -272,6 +272,16 @@ extern bool ClockP_isActive(ClockP_Handle handle);
  *  @param params  Pointer to the instance configuration parameters.
  */
 extern void ClockP_Params_init(ClockP_Params *params);
+
+/*!
+ *  @brief  Function to overwrite ClockP callback function and arg
+ *
+ *  @param  handle    A #ClockP_Handle returned from #ClockP_create() or
+ *                    #ClockP_construct()
+ *  @param  clockFxn  Function called when timeout or period expires.
+ *  @param  arg       Argument passed to \c clockFxn
+ */
+extern void ClockP_setFunc(ClockP_Handle handle, ClockP_Fxn clockFxn, uintptr_t arg);
 
 /*!
  *  @brief  Set the initial timeout

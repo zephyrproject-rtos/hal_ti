@@ -37,6 +37,8 @@ zephyr_include_directories(
 zephyr_library()
 
 zephyr_library_sources(
+  driverlib/aes_gcc.s
+  driverlib/udma.c
   driverlib/gpio.c
   driverlib/interrupt.c
   driverlib/lrfd.c

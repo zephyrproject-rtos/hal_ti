@@ -1,0 +1,119 @@
+/*
+ * Copyright (c) 2021 - 2023, Texas Instruments Incorporated
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <stdint.h>
+
+#include <ti/drivers/dpl/DebugP.h>
+#include <ti/drivers/dpl/HwiP.h>
+
+#include <ti/drivers/dma/UDMALPF3.h>
+
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(inc/hw_memmap.h)
+#include DeviceFamily_constructPath(inc/hw_ints.h)
+#include DeviceFamily_constructPath(driverlib/udma.h)
+
+/* Externs */
+extern const UDMALPF3_Config UDMALPF3_config;
+
+static void UDMALPF3_initHw(void);
+static int UDMALPF3_postNotifyFxn(unsigned int eventType, uintptr_t eventArg, uintptr_t clientArg);
+
+static bool isOpen = false;
+static Power_NotifyObj postNotify;
+
+/*
+ *  ======== UDMACC26XX_init ========
+ *
+ */
+void UDMALPF3_init(void)
+{
+    /* Init the DMA HW only once */
+    if (!isOpen)
+    {
+        isOpen = true;
+
+        /* Register power notification function */
+        Power_registerNotify(&postNotify, PowerLPF3_AWAKE_STANDBY, UDMALPF3_postNotifyFxn, (uintptr_t)NULL);
+
+        /* Power up and enable clocks for uDMA. */
+        Power_setDependency(PowerLPF3_PERIPH_DMA);
+
+        /* initialize the UDMALPF3 hardware */
+        UDMALPF3_initHw();
+
+        /* Disable clock on the DMA peripheral */
+        Power_releaseDependency(PowerLPF3_PERIPH_DMA);
+    }
+}
+
+/*
+ *  ======== UDMACC26XX_initHw ========
+ *  This functions initializes the UDMACC26XX hardware module.
+ *
+ */
+static void UDMALPF3_initHw(void)
+{
+    /* Disable all channels */
+    UDMALPF3_channelDisable(0xFF);
+
+    /* clear the error register */
+    uDMAClearErrorStatus();
+
+    /* Set the base for the channel control table. */
+    uDMASetControlBase((void *)UDMALPF3_config.CtrlBaseAddr);
+
+    /* Enable uDMA. */
+    uDMAEnable();
+}
+
+/*
+ *  ======== UDMALPF3_postNotifyFxn ========
+ *  Called by Power module when waking up from LPDS.
+ */
+static int UDMALPF3_postNotifyFxn(unsigned int eventType, uintptr_t eventArg, uintptr_t clientArg)
+{
+    /* Reconfigure the hardware if returning from sleep */
+    if (eventType == PowerLPF3_AWAKE_STANDBY)
+    {
+        /* Power up and enable clocks for uDMA. */
+        Power_setDependency(PowerLPF3_PERIPH_DMA);
+
+        /* initialize the UDMACC26XX hardware */
+        UDMALPF3_initHw();
+
+        /* Disable clock on the DMA peripheral */
+        Power_releaseDependency(PowerLPF3_PERIPH_DMA);
+    }
+
+    return (Power_NOTIFYDONE);
+}

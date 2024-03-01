@@ -23,25 +23,25 @@
 /* We can't easily dynamically allocate kernel objects */
 #define DPL_MAX_EVENTS 5
 K_MEM_SLAB_DEFINE(event_slab, sizeof(struct k_event), DPL_MAX_EVENTS,\
-		  MEM_ALIGN);
+          MEM_ALIGN);
 
 
 static struct k_event *dpl_event_pool_alloc()
 {
-	struct k_event *event_ptr = NULL;
+    struct k_event *event_ptr = NULL;
 
-	if (k_mem_slab_alloc(&event_slab, (void **)&event_ptr, K_NO_WAIT) < 0) {
+    if (k_mem_slab_alloc(&event_slab, (void **)&event_ptr, K_NO_WAIT) < 0) {
 
-		 __ASSERT(0, "Increase size of DPL event pool");
-	}
-	return event_ptr;
+         __ASSERT(0, "Increase size of DPL event pool");
+    }
+    return event_ptr;
 }
 
 static void dpl_event_pool_free(struct k_event *event)
 {
-	k_mem_slab_free(&event_slab, (void *)event);
+    k_mem_slab_free(&event_slab, (void *)event);
 
-	return;
+    return;
 }
 
 /*
@@ -116,7 +116,7 @@ uint32_t EventP_pend(EventP_Handle event, uint32_t eventMask, bool waitForAll, u
     {
         /* if necessary, convert ClockP ticks to Zephyr ticks */
         /* Should really be ClockP_getSystemTickPeriod() but this causes issues with ielftool post build step */
-        tickPeriod = CLOCKP_TICK_PERIOD;
+        tickPeriod = ClockP_TICK_PERIOD;
         eventTimeout = K_TICKS(timeout);
     }
 
