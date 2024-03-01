@@ -1,0 +1,267 @@
+/*
+ * Copyright (c) 2021-2023, Texas Instruments Incorporated
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * *  Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * *  Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * *  Neither the name of Texas Instruments Incorporated nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/*
+ *  ======== ECCParamsLPF3SW.c ========
+ *
+ *  This file contains structure definitions for various ECC curves for use
+ *  on L devices.
+ */
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
+#include <ti/drivers/cryptoutils/ecc/ECCParams.h>
+#include <ti/drivers/cryptoutils/cryptokey/CryptoKey.h>
+
+/*
+ * Curve parameters are formatted as little-endian integers with a prepended
+ * length word in words as required by the ECC SW library.
+ */
+
+/*
+ * NIST P256 curve params in little endian format.
+ * byte[0-3] are the param length word as required by the ECC SW library.
+ * byte[4] is the least significant byte of the curve parameter.
+ */
+const ECC_NISTP256_Param ECC_NISTP256_generatorX = {
+    .byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+             0x96, 0xc2, 0x98, 0xd8, 0x45, 0x39, 0xa1, 0xf4, 0xa0, 0x33, 0xeb, 0x2d, 0x81, 0x7d, 0x03, 0x77,
+             0xf2, 0x40, 0xa4, 0x63, 0xe5, 0xe6, 0xbc, 0xf8, 0x47, 0x42, 0x2c, 0xe1, 0xf2, 0xd1, 0x17, 0x6b}};
+
+const ECC_NISTP256_Param ECC_NISTP256_generatorY = {
+    .byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+             0xf5, 0x51, 0xbf, 0x37, 0x68, 0x40, 0xb6, 0xcb, 0xce, 0x5e, 0x31, 0x6b, 0x57, 0x33, 0xce, 0x2b,
+             0x16, 0x9e, 0x0f, 0x7c, 0x4a, 0xeb, 0xe7, 0x8e, 0x9b, 0x7f, 0x1a, 0xfe, 0xe2, 0x42, 0xe3, 0x4f}};
+
+const ECC_NISTP256_Param ECC_NISTP256_prime = {
+    .byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff}};
+
+const ECC_NISTP256_Param ECC_NISTP256_a = {.byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+                                                    0xfc, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                                    0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                    0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff}};
+
+const ECC_NISTP256_Param ECC_NISTP256_b = {.byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+                                                    0x4b, 0x60, 0xd2, 0x27, 0x3e, 0x3c, 0xce, 0x3b, 0xf6, 0xb0, 0x53,
+                                                    0xcc, 0xb0, 0x06, 0x1d, 0x65, 0xbc, 0x86, 0x98, 0x76, 0x55, 0xbd,
+                                                    0xeb, 0xb3, 0xe7, 0x93, 0x3a, 0xaa, 0xd8, 0x35, 0xc6, 0x5a}};
+
+const ECC_NISTP256_Param ECC_NISTP256_order = {
+    .byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+             0x51, 0x25, 0x63, 0xfc, 0xc2, 0xca, 0xb9, 0xf3, 0x84, 0x9e, 0x17, 0xa7, 0xad, 0xfa, 0xe6, 0xbc,
+             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff}};
+
+/*
+ * Curve params in Montgomery domain are used for public key validation only
+ * and are not prefixed with a length word.
+ */
+/* Invert of square of Montgomery constant, k = 2^(256) mod p, p is the curve prime */
+const ECC_NISTP256_Param ECC_NISTP256_k_mont = {
+    .byte = {0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xfb, 0xff, 0xff, 0xff,
+             0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfd, 0xff, 0xff, 0xff, 0x04, 0x00, 0x00, 0x00}};
+
+/* Converted to Montgomery domain by modular multiplication of ECC_NISTP256_a with ECC_NISTP224_k_mont */
+const ECC_NISTP256_Param ECC_NISTP256_a_mont = {
+    .byte = {0xfc, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x03, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0xfc, 0xff, 0xff, 0xff}};
+
+/* Converted to Montgomery domain by modular multiplication of ECC_NISTP256_b with ECC_NISTP224_k_mont */
+const ECC_NISTP256_Param ECC_NISTP256_b_mont = {
+    .byte = {0xdf, 0xbd, 0xc4, 0x29, 0x62, 0xdf, 0x9c, 0xd8, 0x90, 0x30, 0x84, 0x78, 0xcd, 0x05, 0xf0, 0xac,
+             0xd6, 0x2e, 0x21, 0xf7, 0xab, 0x20, 0xa2, 0xe5, 0x34, 0x48, 0x87, 0x04, 0x1d, 0x06, 0x30, 0xdc}};
+
+const ECCParams_CurveParams ECCParams_NISTP256 = {.curveType  = ECCParams_CURVE_TYPE_SHORT_WEIERSTRASS_AN3,
+                                                  .length     = ECCParams_NISTP256_LENGTH,
+                                                  .prime      = ECC_NISTP256_prime.byte,
+                                                  .order      = ECC_NISTP256_order.byte,
+                                                  .a          = ECC_NISTP256_a.byte,
+                                                  .b          = ECC_NISTP256_b.byte,
+                                                  .generatorX = ECC_NISTP256_generatorX.byte,
+                                                  .generatorY = ECC_NISTP256_generatorY.byte,
+                                                  .cofactor   = 1};
+
+/*
+ * NIST P224 curve params in little endian format.
+ * byte[0-3] are the param length word as required by the ECC SW library.
+ * byte[4] is the least significant byte of the curve parameter.
+ */
+const ECC_NISTP224_Param ECC_NISTP224_generatorX = {.byte = {0x07, 0x00, 0x00, 0x00, /* Length word prefix */
+                                                             0x21, 0x1d, 0x5c, 0x11, 0xd6, 0x80, 0x32, 0x34, 0x22, 0x11,
+                                                             0xc2, 0x56, 0xd3, 0xc1, 0x03, 0x4a, 0xb9, 0x90, 0x13, 0x32,
+                                                             0x7f, 0xbf, 0xb4, 0x6b, 0xbd, 0x0c, 0x0e, 0xb7}};
+
+const ECC_NISTP224_Param ECC_NISTP224_generatorY = {.byte = {
+                                                        0x07, 0x00, 0x00, 0x00, /* Length word prefix */
+                                                        0x34, 0x7e, 0x00, 0x85, 0x99, 0x81, 0xd5, 0x44, 0x64, 0x47,
+                                                        0x07, 0x5a, 0xa0, 0x75, 0x43, 0xcd, 0xe6, 0xdf, 0x22, 0x4c,
+                                                        0xfb, 0x23, 0xf7, 0xb5, 0x88, 0x63, 0x37, 0xbd,
+                                                    }};
+
+const ECC_NISTP224_Param ECC_NISTP224_prime = {.byte = {0x07, 0x00, 0x00, 0x00, /* Length word prefix */
+                                                        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                        0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}};
+
+const ECC_NISTP224_Param ECC_NISTP224_a = {.byte = {0x07, 0x00, 0x00, 0x00, /* Length word prefix */
+                                                    0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                                    0xff, 0xff, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                                    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}};
+
+const ECC_NISTP224_Param ECC_NISTP224_b = {.byte = {0x07, 0x00, 0x00, 0x00, /* Length word prefix */
+                                                    0xb4, 0xff, 0x55, 0x23, 0x43, 0x39, 0x0b, 0x27, 0xba, 0xd8,
+                                                    0xbf, 0xd7, 0xb7, 0xb0, 0x44, 0x50, 0x56, 0x32, 0x41, 0xf5,
+                                                    0xab, 0xb3, 0x04, 0x0c, 0x85, 0x0a, 0x05, 0xb4}};
+
+const ECC_NISTP224_Param ECC_NISTP224_order = {.byte = {0x07, 0x00, 0x00, 0x00, /* Length word prefix */
+                                                        0x3d, 0x2a, 0x5c, 0x5c, 0x45, 0x29, 0xdd, 0x13, 0x3e, 0xf0,
+                                                        0xb8, 0xe0, 0xa2, 0x16, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}};
+
+/*
+ * Curve params in Montgomery domain are used for public key validation only
+ * and are not prefixed with a length word.
+ */
+/* Invert of square of Montgomery constant, k = 2^(224) mod p, p is the curve prime */
+const ECC_NISTP224_Param ECC_NISTP224_k_mont = {.byte = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                         0x00, 0x00, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                         0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00}};
+
+/* Converted to Montgomery domain by modular multiplication of ECC_NISTP224_a with ECC_NISTP224_k_mont */
+const ECC_NISTP224_Param ECC_NISTP224_a_mont = {.byte = {0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                         0x00, 0x00, 0xFC, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                                         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
+
+/* Converted to Montgomery domain by modular multiplication of ECC_NISTP224_b with ECC_NISTP224_k_mont */
+const ECC_NISTP224_Param ECC_NISTP224_b_mont = {.byte = {0xF7, 0xCD, 0x68, 0xE7, 0x10, 0x13, 0xF0, 0xCC, 0xC0, 0x1C,
+                                                         0x3B, 0x74, 0x50, 0x81, 0x52, 0xC8, 0x98, 0xBA, 0xCE, 0x3D,
+                                                         0x93, 0x2F, 0xC0, 0x7F, 0x33, 0xA6, 0x3F, 0x9C}};
+
+const ECCParams_CurveParams ECCParams_NISTP224 = {.curveType  = ECCParams_CURVE_TYPE_SHORT_WEIERSTRASS_AN3,
+                                                  .length     = ECCParams_NISTP224_LENGTH,
+                                                  .prime      = ECC_NISTP224_prime.byte,
+                                                  .order      = ECC_NISTP224_order.byte,
+                                                  .a          = ECC_NISTP224_a.byte,
+                                                  .b          = ECC_NISTP224_b.byte,
+                                                  .generatorX = ECC_NISTP224_generatorX.byte,
+                                                  .generatorY = ECC_NISTP224_generatorY.byte,
+                                                  .cofactor   = 1};
+
+/*
+ * Curve25519 curve params in little endian format.
+ * byte[0-3] are the param length word as required by the ECC SW library.
+ * byte[4] is the least significant byte of the curve parameter.
+ */
+const ECC_Curve25519_Param ECC_Curve25519_generatorX = {
+    .byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+             0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+
+const ECC_Curve25519_Param ECC_Curve25519_generatorY = {
+    .byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+             0xd9, 0xd3, 0xce, 0x7e, 0xa2, 0xc5, 0xe9, 0x29, 0xb2, 0x61, 0x7c, 0x6d, 0x7e, 0x4d, 0x3d, 0x92,
+             0x4c, 0xd1, 0x48, 0x77, 0x2c, 0xdd, 0x1e, 0xe0, 0xb4, 0x86, 0xa0, 0xb8, 0xa1, 0x19, 0xae, 0x20}};
+
+const ECC_Curve25519_Param ECC_Curve25519_prime = {
+    .byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+             0xed, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f}};
+
+const ECC_Curve25519_Param ECC_Curve25519_a = {
+    .byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+             0x06, 0x6d, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+
+const ECC_Curve25519_Param ECC_Curve25519_b = {
+    .byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+             0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+
+const ECC_Curve25519_Param ECC_Curve25519_order = {
+    .byte = {0x08, 0x00, 0x00, 0x00, /* Length word prefix */
+             0xb9, 0xdc, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+
+const ECCParams_CurveParams ECCParams_Curve25519 = {.curveType  = ECCParams_CURVE_TYPE_MONTGOMERY,
+                                                    .length     = ECCParams_CURVE25519_LENGTH,
+                                                    .prime      = ECC_Curve25519_prime.byte,
+                                                    .order      = ECC_Curve25519_order.byte,
+                                                    .a          = ECC_Curve25519_a.byte,
+                                                    .b          = ECC_Curve25519_b.byte,
+                                                    .generatorX = ECC_Curve25519_generatorX.byte,
+                                                    .generatorY = ECC_Curve25519_generatorY.byte,
+                                                    .cofactor   = 1};
+
+/*
+ *  ======== ECCParams_formatCurve25519PrivateKey ========
+ */
+int_fast16_t ECCParams_formatCurve25519PrivateKey(CryptoKey *myPrivateKey)
+{
+    myPrivateKey->u.plaintext.keyMaterial[31] &= 0xF8;
+    myPrivateKey->u.plaintext.keyMaterial[0] &= 0x7F;
+    myPrivateKey->u.plaintext.keyMaterial[0] |= 0x40;
+
+    return ECCParams_STATUS_SUCCESS;
+}
+
+/*
+ *  ======== ECCParams_getUncompressedGeneratorPoint ========
+ */
+int_fast16_t ECCParams_getUncompressedGeneratorPoint(const ECCParams_CurveParams *curveParams,
+                                                     uint8_t *buffer,
+                                                     size_t length)
+{
+
+    size_t paramLength = curveParams->length;
+    size_t pointLength = (paramLength * 2) + 1;
+
+    if (length < pointLength)
+    {
+        return ECCParams_STATUS_ERROR;
+    }
+
+    /* Reverse and concatenate x and y */
+    uint32_t i = 0;
+    for (i = 0; i < paramLength; i++)
+    {
+        buffer[i + 1]               = curveParams->generatorX[paramLength + ECC_LENGTH_PREFIX_BYTES - i - 1];
+        buffer[i + 1 + paramLength] = curveParams->generatorY[paramLength + ECC_LENGTH_PREFIX_BYTES - i - 1];
+    }
+
+    buffer[0] = 0x04;
+    /* Fill the remaining buffer with 0 if needed */
+    memset(buffer + pointLength, 0, length - pointLength);
+
+    return ECCParams_STATUS_SUCCESS;
+}

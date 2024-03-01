@@ -26,24 +26,24 @@
 #ifdef DYNAMIC_THREADS
 /* Space for thread objects  */
 K_MEM_SLAB_DEFINE(task_slab, sizeof(struct k_thread), CONFIG_DYNAMIC_THREAD_POOL_SIZE,\
-		  MEM_ALIGN);
+          MEM_ALIGN);
 
 static struct k_thread *dpl_task_pool_alloc()
 {
-	struct k_thread *task_ptr = NULL;
+    struct k_thread *task_ptr = NULL;
 
-	if (k_mem_slab_alloc(&task_slab, (void **)&task_ptr, K_NO_WAIT) < 0) {
+    if (k_mem_slab_alloc(&task_slab, (void **)&task_ptr, K_NO_WAIT) < 0) {
 
-		 __ASSERT(0, "Increase size of DPL task pool");
-	}
+         __ASSERT(0, "Increase size of DPL task pool");
+    }
     printk("Slabs used: %d / %d \n", task_slab.info.num_used, task_slab.info.num_blocks);
-	return task_ptr;
+    return task_ptr;
 }
 
 static void dpl_task_pool_free(struct k_thread *task)
 {
-	k_mem_slab_free(&task_slab, (void *)task);
-	return;
+    k_mem_slab_free(&task_slab, (void *)task);
+    return;
 }
 
 #endif /* CONFIG_DYNAMIC_DPL_OBJECTS */
@@ -179,31 +179,28 @@ TaskP_State TaskP_getState(TaskP_Handle task)
     TaskP_State state;
 
     switch (((struct k_thread*) task)->base.thread_state) {
-	case _THREAD_DUMMY:
-		state = TaskP_State_INVALID;
-		break;
-	case _THREAD_PRESTART:
-		state = TaskP_State_INACTIVE;
-		break;
-	case _THREAD_DEAD:
-		state = TaskP_State_DELETED;
-		break;
-	case _THREAD_SUSPENDED:
-	case _THREAD_PENDING:
-		state = TaskP_State_BLOCKED;
-		break;
-	case _THREAD_QUEUED:
-		state = TaskP_State_READY;
-		break;
-	default:
-		state = TaskP_State_INVALID;
-		break;
-	}
+    case _THREAD_DUMMY:
+        state = TaskP_State_INVALID;
+        break;
+    case _THREAD_DEAD:
+        state = TaskP_State_DELETED;
+        break;
+    case _THREAD_SUSPENDED:
+    case _THREAD_PENDING:
+        state = TaskP_State_BLOCKED;
+        break;
+    case _THREAD_QUEUED:
+        state = TaskP_State_READY;
+        break;
+    default:
+        state = TaskP_State_INVALID;
+        break;
+    }
 
     /* Check if we are the currently running thread */
     if (k_current_get() == ((k_tid_t) ((struct k_thread *) task))) {
-		state = TaskP_State_RUNNING;
-	}
+        state = TaskP_State_RUNNING;
+    }
 
     return state;
 }

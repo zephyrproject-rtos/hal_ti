@@ -26,21 +26,21 @@ K_MEM_SLAB_DEFINE(msgq_slab, sizeof(struct k_msgq) , DPL_MAX_MSGQS, MEM_ALIGN);
 
 static struct k_msgq *dpl_msgq_pool_alloc()
 {
-	struct k_msgq  *msgq_ptr = NULL;
+    struct k_msgq  *msgq_ptr = NULL;
 
-	if (k_mem_slab_alloc(&msgq_slab, (void **)&msgq_ptr, K_NO_WAIT) < 0) {
+    if (k_mem_slab_alloc(&msgq_slab, (void **)&msgq_ptr, K_NO_WAIT) < 0) {
 
-		 __ASSERT(0, "Increase size of DPL message queue pool");
-	}
-	return msgq_ptr;
+         __ASSERT(0, "Increase size of DPL message queue pool");
+    }
+    return msgq_ptr;
 }
 
 static void dpl_msgq_pool_free(struct k_msgq *msgq)
 {
 
-	k_mem_slab_free(&msgq_slab, (void *)msgq);
+    k_mem_slab_free(&msgq_slab, (void *)msgq);
 
-	return;
+    return;
 }
 
 /*
@@ -119,7 +119,7 @@ MessageQueueP_Status MessageQueueP_pend(MessageQueueP_Handle handle, void *messa
     {
         /* If necessary, convert ClockP ticks to Zephyr ticks */
         /* Should really be ClockP_getSystemTickPeriod() but this causes issues with ielftool post build step */
-        tickPeriod = CLOCKP_TICK_PERIOD;
+        tickPeriod = ClockP_TICK_PERIOD;
         msgTimeout = K_TICKS(timeout);
     }
     int status = k_msgq_get((struct k_msgq*) handle, message, msgTimeout);
@@ -167,7 +167,7 @@ MessageQueueP_Status MessageQueueP_post(MessageQueueP_Handle handle, const void 
     {
         /* if necessary, convert ClockP ticks to Zephyr ticks */
         /* Should really be ClockP_getSystemTickPeriod() but this causes issues with ielftool post build step */
-        tickPeriod = CLOCKP_TICK_PERIOD;
+        tickPeriod = ClockP_TICK_PERIOD;
         if (tickPeriod != CONFIG_SYS_CLOCK_TICKS_PER_SEC)
         {
             timeUS  = timeout * (uint64_t)tickPeriod;
