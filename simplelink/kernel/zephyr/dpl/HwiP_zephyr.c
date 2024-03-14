@@ -142,6 +142,8 @@ static struct sl_isr_args sl_AUX_COMB_cb = {NULL, 0};
 static struct sl_isr_args sl_RFC_HW_COMB_cb = {NULL, 0};
 static struct sl_isr_args sl_RFC_CPE_0_cb = {NULL, 0};
 static struct sl_isr_args sl_SWEV0_cb = {NULL, 0};
+static struct sl_isr_args sl_AUX_SWEV0_cb = {NULL, 0};
+static struct sl_isr_args sl_AUX_SWEV1_cb = {NULL, 0};
 
 /*
  *  ======== HwiP_construct ========
@@ -152,6 +154,7 @@ HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
 	HwiP_Obj *obj = (HwiP_Obj *)handle;
 	uintptr_t arg = 0;
 	uint8_t priority = INT_PRI_LEVEL7; /* default to lowest priority */
+	bool enable = true;
 	
 	if (handle == NULL) {
 		return NULL;
@@ -160,6 +163,7 @@ HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
 	if (params) {
 		priority = params->priority;
 		arg = params->arg;
+		enable = params->enableInt;
 	}
 
 	/*
@@ -168,7 +172,9 @@ HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
 	__ASSERT(INT_OSC_COMB == interruptNum || INT_AUX_COMB == interruptNum
 		|| INT_RFC_HW_COMB == interruptNum
 		|| INT_RFC_CPE_0 == interruptNum
-		|| INT_SWEV0 == interruptNum,
+		|| INT_SWEV0 == interruptNum
+		|| INT_AUX_SWEV0 == interruptNum
+		|| INT_AUX_SWEV1 == interruptNum,
 		 "Unexpected interruptNum: %d\r\n",
 		 interruptNum);
 
@@ -230,10 +236,25 @@ HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
 		obj->cb = &sl_SWEV0_cb;
 		irq_connect_dynamic(INT_SWEV0 - 16, priority, sl_isr, &sl_SWEV0_cb, 0);
 		break;
+	case INT_AUX_SWEV0:
+		sl_AUX_SWEV0_cb.cb = hwiFxn;
+		sl_AUX_SWEV0_cb.arg = arg;
+		obj->cb = &sl_AUX_SWEV0_cb;
+		irq_connect_dynamic(INT_AUX_SWEV0 - 16, priority, sl_isr, &sl_AUX_SWEV0_cb, 0);
+		break;
+	case INT_AUX_SWEV1:
+		sl_AUX_SWEV1_cb.cb = hwiFxn;
+		sl_AUX_SWEV1_cb.arg = arg;
+		obj->cb = &sl_AUX_SWEV1_cb;
+		irq_connect_dynamic(INT_AUX_SWEV1 - 16, priority, sl_isr, &sl_AUX_SWEV1_cb, 0);
+		break;
 	default:
 		return(NULL);
 	}
-	irq_enable(interruptNum - 16);
+	if (enable)
+	{
+		irq_enable(interruptNum - 16);
+	}
 	
 	obj->intNum = interruptNum;
 
@@ -245,6 +266,7 @@ void HwiP_Params_init(HwiP_Params *params)
 {
 	params->arg = 0;
 	params->priority = ~0;
+	params->enableInt = true;
 }
 
 /* Zephyr has no functions for clearing an interrupt, so use driverlib: */
