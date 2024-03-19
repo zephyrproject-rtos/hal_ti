@@ -1,0 +1,70 @@
+#include <dt-bindings/pinctrl/mspm0-pinctrl.h>
+
+&pinctrl {
+
+	i2c1_scl_pa17_pull_up: i2c1_scl_pa17_pull_up {
+		pinmux = <MSP_PINMUX(49,MSPM0_PIN_FUNCTION_4)>;
+		input-enable;
+		bias-pull-up;
+		drive-open-drain;
+	};
+
+	i2c1_sda_pa18_pull_up: i2c1_sda_pa18_pull_up {
+		pinmux = <MSP_PINMUX(50,MSPM0_PIN_FUNCTION_4)>;
+		input-enable;
+		bias-pull-up;
+		drive-open-drain;
+	};
+
+	i2c1_scl_pa17_floating: i2c1_scl_pa17_floating {
+		pinmux = <MSP_PINMUX(49,MSPM0_PIN_FUNCTION_4)>;
+		input-enable;
+		drive-open-drain;
+	};
+
+	i2c1_sda_pa18_floating: i2c1_sda_pa18_floating {
+		pinmux = <MSP_PINMUX(50,MSPM0_PIN_FUNCTION_4)>;
+		input-enable;
+		drive-open-drain;
+	};
+
+	i2c1_sda_pa30_pull_up: i2c1_sda_pa30_pull_up {
+		pinmux = <MSP_PINMUX(5,MSPM0_PIN_FUNCTION_2)>;
+		input-enable;
+		bias-pull-up;
+		drive-open-drain;
+	};
+
+	i2c1_scl_pa29_pull_up: i2c1_scl_pa29_pull_up {
+		pinmux = <MSP_PINMUX(4,MSPM0_PIN_FUNCTION_2)>;
+		input-enable;
+		bias-pull-up;
+		drive-open-drain;
+	};
+
+	i2c1_sda_pa30_floating: i2c1_sda_pa30_floating {
+		pinmux = <MSP_PINMUX(5,MSPM0_PIN_FUNCTION_2)>;
+		input-enable;
+		drive-open-drain;
+	};
+
+	i2c1_scl_pa29_floating: i2c1_scl_pa29_floating {
+		pinmux = <MSP_PINMUX(4,MSPM0_PIN_FUNCTION_2)>;
+		input-enable;
+		drive-open-drain;
+	};
+
+	uart0_tx_pa10: uart_tx_pa10 {
+		pinmux = <MSP_PINMUX(25,MSPM0_PIN_FUNCTION_2)>;
+	};
+
+	uart0_rx_pa11: uart_rx_pa11 {
+		pinmux = <MSP_PINMUX(26,MSPM0_PIN_FUNCTION_2)>;
+		input-enable;
+	};
+
+	adc0_pa25: adc0_pa25 {
+		pinmux = <MSP_PINMUX(69,MSPM0_PIN_FUNCTION_ANALOG)>;
+	};
+	
+};
