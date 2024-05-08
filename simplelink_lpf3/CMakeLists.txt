@@ -27,5 +27,10 @@ if(CONFIG_HAS_CC23X0_SDK)
     # DPL
     kernel/zephyr/dpl/ClockP_zephyr.c
     kernel/zephyr/dpl/HwiP_zephyr.c
+    kernel/zephyr/dpl/TaskP_zephyr.c
+    kernel/zephyr/dpl/MessageQueueP_zephyr.c
     )
+    if(CONFIG_EVENTS)
+      zephyr_library_sources(kernel/zephyr/dpl/EventP_zephyr.c)
+    endif()
 endif()

@@ -67,6 +67,8 @@
 extern "C" {
 #endif
 
+#define CLOCKP_TICK_PERIOD (USEC_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PER_SEC)
+
 /*!
  *  @brief  Prototype for a ClockP function.
  */
