@@ -121,6 +121,11 @@ extern "C" {
     #define DeviceFamily_DIRECTORY      cc13x2_cc26x2
     #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X2_CC26X2
 
+#elif defined(DeviceFamily_CC26X2X7)
+    #define DeviceFamily_ID             DeviceFamily_ID_CC26X2
+    #define DeviceFamily_DIRECTORY      cc13x2x7_cc26x2x7
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X2_CC26X2
+
 #elif defined(DeviceFamily_CC3200)
     #define DeviceFamily_ID             DeviceFamily_ID_CC3200
     #define DeviceFamily_DIRECTORY      cc32xx
@@ -187,6 +192,7 @@ extern "C" {
 #if (defined(DeviceFamily_CC13X0) + defined(DeviceFamily_CC13X2)        \
     + defined(DeviceFamily_CC26X0) + defined(DeviceFamily_CC26X0R2)     \
     + defined(DeviceFamily_CC26X2)                                      \
+    + defined(DeviceFamily_CC13X2X7) + defined(DeviceFamily_CC26X2X7)   \
     + defined(DeviceFamily_CC3200) + defined(DeviceFamily_CC3220)       \
     + defined(DeviceFamily_MSP432P401x) + defined(DeviceFamily_MSP432P4x1xI) \
     + defined(DeviceFamily_MSP432P4x1xT) + defined(DeviceFamily_MSP432E401Y) \
