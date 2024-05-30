@@ -152,7 +152,7 @@ extern "C" {
  */
 typedef struct
 {
-    uint32_t CtrlBaseAddr; /*!< Base adddress for UDMALPF3 control table*/
+    uint32_t CtrlBaseAddr; /*!< Base address for UDMALPF3 control table */
 } UDMALPF3_Config;
 
 /* Externs from ti_drivers_config.c */

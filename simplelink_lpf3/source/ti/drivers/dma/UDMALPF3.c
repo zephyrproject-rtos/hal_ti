@@ -52,7 +52,7 @@ static bool isOpen = false;
 static Power_NotifyObj postNotify;
 
 /*
- *  ======== UDMACC26XX_init ========
+ *  ======== UDMALPF3_init ========
  *
  */
 void UDMALPF3_init(void)
@@ -77,8 +77,8 @@ void UDMALPF3_init(void)
 }
 
 /*
- *  ======== UDMACC26XX_initHw ========
- *  This functions initializes the UDMACC26XX hardware module.
+ *  ======== UDMALPF3_initHw ========
+ *  This functions initializes the UDMALPF3 hardware module.
  *
  */
 static void UDMALPF3_initHw(void)
@@ -108,7 +108,7 @@ static int UDMALPF3_postNotifyFxn(unsigned int eventType, uintptr_t eventArg, ui
         /* Power up and enable clocks for uDMA. */
         Power_setDependency(PowerLPF3_PERIPH_DMA);
 
-        /* initialize the UDMACC26XX hardware */
+        /* initialize the UDMALPF3 hardware */
         UDMALPF3_initHw();
 
         /* Disable clock on the DMA peripheral */

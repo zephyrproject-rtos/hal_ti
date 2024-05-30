@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, Texas Instruments Incorporated
+ * Copyright (c) 2021-2024, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <ti/drivers/aesecb/AESECBLPF3.h>
 #include <ti/drivers/AESCommon.h>
@@ -40,6 +41,10 @@
 #include <ti/drivers/cryptoutils/cryptokey/CryptoKey.h>
 #include <ti/drivers/cryptoutils/sharedresources/CryptoResourceLPF3.h>
 #include <ti/drivers/dma/UDMALPF3.h>
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    #include <ti/drivers/cryptoutils/hsm/HSMLPF3.h>
+#endif
 
 #include <ti/drivers/dpl/DebugP.h>
 #include <ti/drivers/dpl/HwiP.h>
@@ -67,6 +72,13 @@
          (uint32_t)AES_AUTOCFG_TRGECB_RDTXT3 | (uint32_t)AES_AUTOCFG_BUSHALT_EN)
 #else
     #error "Unsupported DeviceFamily_Parent for AESECBLPF3!"
+#endif
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    #define PSA_SYM_MODE_GCM_NONE 0U
+
+    /* Size of state asset for GCM/CCM continuation */
+    #define PSA_SYM_STATE_ASSET_SIZE 48U
 #endif
 
 /*
@@ -104,6 +116,18 @@ static inline int_fast16_t AESECBLPF3_oneStepOperation(AESECB_Handle handle,
                                                        AESECB_OperationType operationType);
 static int_fast16_t AESECBLPF3_startOperation(AESECB_Handle handle, AESECB_Operation *operation);
 static inline int_fast16_t AESECBLPF3_waitForResult(AESECB_Handle handle);
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+static int_fast16_t AESECBLPF3HSM_oneStepOperation(AESECB_Handle handle,
+                                                   AESECB_Operation *operation,
+                                                   AESECB_OperationType operationType);
+static int_fast16_t AESECBLPF3HSM_processOneStep(AESECB_Handle handle);
+
+static int_fast16_t AESECBLPF3HSM_addData(AESECB_Handle handle, AESECB_Operation *operation);
+
+static int_fast16_t AESECBLPF3HSM_finalize(AESECB_Handle handle, AESECB_Operation *operation);
+
+#endif
 
 /*
  *  ======== AESEBCLPF3_getObject ========
@@ -163,6 +187,9 @@ static void AESECBLPF3_hwiFxn(uintptr_t arg0)
  */
 void AESECB_init(void)
 {
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    HSMLPF3_constructRTOSObjects();
+#endif
     AESCommonLPF3_init();
 }
 
@@ -176,6 +203,24 @@ AESECB_Handle AESECB_construct(AESECB_Config *config, const AESECB_Params *param
     int_fast16_t status;
     AESECB_Handle handle      = config;
     AESECBLPF3_Object *object = AESEBCLPF3_getObject(handle);
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    /* Initialize and boot HSM */
+    if (HSMLPF3_init() != HSMLPF3_STATUS_SUCCESS)
+    {
+        /* Upon HSM Boot failure, the AES-CCM Driver stores the failure status in the object
+         * This is done so that users of the AES-CCM Driver do not get a NULL handle and still can use
+         * the driver in LAES mode.
+         */
+        object->hsmStatus = HSMLPF3_STATUS_ERROR;
+    }
+    else
+    {
+        object->hsmStatus = HSMLPF3_STATUS_SUCCESS;
+    }
+
+    object->segmentedOperationInProgress = false;
+#endif
 
     /* If params are NULL, use defaults */
     if (params == NULL)
@@ -215,7 +260,23 @@ void AESECB_close(AESECB_Handle handle)
  */
 int_fast16_t AESECB_oneStepEncrypt(AESECB_Handle handle, AESECB_Operation *operation)
 {
-    return AESECBLPF3_oneStepOperation(handle, operation, AESECB_OPERATION_TYPE_ENCRYPT);
+    int_fast16_t status = AESECB_STATUS_SUCCESS;
+
+    if (operation->key->encoding == CryptoKey_PLAINTEXT || operation->key->encoding == CryptoKey_KEYSTORE)
+    {
+        status = AESECBLPF3_oneStepOperation(handle, operation, AESECB_OPERATION_TYPE_ENCRYPT);
+    }
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    else if (operation->key->encoding == CryptoKey_PLAINTEXT_HSM)
+    {
+        status = AESECBLPF3HSM_oneStepOperation(handle, operation, AESECB_OPERATION_TYPE_ENCRYPT);
+    }
+#endif
+    else
+    {
+        status = AESECB_STATUS_ERROR;
+    }
+    return status;
 }
 
 /*
@@ -226,7 +287,24 @@ int_fast16_t AESECB_oneStepDecrypt(AESECB_Handle handle, AESECB_Operation *opera
     DebugP_assert(handle);
     DebugP_assert(operation);
 
-    return AESECB_STATUS_FEATURE_NOT_SUPPORTED;
+    int_fast16_t status = AESECB_STATUS_SUCCESS;
+
+    if (operation->key->encoding == CryptoKey_PLAINTEXT || operation->key->encoding == CryptoKey_KEYSTORE)
+    {
+        status = AESECB_STATUS_FEATURE_NOT_SUPPORTED;
+    }
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    else if (operation->key->encoding == CryptoKey_PLAINTEXT_HSM)
+    {
+        status = AESECBLPF3HSM_oneStepOperation(handle, operation, AESECB_OPERATION_TYPE_DECRYPT);
+    }
+#endif
+    else
+    {
+        status = AESECB_STATUS_ERROR;
+    }
+
+    return status;
 }
 
 /*
@@ -507,10 +585,45 @@ static inline int_fast16_t AESECBLPF3_waitForResult(AESECB_Handle handle)
 int_fast16_t AESECB_setupEncrypt(AESECB_Handle handle, const CryptoKey *key)
 {
     DebugP_assert(handle);
-
+    int_fast16_t status       = AESECB_STATUS_SUCCESS;
     AESECBLPF3_Object *object = AESEBCLPF3_getObject(handle);
 
-    int_fast16_t status = AESCommonLPF3_setupSegmentedOperation(&object->common, key);
+    /*
+     * Key material pointer and length are not checked until adding or
+     * finalizing data.
+     */
+    if (key->encoding == CryptoKey_PLAINTEXT)
+    {
+        /* When using the AES driver with the LAES engine */
+        status = AESCommonLPF3_setupSegmentedOperation(&object->common, key);
+    }
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    else if (key->encoding == CryptoKey_PLAINTEXT_HSM)
+    {
+        if (object->hsmStatus != HSMLPF3_STATUS_SUCCESS)
+        {
+            return AESECB_STATUS_ERROR;
+        }
+
+        /* A segmented operation may have been started but not finalized yet */
+        if (object->segmentedOperationInProgress)
+        {
+            return AESECB_STATUS_ERROR;
+        }
+
+        /* Make internal copy of crypto key */
+        object->common.key = *key;
+
+        /* returnStatus is only changed in the case of an error or cancellation */
+        object->common.returnStatus = AES_STATUS_SUCCESS;
+
+        object->segmentedOperationInProgress = true;
+    }
+#endif
+    else
+    {
+        status = AESECB_STATUS_ERROR;
+    }
 
     if (status == AES_STATUS_SUCCESS)
     {
@@ -521,10 +634,7 @@ int_fast16_t AESECB_setupEncrypt(AESECB_Handle handle, const CryptoKey *key)
         object->operation = NULL;
     }
 
-    if (status == AES_STATUS_SUCCESS)
-    {
-        object->operationType = AESECB_OPERATION_TYPE_ENCRYPT_SEGMENTED;
-    }
+    object->operationType = AESECB_OPERATION_TYPE_ENCRYPT_SEGMENTED;
 
     return status;
 }
@@ -538,10 +648,48 @@ int_fast16_t AESECB_setupDecrypt(AESECB_Handle handle, const CryptoKey *key)
     DebugP_assert(key);
 
     AESECBLPF3_Object *object = AESEBCLPF3_getObject(handle);
+    int_fast16_t status       = AESECB_STATUS_SUCCESS;
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    if (key->encoding == CryptoKey_PLAINTEXT_HSM)
+    {
+        /* If the HSM IP and/or HSMSAL failed to boot then we cannot perform any HSM-related operation */
+        if (object->hsmStatus != HSMLPF3_STATUS_SUCCESS)
+        {
+            return AESECB_STATUS_ERROR;
+        }
+
+        /* A segmented operation may have been started but not finalized yet */
+        if (object->segmentedOperationInProgress)
+        {
+            return AESECB_STATUS_ERROR;
+        }
+
+        /* Make internal copy of crypto key */
+        object->common.key = *key;
+
+        /* returnStatus is only changed in the case of an error or cancellation */
+        object->common.returnStatus = AES_STATUS_SUCCESS;
+
+        /* Initialize operation pointer to NULL in case AESECB_cancelOperation
+         * is called after AESECB_setupXXXX and callback should be skipped.
+         */
+        object->operation = NULL;
+
+        object->operationType = AESECB_OPERATION_TYPE_DECRYPT_SEGMENTED;
+
+        object->segmentedOperationInProgress = true;
+    }
+    else
+#endif
+    {
+        object->common.returnStatus = AESECB_STATUS_FEATURE_NOT_SUPPORTED;
+        status                      = AESECB_STATUS_FEATURE_NOT_SUPPORTED;
+    }
 
     /* Save the error status in case addData or finalize is called afterward */
-    object->common.returnStatus = AESECB_STATUS_FEATURE_NOT_SUPPORTED;
-    return AESECB_STATUS_FEATURE_NOT_SUPPORTED;
+
+    return status;
 }
 
 /*
@@ -554,6 +702,13 @@ int_fast16_t AESECB_addData(AESECB_Handle handle, AESECB_Operation *operation)
 
     AESECBLPF3_Object *object = AESEBCLPF3_getObject(handle);
     int_fast16_t status;
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    if (operation->key->encoding == CryptoKey_PLAINTEXT_HSM)
+    {
+        return AESECBLPF3HSM_addData(handle, operation);
+    }
+#endif
 
     /*
      * Assert the segmented operation was setup.
@@ -603,6 +758,13 @@ int_fast16_t AESECB_finalize(AESECB_Handle handle, AESECB_Operation *operation)
 
     AESECBLPF3_Object *object = AESEBCLPF3_getObject(handle);
     int_fast16_t status;
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    if (operation->key->encoding == CryptoKey_PLAINTEXT_HSM)
+    {
+        return AESECBLPF3HSM_finalize(handle, operation);
+    }
+#endif
 
     /*
      * Assert the segmented operation was setup.
@@ -704,7 +866,11 @@ int_fast16_t AESECB_cancelOperation(AESECB_Handle handle)
      * Do not execute the callback as it would have been executed already
      * when the operation completed.
      */
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    if (((object->common.key.encoding & CRYPTOKEY_HSM) == 0) && (!object->common.operationInProgress))
+#else
     if (!object->common.operationInProgress)
+#endif
     {
         HwiP_restore(interruptKey);
         return AESECB_STATUS_SUCCESS;
@@ -718,9 +884,21 @@ int_fast16_t AESECB_cancelOperation(AESECB_Handle handle)
      */
     AESCommonLPF3_cancelOperation(&object->common, true);
 
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    if ((object->common.key.encoding & CRYPTOKEY_HSM))
+    {
+        /* Since the HSM cannot cancel an in-progress token, we must wait for the result to allow for
+         * subsequent token submissions to succeed.
+         */
+        (void)HSMLPF3_cancelOperation();
+
+        object->segmentedOperationInProgress = false;
+    }
+#endif
+
     /*
      * Operation pointer could be NULL if a segmented operation was setup
-     * but neither AESCCM_addData or AESCCM_finalize was called.
+     * but neither AESECB_addData or AESECB_finalize was called.
      */
     if ((object->common.returnBehavior == AES_RETURN_BEHAVIOR_CALLBACK) && (object->operation != NULL))
     {
@@ -730,3 +908,219 @@ int_fast16_t AESECB_cancelOperation(AESECB_Handle handle)
 
     return AESECB_STATUS_SUCCESS;
 }
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+
+/*
+ *  ======== AESECBLPF3HSM_oneStepOperation ========
+ */
+static int_fast16_t AESECBLPF3HSM_oneStepOperation(AESECB_Handle handle,
+                                                   AESECB_Operation *operation,
+                                                   AESECB_OperationType operationType)
+{
+    DebugP_assert(handle);
+    DebugP_assert(operation);
+
+    AESECBLPF3_Object *object = AESEBCLPF3_getObject(handle);
+
+    /* If the HSM IP and/or HSMSAL failed to boot then we cannot perform any HSM-related operation */
+    if (object->hsmStatus != HSMLPF3_STATUS_SUCCESS)
+    {
+        return HSMLPF3_STATUS_ERROR;
+    }
+
+    /* A segmented operation may have been started but not finalized yet */
+    if (object->segmentedOperationInProgress)
+    {
+        return AESECB_STATUS_ERROR;
+    }
+
+    object->operation     = operation;
+    object->operationType = operationType;
+
+    object->common.key          = *(operation->key);
+    /* We will only change the returnStatus if there is an error or cancellation */
+    object->common.returnStatus = AESECB_STATUS_SUCCESS;
+
+    return AESECBLPF3HSM_processOneStep(handle);
+}
+
+/*
+ *  ======== AESECBLPF3HSM_OneStepPostProcessing ========
+ */
+static inline void AESECBLPF3HSM_OneStepPostProcessing(uintptr_t arg0)
+{
+    AESECB_Handle handle      = (AESECB_Handle)arg0;
+    AESECBLPF3_Object *object = AESEBCLPF3_getObject(handle);
+    int_fast16_t status       = AESECB_STATUS_ERROR;
+    int32_t physicalResult    = HSMLPF3_getResultCode();
+    int32_t tokenResult       = physicalResult & HSMLPF3_RETVAL_MASK;
+
+    if (tokenResult == EIP130TOKEN_RESULT_SUCCESS)
+    {
+        status = AESECB_STATUS_SUCCESS;
+    }
+
+    object->common.returnStatus = status;
+
+    HSMLPF3_releaseLock();
+
+    Power_releaseConstraint(PowerLPF3_DISALLOW_STANDBY);
+
+    if ((object->operationType == AESECB_OPERATION_TYPE_FINALIZE_ENCRYPT_SEGMENTED) ||
+        (object->operationType == AESECB_OPERATION_TYPE_FINALIZE_DECRYPT_SEGMENTED) ||
+        (object->operationType == AESECB_OPERATION_TYPE_ENCRYPT) ||
+        (object->operationType == AESECB_OPERATION_TYPE_DECRYPT))
+    {
+        object->segmentedOperationInProgress = false;
+    }
+
+    if (object->common.returnBehavior == AES_RETURN_BEHAVIOR_CALLBACK)
+    {
+        object->callbackFxn(handle, object->common.returnStatus, object->operation, object->operationType);
+    }
+}
+
+static int_fast16_t AESECBLPF3HSM_processOneStep(AESECB_Handle handle)
+{
+    int_fast16_t status       = AESECB_STATUS_ERROR;
+    int_fast16_t hsmRetval    = HSMLPF3_STATUS_ERROR;
+    AESECBLPF3_Object *object = AESEBCLPF3_getObject(handle);
+
+    if (!HSMLPF3_acquireLock(SemaphoreP_NO_WAIT, (uintptr_t)handle))
+    {
+        return AESECB_STATUS_RESOURCE_UNAVAILABLE;
+    }
+
+    Power_setConstraint(PowerLPF3_DISALLOW_STANDBY);
+
+    HSMLPF3_constructAESECBOneStepPhysicalToken(object);
+
+    hsmRetval = HSMLPF3_submitToken((HSMLPF3_ReturnBehavior)object->common.returnBehavior,
+                                    AESECBLPF3HSM_OneStepPostProcessing,
+                                    (uintptr_t)handle);
+
+    if (hsmRetval == HSMLPF3_STATUS_SUCCESS)
+    {
+        hsmRetval = HSMLPF3_waitForResult();
+
+        if (hsmRetval == HSMLPF3_STATUS_SUCCESS)
+        {
+            status = object->common.returnStatus;
+        }
+    }
+
+    if (hsmRetval != HSMLPF3_STATUS_SUCCESS)
+    {
+        Power_releaseConstraint(PowerLPF3_DISALLOW_STANDBY);
+
+        HSMLPF3_releaseLock();
+    }
+
+    return status;
+}
+
+static int_fast16_t AESECBLPF3HSM_addData(AESECB_Handle handle, AESECB_Operation *operation)
+{
+    DebugP_assert(handle);
+    DebugP_assert(operation);
+
+    AESECBLPF3_Object *object = AESEBCLPF3_getObject(handle);
+
+    /* If the HSM IP and/or HSMSAL failed to boot then we cannot perform any HSM-related operation */
+    if (object->hsmStatus != HSMLPF3_STATUS_SUCCESS)
+    {
+        return AESECB_STATUS_ERROR;
+    }
+
+    /*
+     * Assert the segmented operation was setup.
+     * LPF3 only supports ECB encryption.
+     */
+    DebugP_assert((object->operationType == AESECB_OPERATION_TYPE_ENCRYPT_SEGMENTED) ||
+                  (object->operationType == AESECB_OPERATION_TYPE_DECRYPT_SEGMENTED));
+
+    /* Check for previous failure or cancellation of segmented operation */
+    if (object->common.returnStatus != AESECB_STATUS_SUCCESS)
+    {
+        /*
+         * Return the status of the previous call.
+         * The callback function will not be executed.
+         */
+        return object->common.returnStatus;
+    }
+
+    object->operation = operation;
+
+    return AESECBLPF3HSM_processOneStep(handle);
+}
+
+static int_fast16_t AESECBLPF3HSM_finalize(AESECB_Handle handle, AESECB_Operation *operation)
+{
+    DebugP_assert(handle);
+    DebugP_assert(operation);
+
+    AESECBLPF3_Object *object = AESEBCLPF3_getObject(handle);
+    int_fast16_t status;
+
+    /* If the HSM IP and/or HSMSAL failed to boot then we cannot perform any HSM-related operation */
+    if (object->hsmStatus != HSMLPF3_STATUS_SUCCESS)
+    {
+        return AESECB_STATUS_ERROR;
+    }
+
+    /*
+     * Assert the segmented operation was setup.
+     * LPF3 only supports ECB encryption.
+     */
+    DebugP_assert((object->operationType == AESECB_OPERATION_TYPE_ENCRYPT_SEGMENTED) ||
+                  (object->operationType == AESECB_OPERATION_TYPE_DECRYPT_SEGMENTED));
+
+    /* Check for previous failure or cancellation of segmented operation */
+    if (object->common.returnStatus != AESECB_STATUS_SUCCESS)
+    {
+        /*
+         * Return the status of the previous call.
+         * The callback function will not be executed.
+         */
+        return object->common.returnStatus;
+    }
+
+    if (object->operationType == AESECB_OPERATION_TYPE_ENCRYPT_SEGMENTED)
+    {
+        object->operationType = AESECB_OPERATION_TYPE_FINALIZE_ENCRYPT_SEGMENTED;
+    }
+    else if (object->operationType == AESECB_OPERATION_TYPE_DECRYPT_SEGMENTED)
+    {
+        object->operationType = AESECB_OPERATION_TYPE_FINALIZE_DECRYPT_SEGMENTED;
+    }
+
+    if (operation->inputLength > 0U)
+    {
+        object->operation = operation;
+
+        status = AESECBLPF3HSM_processOneStep(handle);
+    }
+    else /* Operation was finalized without additional data to process */
+    {
+        /* Save the object's returnStatus in case it is
+         * overwritten during setup of a new segmented operation
+         * after the operationInProgress flag is cleared.
+         */
+        status = object->common.returnStatus;
+
+        object->segmentedOperationInProgress = false;
+
+        if (object->common.returnBehavior == AES_RETURN_BEHAVIOR_CALLBACK)
+        {
+            object->callbackFxn(handle, status, operation, object->operationType);
+
+            /* Always return success in callback mode */
+            status = AESECB_STATUS_SUCCESS;
+        }
+    }
+
+    return status;
+}
+
+#endif

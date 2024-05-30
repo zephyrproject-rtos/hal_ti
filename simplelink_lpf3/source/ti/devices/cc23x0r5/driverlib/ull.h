@@ -1,10 +1,10 @@
 /******************************************************************************
- *  Filename:       cpu.h
+ *  Filename:       ull.h
  *
- *  Description:    Defines and prototypes for the CPU instruction wrapper
+ *  Description:    Defines and prototypes for the ULL instruction wrapper
  *                  functions.
  *
- *  Copyright (c) 2022-2023 Texas Instruments Incorporated
+ *  Copyright (c) 2024 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -34,14 +34,14 @@
  *
  ******************************************************************************/
 
-#ifndef __CPU_H__
-#define __CPU_H__
+#ifndef __ULL_H__
+#define __ULL_H__
 
 //*****************************************************************************
 //
-//! \addtogroup system_cpu_group
+//! \addtogroup system_control_group
 //! @{
-//! \addtogroup cpu_api
+//! \addtogroup ull_api
 //! @{
 //
 //*****************************************************************************
@@ -59,6 +59,10 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "../inc/hw_types.h"
+#include "../inc/hw_memmap.h"
+#include "../inc/hw_rtc.h"
+
 //*****************************************************************************
 //
 // API Functions and prototypes
@@ -67,32 +71,26 @@ extern "C" {
 
 //*****************************************************************************
 //
-//! \brief Provide a small non-zero delay using a simple loop counter.
+//! \brief Sync all writes to registers in the ULL domain
 //!
-//! This function provides means for generating a constant length delay. It is
-//! written in assembly to keep the delay consistent across tool chains,
-//! avoiding the need to tune the delay based on the tool chain in use.
+//! The SVT and ULL domains are not fully synchronised. If software issues a
+//! write to a ULL register followed be a read or write access to an SVT
+//! register, the accesses may take effect out of order. That is, the SVT access
+//! may happen before the ULL write.
 //!
-//! \note It is not recommended using this function for long delays. For longer
-//! delays, consider using ROM function \ref HapiWaitUs().
-//!
-//! \note If using an RTOS, consider using RTOS provided delay functions because
-//! these will not block task scheduling and will potentially save power.
-//!
-//! \note Interrupts can affect the delay if not manually disabled in advance.
-//!
-//! \note The delay depends on where code resides and the path for code
-//! fetching, consider using ROM function \ref HapiWaitUs().
-//!
-//! \param count is the number of delay loop iterations to perform. Number must
-//! be greater than zero.
-//!
-//! \sa HapiWaitUs()
+//! This function explicitly synchronises the domains by reading from the ULL
+//! domain. When this function returns, all writes to ULL registers are
+//! guaranteed to have propagated to hardware.
 //!
 //! \return None
+//!
 //
 //*****************************************************************************
-extern void CPUDelay(uint32_t count);
+__STATIC_INLINE void ULLSync(void)
+{
+    // Read an RTC register to ensure that previous ULL writes have taken effect
+    HWREG(RTC_BASE + RTC_O_DESC);
+}
 
 //*****************************************************************************
 //
@@ -111,4 +109,4 @@ extern void CPUDelay(uint32_t count);
 //
 //*****************************************************************************
 
-#endif // __CPU_H__
+#endif // __ULL_H__

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Texas Instruments Incorporated - http://www.ti.com
+ * Copyright (c) 2022-2024 Texas Instruments Incorporated - http://www.ti.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -110,9 +110,9 @@ KeyStore_PSA_KeyLifetime KeyStore_PSA_getKeyLifetime(KeyStore_PSA_KeyAttributes 
 /*
  *  ======== KeyStore_PSA_setKeyUsageFlags ========
  */
-void KeyStore_PSA_setKeyUsageFlags(KeyStore_PSA_KeyAttributes *attributes, KeyStore_PSA_KeyUsage usage_flags)
+void KeyStore_PSA_setKeyUsageFlags(KeyStore_PSA_KeyAttributes *attributes, KeyStore_PSA_KeyUsage usageFlags)
 {
-    psa_set_key_usage_flags(attributes, usage_flags);
+    psa_set_key_usage_flags(attributes, usageFlags);
 }
 
 /*

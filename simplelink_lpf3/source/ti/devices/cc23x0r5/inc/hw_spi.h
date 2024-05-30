@@ -170,7 +170,7 @@
 //
 // DMA Done TX event mask.
 // ENUMs:
-// SET                      Set Interrrupt Mask
+// SET                      Set Interrupt Mask
 // CLR                      Clear Interrupt Mask
 #define SPI_IMASK_DMATX                                             0x00000100U
 #define SPI_IMASK_DMATX_M                                           0x00000100U
@@ -463,7 +463,7 @@
 
 // Field:     [3] RX
 //
-// Masked receive FIFO event.
+// Masked Receive FIFO event.
 // ENUMs:
 // SET                      Interrupt occurred
 // CLR                      Interrupt did not occur
@@ -590,7 +590,7 @@
 //
 // Set SPI Receive Time-Out Event.
 // ENUMs:
-// SET                      Set Interrrupt Mask
+// SET                      Set Interrupt Mask
 // NOEFF                    Writing 0 has no effect
 #define SPI_ISET_RTOUT                                              0x00000004U
 #define SPI_ISET_RTOUT_M                                            0x00000004U
@@ -703,7 +703,7 @@
 //
 // Clear SPI Receive Time-Out Event.
 // ENUMs:
-// CLR                      Set Interrrupt Mask
+// CLR                      Set Interrupt Mask
 // NOEFF                    Writing 0 has no effect
 #define SPI_ICLR_RTOUT                                              0x00000004U
 #define SPI_ICLR_RTOUT_M                                            0x00000004U
@@ -1218,7 +1218,7 @@
 
 // Field: [15:12] CDMODE
 //
-// Commnd Data Mode. This bit field value determines the behavior of C/D or CS
+// Command Data Mode. This bit field value determines the behavior of C/D or CS
 // signal when CDEN = 1. CS pin held low indicates command phase and CS pin
 // held high indicates data phase.
 // When CDMODE = 0x0, the CS pin is always held high during transfer indicating
@@ -1415,8 +1415,8 @@
 //
 // Serial clock divider. This is used to generate the transmit and receive bit
 // rate of the SPI.
-// The SPI bit rate: (SPI functional clock frequency)/((SCR+1)*2). SCR value
-// can be from 0 to 1023.
+// The SPI bit rate: (SPI functional clock frequency)/((SCR+1)*PRESC). SCR
+// value can be from 0 to 1023.
 #define SPI_CLKCFG1_SCR_W                                                   10U
 #define SPI_CLKCFG1_SCR_M                                           0x000003FFU
 #define SPI_CLKCFG1_SCR_S                                                    0U
@@ -1483,7 +1483,7 @@
 //*****************************************************************************
 // Field:     [8] TXEN
 //
-// Transmit DMA enable. If this bit is set to 1, DMA for the trasmit FIFO is
+// Transmit DMA enable. If this bit is set to 1, DMA for the transmit FIFO is
 // enabled.
 // ENUMs:
 // EN                       Enable TX DMA
@@ -1515,8 +1515,8 @@
 // Field:  [15:0] DATA
 //
 // CRC value
-// SW should read RXCRC register at the end of data transmission to reinitiaze
-// the seed value to all ones
+// SW should read RXCRC register at the end of data transmission to
+// reinitialize the seed value to all ones
 #define SPI_RXCRC_DATA_W                                                    16U
 #define SPI_RXCRC_DATA_M                                            0x0000FFFFU
 #define SPI_RXCRC_DATA_S                                                     0U
@@ -1761,7 +1761,7 @@
 //
 // SPI Busy status
 // ENUMs:
-// ACTIVE                   SPI is currently transmitting and/or recieving
+// ACTIVE                   SPI is currently transmitting and/or receiving
 //                          data, or transmit FIFO is not empty.
 // IDLE                     SPI is in idle mode.
 #define SPI_STA_BUSY                                                0x00000010U

@@ -125,12 +125,8 @@ typedef struct {
         struct {
             // Sticky-0 bits written to VIMS.WEPRA (sectors 0-31, 1/bit)
             uint32_t mainSectors0_31;
-            union {
-                // Sticky-0 bits written to VIMS.WEPRB(0) (sectors 32-255, 8/bit)
-                uint32_t mainSectors32_255;
-                // Dummy symbol to allow code to remain the same across devices
-                uint32_t mainSectors256_511;
-            };
+            // Sticky-0 bits written to VIMS.WEPRB(0) (sectors 32-255, 8/bit)
+            uint32_t mainSectors32_255;
             // Sticky-0 bit written to VIMS.WEPRAUX
             union {
                 uint32_t auxSectors;
@@ -146,12 +142,8 @@ typedef struct {
         struct {
             // Set bits (sectors 0-31, 1/bit) define what a chip erase command can optionally retain
             uint32_t mainSectors0_31;
-            union {
-                // Set bits (sectors 32-255, 8/bit) define what a chip erase command can optionally retain
-                uint32_t mainSectors32_255;
-                // Dummy field to allow code to remain same across devices
-                uint32_t mainSectors256_511;
-            };
+            // Set bits (sectors 32-255, 8/bit) define what a chip erase command can optionally retain
+            uint32_t mainSectors32_255;
         } chipEraseRetain;
         // Reserved for future flash increases
         uint32_t res0[2];
@@ -185,13 +177,14 @@ typedef struct {
     // User record size is fixed at 128 B. Last word assumed to be CRC over first 124 B (optional)
     #define CCFG_USER_RECORD_SIZE  128
     union {    // [End-176]: length 128B
-        // Generic 32b record layout
-        uint32_t val32[(CCFG_USER_RECORD_SIZE/4)];
-        // Generic 8b record layout
-        uint8_t  val8[CCFG_USER_RECORD_SIZE];
-        // CRC field in last word
         struct {
-            uint32_t res0[CCFG_USER_RECORD_SIZE/4-1];
+            union {
+                // Generic 32b record layout
+                uint32_t val32[(CCFG_USER_RECORD_SIZE/4)-1];
+                // Generic 8b record layout
+                uint8_t  val8[CCFG_USER_RECORD_SIZE-4];
+            };
+            // CRC field across first 124B of userRecord (supported by SACI verifyCcfg command)
             uint32_t crc32;
         };
     } userRecord;

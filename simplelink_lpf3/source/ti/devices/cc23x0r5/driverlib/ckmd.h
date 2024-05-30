@@ -560,65 +560,77 @@ __STATIC_INLINE uint32_t CKMDGetTargetAmplitudeThresholdTrim(void)
 
 //*****************************************************************************
 //
-//! \brief Gets the worst case LFOSC frequency jump due to RTN.
+//! \brief Gets the worst-case LFOSC frequency jump due to RTN.
 //!
-//! \return The absolute value of the worst case jump due to RTN in ppm.
+//! \return The absolute value of the worst-case jump due to RTN in ppm.
 //
 //*****************************************************************************
 __STATIC_INLINE uint_least16_t CKMDGetLfoscRtnPpm(void)
 {
-    uint8_t ppmRtn = 0x14;
+    // Only App trims revision 5 and newer has a ppmRtn field. For older
+    // revisions use a default value of 20 (equivalent to 600ppm)
+    uint8_t ppmRtn = 20;
     if (fcfg->appTrims.revision >= 0x5)
     {
         ppmRtn = fcfg->appTrims.cc23x0r5.lfOscParams.ppmRtn;
     }
+
+    // The ppmTempMid field uses units of 30ppm, convert to ppm
     return ppmRtn * 30;
 }
 
 //*****************************************************************************
 //
-//! \brief Gets the the worst case LFOSC temperature coefficient in the "middle"
+//! \brief Gets the the worst-case LFOSC temperature coefficient in the "middle"
 //! temperature range.
 //!
-//! This function can be used to determine the the worst case LFOSC temperature
+//! This function can be used to determine the the worst-case LFOSC temperature
 //! coefficient in units of ppm/C in the temperature range [
 //! \ref CKMD_LFOSC_MID_TEMP_COEFFICIENT_RANGE_MIN,
 //! \ref CKMD_LFOSC_MID_TEMP_COEFFICIENT_RANGE_MAX ].
 //!
-//! \return The absolute value of worst case temperature coefficient in ppm/C.
+//! \return The absolute value of worst-case temperature coefficient in ppm/C.
 //
 //*****************************************************************************
 __STATIC_INLINE uint_least16_t CKMDGetLfoscMidTempCoefficientPpmPerC(void)
 {
-    uint8_t ppmTempMid = 0x14;
+    // Only App trims revision 5 and newer has a ppmTempMid field. For older
+    // revisions use a default value of 20 (equivalent to 260ppm/C)
+    uint8_t ppmTempMid = 20;
     if (fcfg->appTrims.revision >= 0x5)
     {
         ppmTempMid = fcfg->appTrims.cc23x0r5.lfOscParams.ppmTempMid;
     }
+
+    // The ppmTempMid field uses units of 13ppm/C, convert to ppm/C
     return ppmTempMid * 13;
 }
 
 //*****************************************************************************
 //
-//! \brief Gets the the worst case LFOSC temperature coefficient in the
+//! \brief Gets the the worst-case LFOSC temperature coefficient in the
 //! "extended" temperature range.
 //!
-//! This function can be used to determine the the worst case LFOSC temperature
+//! This function can be used to determine the the worst-case LFOSC temperature
 //! coefficient in units of ppm/C when the temperature is outside of the
 //! temperature range [
 //! \ref CKMD_LFOSC_MID_TEMP_COEFFICIENT_RANGE_MIN,
 //! \ref CKMD_LFOSC_MID_TEMP_COEFFICIENT_RANGE_MAX ].
 //!
-//! \return The absolute value of worst case temperature coefficient in ppm/C.
+//! \return The absolute value of worst-case temperature coefficient in ppm/C.
 //
 //*****************************************************************************
 __STATIC_INLINE uint_least16_t CKMDGetLfoscExtTempCoefficientPpmPerC(void)
 {
-    uint8_t ppmTempExt = 0x14;
+    // Only App trims revision 5 and newer has a ppmTempExt field. For older
+    // revisions use a default value of 20 (equivalent to 700ppm/C)
+    uint8_t ppmTempExt = 20;
     if (fcfg->appTrims.revision >= 0x5)
     {
         ppmTempExt = fcfg->appTrims.cc23x0r5.lfOscParams.ppmTempExt;
     }
+
+    // The ppmTempExt field uses units of 35ppm/C, convert to ppm/C
     return ppmTempExt * 35;
 }
 

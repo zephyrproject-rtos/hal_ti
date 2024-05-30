@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022, Texas Instruments Incorporated
+ * Copyright (c) 2017-2024, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -251,6 +251,14 @@
  *
  * // Since we are using default ECDH_Params, we just pass in NULL for that parameter.
  * ecdhHandle = ECDH_open(0, NULL);
+ *
+ * // For CC27XX devices only,
+ * // Since the ECDH driver for CC27XX relies on one HW engine (the HSM) for all of its operations
+ * // If the HSM boot up sequence fails, ECDH_open() will return NULL.
+ * if (!ecdhHandle) {
+ *     // Handle error
+ * }
+ *
  *
  * // Initialize myPrivateKey and myPublicKey
  * CryptoKeyPlaintext_initKey(&myPrivateKey, myPrivateKeyingMaterial, sizeof(myPrivateKeyingMaterial));
@@ -633,7 +641,8 @@ typedef struct
 typedef union
 {
     ECDH_OperationGeneratePublicKey *generatePublicKey; /*!< A pointer to an ECDH_OperationGeneratePublicKey struct */
-    ECDH_OperationComputeSharedSecret *computeSharedSecret; /*!< A pointer to an ECDH_OperationGeneratePublicKey struct
+    ECDH_OperationComputeSharedSecret *computeSharedSecret; /*!< A pointer to an ECDH_OperationComputeSharedSecret
+                                                             * struct
                                                              */
 } ECDH_Operation;
 

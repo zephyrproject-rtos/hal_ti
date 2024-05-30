@@ -101,7 +101,6 @@ uint32_t EventP_pend(EventP_Handle event, uint32_t eventMask, bool waitForAll, u
 {
     uint32_t eventBits, tickPeriod;
     k_timeout_t eventTimeout;
-    uint64_t timeUS;
 
 
     if (timeout == EventP_WAIT_FOREVER)

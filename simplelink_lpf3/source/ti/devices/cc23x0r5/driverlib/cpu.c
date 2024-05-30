@@ -4,7 +4,7 @@
  *  Description:    Instruction wrappers for special CPU instructions needed by
  *                  the drivers.
  *
- *  Copyright (c) 2022 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2023 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -57,41 +57,36 @@ void CPUDelay(uint32_t count)
     #pragma diag_suppress = Pe940
 }
     #pragma diag_default  = Pe940
-
-#elif defined(__TI_COMPILER_VERSION__)
-// For CCS implement this function in pure assembly. This prevents the TI
-// compiler from doing funny things with the optimizer.
-
-// Loop the specified number of times
-__asm("    .sect \".text:CPUDelay\"\n"
-      "    .clink\n"
-      "    .thumbfunc CPUDelay\n"
-      "    .thumb\n"
-      "    .global CPUDelay\n"
-      "CPUDelay:\n"
-      "    subs r0, #1\n"
-      "    bne.n CPUDelay\n"
-      "    bx lr\n");
-
 #elif defined(__clang__)
-void CPUDelay(uint32_t count)
+void __attribute__((naked)) CPUDelay(uint32_t count)
 {
-    (void)count; // Linter does not see the use of r0 in asm.
-    // Loop the specified number of times
-    __asm("    subs    r0, #1\n"
-          "    bne.n   CPUDelay\n"
-          "    bx      lr");
+    // Loop the specified number of times.
+    // The naked attribute tells the compiler that the function is effectively
+    // hand-coded assembly implemented using inlined assembly without operands.
+    // As such, it assumes that the C calling conventions are obeyed, and we can
+    // assume count is in R0.
+    __asm volatile("CPUdel%=:\n"
+                   "    subs r0, #1\n"
+                   "    bne   CPUdel%=\n"
+                   "    bx    lr\n"
+                   :            /* No output */
+                   :            /* No input */
+                   : "r0", "cc" /* Clobbers. "cc" is the flags */
+    );
 }
-#else
-// GCC
+#elif defined(__GNUC__)
 void __attribute__((naked)) CPUDelay(uint32_t count)
 {
     // Loop the specified number of times
     __asm volatile(".syntax unified\n"
-                   "%=:  subs  %0, #1\n"
-                   "     bne   %=b\n"
-                   "     bx    lr\n"
-                   : /* No output */
-                   : "r"(count));
+                   "CPUdel%=:\n"
+                   "    subs  %0, #1\n"
+                   "    bne   CPUdel%=\n"
+                   "    bx    lr\n"
+                   :            /* No output */
+                   : "r"(count) /* Input */
+    );
 }
+#else
+    #error "Unsupported toolchain!"
 #endif
