@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Texas Instruments Incorporated
+ * Copyright (c) 2022-2024, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,7 +64,7 @@ extern "C" {
 /** KeyStore driver semaphore used to synchronize accesses to the keyStore
  *
  * isAcquired: used by openKey() and purgeKey() to check if the KeyStore semaphore is acquired by
- * other KeyStore functions before opening and closing key handles passed to mbedcrypto functions.
+ * other KeyStore functions before opening and closing key handles passed to mbedTLS functions.
  */
 typedef struct
 {

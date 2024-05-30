@@ -41,7 +41,7 @@
 
 // --- ROM definitions ---
 /// Size of the call stack used in ROM, in number of bytes
-#define BOOT_CSTACK_SIZE                        (1024-CCFG_USER_RECORD_SIZE)
+#define BOOT_CSTACK_SIZE                        (1024-sizeof(fcfg_appTrims_t))
 
 // --- FLASH definitions ---
 /// Size of a 1T flash sector, in number of bytes

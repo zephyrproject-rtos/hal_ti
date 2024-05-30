@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, Texas Instruments Incorporated
+ * Copyright (c) 2021-2024, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,9 +42,41 @@
  *
  *  Refer to @ref Power.h for a complete description of APIs.
  *
- *  ## Implementation #
+ *  ## Implementation ##
  *  This header file defines the power resources, constraints, events, sleep
  *  states and transition latencies for CC23X0.
+ *
+ *  @anchor ti_drivers_PowerCC23X0_HFXT_Amplitude_Compensation
+ *  ## HFXT Amplitude Compensation ##
+ *  The CC23X0 Power driver will configure the HFXT amplitude to the highest
+ *  possible value at boot (in #Power_init()). Each time the device
+ *  enters standby the HFXT amplitude will be updated to ensure the optimal
+ *  amplitude is used. It will take up to 5 iterations (5 standby entries)
+ *  after boot until the optimal amplitude has been found. This process will
+ *  ensure that the amplitude is kept in an optimal range if the operating
+ *  conditions change, as long as the device regularly enters standby.
+ *
+ *  ### Applications that rarely enters standby ###
+ *  The amplitude adjustments done at standby entry is sufficient for
+ *  applications that regularly enters standby, but if the application does not
+ *  regularly enter standby, then #PowerLPF3_getHfxtAmpAdjustment() and
+ *  #PowerLPF3_adjustHfxtAmp() can be used to check if an adjustment is needed,
+ *  and perform the adjustment if needed.
+ *
+ *  @anchor ti_drivers_PowerCC23X0_Initial_HFXT_Amplitude_Compensation
+ *  ### Initial HFXT Amplitude Compensation ###
+ *  If the application requires that the HFXT amplitude is already in the
+ *  optimal range after boot, then Initial HFXT Amplitude Compensation can be
+ *  enabled with #PowerCC23X0_Config.startInitialHfxtAmpCompFxn.
+ *  If initial HFXT amplitude compensation is enabled, the optimal amplitude
+ *  will be found at/after boot, meaning it will take longer before HFXT is
+ *  ready after boot, but when it is ready the amplitude will already be in the
+ *  optimal range. This process is done asynchronously, so the application can
+ *  do other stuff while waiting for HFXT to be ready.
+ *
+ *  Enabling initial HFXT amplitude compensation will result in more flash usage
+ *  and longer time from boot to the first RF operation.
+ *
  *
  *  ============================================================================
  */
@@ -150,7 +182,7 @@ typedef uint16_t PowerLPF3_Resource; /* Power resource identifier */
  */
 #if defined(DeviceFamily_CC23X0R2)
     #define PowerCC23X0_NUMRESOURCES_CLKCTL0 29
-#elif defined(DeviceFamily_CC23X0R5)
+#elif (defined(DeviceFamily_CC23X0R5) || defined(DeviceFamily_CC23X0R22))
     #define PowerCC23X0_NUMRESOURCES_CLKCTL0 31
 #else
     #error "Unsupported DeviceFamily specified!"
@@ -217,6 +249,14 @@ typedef uint16_t PowerLPF3_Resource; /* Power resource identifier */
 #define PowerCC23X0_NUMEVENTS 5 /* Number of events supported */
 /* \endcond */
 
+/*!
+ *  @brief Function pointer to #PowerLPF3_startInitialHfxtAmpComp() or NULL.
+ *
+ *  This type is only allowed to have the value NULL or be a
+ *  pointer to #PowerLPF3_startInitialHfxtAmpComp().
+ */
+typedef void (*PowerLPF3_StartInitialHfxtAmpCompFxn)(void);
+
 /*! @brief Global configuration structure */
 typedef struct
 {
@@ -256,6 +296,22 @@ typedef struct
      *  Power_disablePolicy() functions, respectively.
      */
     Power_PolicyFxn policyFxn;
+
+    /*!
+     *  @brief Pointer to the function to start the initial HFXT amplitude
+               compensation.
+     *
+     *  This is used to enable/disable the initial HFXT amplitude compensation
+     *  feature.
+     *
+     * The allowed values for this field is:
+     *  - NULL: Initial HFXT amplitude compensation is disabled.
+     *  - Pointer to #PowerLPF3_startInitialHfxtAmpComp(): Initial HFXT
+     *    amplitude compensation is disabled.
+     *
+     * @sa @ref ti_drivers_PowerCC23X0_Initial_HFXT_Amplitude_Compensation "Initial HFXT Amplitude Compensation"
+     */
+    PowerLPF3_StartInitialHfxtAmpCompFxn startInitialHfxtAmpCompFxn;
 } PowerCC23X0_Config;
 
 /*!
@@ -269,7 +325,7 @@ typedef enum
     PowerLPF3_RESET_SHUTDOWN_SWD = PMCTL_RESET_SHUTDOWN_SWD,
     /*! Device reset because of a watchdog timeout. */
     PowerLPF3_RESET_WATCHDOG     = PMCTL_RESET_WATCHDOG,
-    /*! Device reset trggered by software writing to RSTCTL.SYSRST */
+    /*! Device reset triggered by software writing to RSTCTL.SYSRST */
     PowerLPF3_RESET_SYSTEM       = PMCTL_RESET_SYSTEM,
     /*! Device reset triggered by CPU reset event */
     PowerLPF3_RESET_CPU          = PMCTL_RESET_CPU,
@@ -367,29 +423,53 @@ void PowerCC23X0_standbyPolicy(void);
  * this event will be notified.
  *
  * @warning Dynamic switching between LF clocks is not supported. Once one of
- * PowerLPF3_selectLFOSC() or PowerLPF3_selectLFXT() is called in an
- * application, the other one may not be invoked thereafter.
+ * PowerLPF3_selectLFOSC(), PowerLPF3_selectLFXT() or PowerLPF3_selectEXTLF()
+ * is called in an application, the other two may not be invoked thereafter.
  *
  * @pre Power_init()
  * @sa PowerLPF3_selectLFXT()
+ * @sa PowerLPF3_selectEXTLF()
  */
 void PowerLPF3_selectLFOSC(void);
 
 /*!
- * @brief Select LFOSC as LFCLK source
+ * @brief Select LFXT as LFCLK source
  *
  * Turn on the LFXT and choose it as LFCLK source. Once LFCLK has switched,
  * the #PowerLPF3_LFCLK_SWITCHED notification will be issued and all
  * subscribers to this event will be notified.
  *
  * @warning Dynamic switching between LF clocks is not supported. Once one of
- * PowerLPF3_selectLFOSC() or PowerLPF3_selectLFXT() is called in an
- * application, the other one may not be invoked thereafter.
+ * PowerLPF3_selectLFOSC(), PowerLPF3_selectLFXT() or PowerLPF3_selectEXTLF()
+ * is called in an application, the other two may not be invoked thereafter.
  *
  * @pre Power_init()
  * @sa PowerLPF3_selectLFOSC()
+ * @sa PowerLPF3_selectEXTLF()
  */
 void PowerLPF3_selectLFXT(void);
+
+/*!
+ * @brief Select EXTLF as LFCLK source
+ *
+ * Choose an external 31.25 kHz square wave as the LFCLK source as input.
+ * Once LFCLK has switched, the #PowerLPF3_LFCLK_SWITCHED notification
+ * will be issued and all subscribers to this event will be notified.
+ *
+ * This function requires the following symbols to be defined.
+ *  - \c PowerLPF3_extlfPin (uint8_t): The DIO number of the pin to be used as the EXTLF pin.
+ *  - \c PowerLPf3_extlfPinMux (uint8_t): Mux value used to mux the EXTLF signal to \c PowerLPF3_extlfPin.
+ * If using SysConfig, the symbols will be defined in ti_drivers_config.c.
+ *
+ * @warning Dynamic switching between LF clocks is not supported. Once one of
+ * PowerLPF3_selectLFOSC(), PowerLPF3_selectLFXT() or PowerLPF3_selectEXTLF()
+ * is called in an application, the other two may not be invoked thereafter.
+ *
+ * @pre Power_init()
+ * @sa PowerLPF3_selectLFOSC()
+ * @sa PowerLPF3_selectLFXT()
+ */
+void PowerLPF3_selectEXTLF(void);
 
 /*!
  * @brief Initialise HFXT temperature compensation coefficients
@@ -408,6 +488,7 @@ void PowerLPF3_selectLFXT(void);
  *
  * @pre Power_init()
  */
+
 void PowerLPF3_initHFXTCompensation(int32_t P0, int32_t P1, int32_t P2, int32_t P3, uint8_t shift, bool fcfgInsertion);
 
 /*!
@@ -445,6 +526,55 @@ void PowerLPF3_enableHFXTCompensation(int16_t tempThreshold, int16_t tempDelta);
  * @pre PowerLPF3_enableHFXTCompensation()
  */
 void PowerLPF3_disableHFXTCompensation(void);
+
+/*!
+ * @brief Start initial compensation of the HFXT amplitude
+ *
+ * @warning This function must not be called by the application. It is only
+ * intended to be specified for #PowerCC23X0_Config.startInitialHfxtAmpCompFxn
+ */
+void PowerLPF3_startInitialHfxtAmpComp(void);
+
+/*!
+ * @brief Check if HFXT amplitude needs to be adjusted
+ *
+ * The HFXT amplitude needs to regularly be checked and if needed adjusted.
+ * The Power driver will check the amplitude and adjust it when the device
+ * enters standby. However if the device does not enter standby often enough,
+ * then additional checks and adjustments are needed.
+ *
+ * This function can be used to check if adjustment of the amplitude is needed,
+ * and #PowerLPF3_adjustHfxtAmp() can be used to adjust the amplitude if needed.
+ *
+ * @return
+ *  - +1: The amplitude needs to be increased
+ *  -  0: No adjustments are needed
+ *  - -1: The amplitude needs to be decreased
+ *
+ * @sa #PowerLPF3_adjustHfxtAmp()
+ */
+int_fast8_t PowerLPF3_getHfxtAmpAdjustment(void);
+
+/*!
+ * @brief Adjust the HFXT amplitude
+ *
+ * This function is to be used to adjust the HFXT amplitude if an adjustment is
+ * needed according to #PowerLPF3_getHfxtAmpAdjustment(). Please refer to the
+ * documentation of #PowerLPF3_getHfxtAmpAdjustment() for more details.
+ *
+ * @note The radio must be disabled when adjusting the HFXT amplitude, and while
+ * the amplitude is settling.
+ * After this function returns, the caller must wait until the HFXT amplitude
+ * has settled.
+ *
+ * @param adjustment the value returned by #PowerLPF3_getHfxtAmpAdjustment().
+ *                   No other value is allowed.
+ *
+ * @pre #PowerLPF3_getHfxtAmpAdjustment() must be called, and it must return
+ * a non-zero value (indicating that adjustment is needed)
+ * @sa #PowerLPF3_getHfxtAmpAdjustment()
+ */
+void PowerLPF3_adjustHfxtAmp(int_fast8_t adjustment);
 
 void PowerCC23X0_schedulerDisable(void);
 void PowerCC23X0_schedulerRestore(void);

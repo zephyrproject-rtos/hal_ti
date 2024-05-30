@@ -3,7 +3,7 @@
 *
 *  Description:    Common types and macros.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2023, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -90,5 +90,29 @@ typedef unsigned int  __UINT32;
 // Write example : HWREGB(base_addr + offset) = my8BitVar ;
 #define HWREGB(x)                                                             \
         (*((volatile unsigned char *)(x)))
+
+// Word (32 bit) read to address x in the LRF module
+// This define is present for cross-device compatibility. Do not use!
+#define HWREG_READ_LRF(x) HWREG(x)
+
+// Half word (16 bit) read to address x in the LRF module
+// This define is present for cross-device compatibility. Do not use!
+#define HWREGH_READ_LRF(x) HWREGH(x)
+
+// Byte (8 bit) access to address x
+// This define is present for cross-device compatibility. Do not use!
+#define HWREGB_READ_LRF(x) HWREGB(x)
+
+// Word (32 bit) write to address x in the LRF module.
+// This define is present for cross-device compatibility. Do not use!
+#define HWREG_WRITE_LRF(x) HWREG(x)
+
+// Half word (16 bit) write to address x in the LRF module.
+// This define is present for cross-device compatibility. Do not use!
+#define HWREGH_WRITE_LRF(x) HWREGH(x)
+
+// Byte (8 bit) write to address x in the LRF module.
+// This define is present for cross-device compatibility. Do not use!
+#define HWREGB_WRITE_LRF(x) HWREGB(x)
 
 #endif // __HW_TYPES_H__

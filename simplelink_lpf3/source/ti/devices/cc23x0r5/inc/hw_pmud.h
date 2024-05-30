@@ -76,6 +76,9 @@
 #define PMUD_O_TEMPLL                                               0x0000005CU
 
 // Internal. Only to be used through TI provided API.
+#define PMUD_O_PREFSYS                                              0x00000080U
+
+// Internal. Only to be used through TI provided API.
 #define PMUD_O_PREG0                                                0x00000090U
 
 // Internal. Only to be used through TI provided API.
@@ -556,6 +559,150 @@
 #define PMUD_TEMPLL_FRAC_W                                                   2U
 #define PMUD_TEMPLL_FRAC_M                                          0x000000C0U
 #define PMUD_TEMPLL_FRAC_S                                                   6U
+
+//*****************************************************************************
+//
+// Register: PMUD_O_PREFSYS
+//
+//*****************************************************************************
+// Field: [15:11] SPARE
+//
+// Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_SPARE_W                                                 5U
+#define PMUD_PREFSYS_SPARE_M                                        0x0000F800U
+#define PMUD_PREFSYS_SPARE_S                                                11U
+
+// Field:    [10] TEST10
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// SET                      Internal. Only to be used through TI provided API.
+// CLR                      Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_TEST10                                         0x00000400U
+#define PMUD_PREFSYS_TEST10_M                                       0x00000400U
+#define PMUD_PREFSYS_TEST10_S                                               10U
+#define PMUD_PREFSYS_TEST10_SET                                     0x00000400U
+#define PMUD_PREFSYS_TEST10_CLR                                     0x00000000U
+
+// Field:     [9] TEST9
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// SET                      Internal. Only to be used through TI provided API.
+// CLR                      Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_TEST9                                          0x00000200U
+#define PMUD_PREFSYS_TEST9_M                                        0x00000200U
+#define PMUD_PREFSYS_TEST9_S                                                 9U
+#define PMUD_PREFSYS_TEST9_SET                                      0x00000200U
+#define PMUD_PREFSYS_TEST9_CLR                                      0x00000000U
+
+// Field:     [8] TEST8
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// SET                      Internal. Only to be used through TI provided API.
+// CLR                      Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_TEST8                                          0x00000100U
+#define PMUD_PREFSYS_TEST8_M                                        0x00000100U
+#define PMUD_PREFSYS_TEST8_S                                                 8U
+#define PMUD_PREFSYS_TEST8_SET                                      0x00000100U
+#define PMUD_PREFSYS_TEST8_CLR                                      0x00000000U
+
+// Field:     [7] TEST7
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// SET                      Internal. Only to be used through TI provided API.
+// CLR                      Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_TEST7                                          0x00000080U
+#define PMUD_PREFSYS_TEST7_M                                        0x00000080U
+#define PMUD_PREFSYS_TEST7_S                                                 7U
+#define PMUD_PREFSYS_TEST7_SET                                      0x00000080U
+#define PMUD_PREFSYS_TEST7_CLR                                      0x00000000U
+
+// Field:     [6] TEST6
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// SET                      Internal. Only to be used through TI provided API.
+// CLR                      Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_TEST6                                          0x00000040U
+#define PMUD_PREFSYS_TEST6_M                                        0x00000040U
+#define PMUD_PREFSYS_TEST6_S                                                 6U
+#define PMUD_PREFSYS_TEST6_SET                                      0x00000040U
+#define PMUD_PREFSYS_TEST6_CLR                                      0x00000000U
+
+// Field:     [5] TEST5
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// SET                      Internal. Only to be used through TI provided API.
+// CLR                      Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_TEST5                                          0x00000020U
+#define PMUD_PREFSYS_TEST5_M                                        0x00000020U
+#define PMUD_PREFSYS_TEST5_S                                                 5U
+#define PMUD_PREFSYS_TEST5_SET                                      0x00000020U
+#define PMUD_PREFSYS_TEST5_CLR                                      0x00000000U
+
+// Field:     [4] TEST4
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// SET                      Internal. Only to be used through TI provided API.
+// CLR                      Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_TEST4                                          0x00000010U
+#define PMUD_PREFSYS_TEST4_M                                        0x00000010U
+#define PMUD_PREFSYS_TEST4_S                                                 4U
+#define PMUD_PREFSYS_TEST4_SET                                      0x00000010U
+#define PMUD_PREFSYS_TEST4_CLR                                      0x00000000U
+
+// Field:     [3] TEST3
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// SET                      Internal. Only to be used through TI provided API.
+// CLR                      Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_TEST3                                          0x00000008U
+#define PMUD_PREFSYS_TEST3_M                                        0x00000008U
+#define PMUD_PREFSYS_TEST3_S                                                 3U
+#define PMUD_PREFSYS_TEST3_SET                                      0x00000008U
+#define PMUD_PREFSYS_TEST3_CLR                                      0x00000000U
+
+// Field:     [2] TEST2
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// SET                      Internal. Only to be used through TI provided API.
+// CLR                      Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_TEST2                                          0x00000004U
+#define PMUD_PREFSYS_TEST2_M                                        0x00000004U
+#define PMUD_PREFSYS_TEST2_S                                                 2U
+#define PMUD_PREFSYS_TEST2_SET                                      0x00000004U
+#define PMUD_PREFSYS_TEST2_CLR                                      0x00000000U
+
+// Field:     [1] TEST1
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// SET                      Internal. Only to be used through TI provided API.
+// CLR                      Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_TEST1                                          0x00000002U
+#define PMUD_PREFSYS_TEST1_M                                        0x00000002U
+#define PMUD_PREFSYS_TEST1_S                                                 1U
+#define PMUD_PREFSYS_TEST1_SET                                      0x00000002U
+#define PMUD_PREFSYS_TEST1_CLR                                      0x00000000U
+
+// Field:     [0] TEST0
+//
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// SET                      Internal. Only to be used through TI provided API.
+// CLR                      Internal. Only to be used through TI provided API.
+#define PMUD_PREFSYS_TEST0                                          0x00000001U
+#define PMUD_PREFSYS_TEST0_M                                        0x00000001U
+#define PMUD_PREFSYS_TEST0_S                                                 0U
+#define PMUD_PREFSYS_TEST0_SET                                      0x00000001U
+#define PMUD_PREFSYS_TEST0_CLR                                      0x00000000U
 
 //*****************************************************************************
 //

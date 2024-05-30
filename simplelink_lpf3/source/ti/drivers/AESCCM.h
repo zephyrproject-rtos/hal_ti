@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2021, Texas Instruments Incorporated
+ * Copyright (c) 2017-2023, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -241,6 +241,65 @@
  *  AESCCM_close(handle);
  *
  *  @endcode
+ *  ### The following code snippet is for CC27XX devices only and leverages the HSM
+ *      which is a seperate Hardware Accelerator ###
+ *  ### Single call CCM encryption + authentication with plaintext HSM CryptoKey in Polling Mode ###
+ *
+ *  @code
+ *
+ *  #include <ti/drivers/AESCCM.h>
+ *  #include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintext.h>
+ *
+ *  ...
+ *
+ *  AESCCM_Params params;
+ *  AESCCM_Handle handle;
+ *  CryptoKey cryptoKey;
+ *  int_fast16_t encryptionResult;
+ *  uint8_t nonce[] = "Thisisanonce";
+ *  uint8_t aad[] = "This string will be authenticated but not encrypted.";
+ *  uint8_t plaintext[] = "This string will be encrypted and authenticated.";
+ *  uint8_t mac[16];
+ *  uint8_t ciphertext[sizeof(plaintext)];
+ *  uint8_t keyingMaterial[32] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+ *                                0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+ *                                0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+ *                                0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F};
+ *
+ *  AESCCM_Params_init(&params)
+ *  params.returnBehavior = AESCCM_RETURN_BEHAVIOR_POLLING;
+ *
+ *  handle = AESCCM_open(0, &params);
+ *
+ *  if (handle == NULL) {
+ *      // handle error
+ *  }
+ *
+ *  CryptoKeyPlaintextHSM_initKey(&cryptoKey, keyingMaterial, sizeof(keyingMaterial));
+ *
+ *  AESCCM_OneStepOperation operation;
+ *  AESCCM_OneStepOperation_init(&operation);
+ *
+ *  operation.key           = &cryptoKey;
+ *  operation.aad           = aad;
+ *  operation.aadLength     = sizeof(aad);
+ *  operation.input         = plaintext;
+ *  operation.output        = ciphertext;
+ *  operation.inputLength   = sizeof(plaintext);
+ *  operation.nonce         = nonce;
+ *  operation.nonceLength   = sizeof(nonce);
+ *  operation.mac           = mac;
+ *  operation.macLength     = sizeof(mac);
+ *
+ *  encryptionResult = AESCCM_oneStepEncrypt(handle, &operation);
+ *
+ *  if (encryptionResult != AESCCM_STATUS_SUCCESS) {
+ *      // handle error
+ *  }
+ *
+ *  AESCCM_close(handle);
+ *
+ *  @endcode
  *
  *  ### Single call CCM decryption + verification with plaintext CryptoKey in callback return mode #
  *  @code
@@ -365,6 +424,7 @@
  *
  *  CryptoKeyPlaintext_initKey(&cryptoKey, keyingMaterial, sizeof(keyingMaterial));
  *
+ *
  *  encryptionResult = AESCCM_setupEncrypt(handle, &cryptoKey, sizeof(aad), sizeof(plaintext), sizeof(mac));
  *  if (decryptionResult != AESCCM_STATUS_SUCCESS) {
  *      // handle error
@@ -374,6 +434,19 @@
  *  if (encryptionResult != AESCCM_STATUS_SUCCESS) {
  *      // handle error
  *  }
+ *
+ *  #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) // and the HSM is the engine of choice
+ *
+ *  CryptoKeyPlaintextHSM_initKey(&cryptoKey, keyingMaterial, sizeof(keyingMaterial));
+ *
+ *  // You will also need to populate the mac in handle->object->mac because HSM needs the mac to construct each
+ *  // segmented token.
+ *  encryptionResult = AESCCMLPF3HSM_setMac(handle, &mac[0], 8);
+ *  if (encryptionResult != AESCCM_STATUS_SUCCESS) {
+ *      // handle error
+ *  }
+ *
+ *  #endif
  *
  *  AESCCM_SegmentedAADOperation segmentedAADOperation;
  *  AESCCM_SegmentedAADOperation_init(&segmentedAADOperation);

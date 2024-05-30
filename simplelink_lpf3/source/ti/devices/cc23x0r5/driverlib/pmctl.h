@@ -3,7 +3,7 @@
  *
  *  Description:    Defines and prototypes for the PMCTL module.
  *
- *  Copyright (c) 2022 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2024 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -76,31 +76,37 @@ extern "C" {
 //@{
 //*****************************************************************************
 //! Device woke up from shutdown due to an IO event
-#define PMCTL_RESET_SHUTDOWN_IO  (PMCTL_RSTSTA_SDDET | PMCTL_RSTSTA_IOWUSD)
+#define PMCTL_RESET_SHUTDOWN_IO        (PMCTL_RSTSTA_SDDET | PMCTL_RSTSTA_IOWUSD)
 //! Device woke up from shutdown due to an SWD event
-#define PMCTL_RESET_SHUTDOWN_SWD PMCTL_RSTSTA_SDDET
+#define PMCTL_RESET_SHUTDOWN_SWD       PMCTL_RSTSTA_SDDET
 //! Device reset because of a watchdog timeout.
-#define PMCTL_RESET_WATCHDOG     (PMCTL_RSTSTA_SYSSRC_WDTEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
-//! Device reset trggered by software writing to RSTCTL.SYSRST
-#define PMCTL_RESET_SYSTEM       (PMCTL_RSTSTA_SYSSRC_SYSRSTEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
+#define PMCTL_RESET_WATCHDOG           (PMCTL_RSTSTA_SYSSRC_WDTEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
+//! Device reset triggered by software writing to RSTCTL.SYSRST
+#define PMCTL_RESET_SYSTEM             (PMCTL_RSTSTA_SYSSRC_SYSRSTEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
 //! Device reset triggered by CPU reset event
-#define PMCTL_RESET_CPU          (PMCTL_RSTSTA_SYSSRC_CPURSTEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
+#define PMCTL_RESET_CPU                (PMCTL_RSTSTA_SYSSRC_CPURSTEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
 //! Device reset triggered by CPU lockup event
-#define PMCTL_RESET_LOCKUP       (PMCTL_RSTSTA_SYSSRC_LOCKUPEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
-//! Device woke up due to Serial Wire Debug event
-#define PMCTL_RESET_SWD          (PMCTL_RSTSTA_SYSSRC_SWDRSTEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
+#define PMCTL_RESET_LOCKUP             (PMCTL_RSTSTA_SYSSRC_LOCKUPEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
+//! Device reset triggered by Analog FSM timeout event
+#define PMCTL_RESET_ANALOG_FSM_TIMEOUT (PMCTL_RSTSTA_SYSSRC_AFSMEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
+//! Device reset triggered by Analog Error reset event
+#define PMCTL_RESET_ANALOG_ERROR       (PMCTL_RSTSTA_SYSSRC_AERREV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
+//! Device reset triggered by Digital Error reset event
+#define PMCTL_RESET_DIGITAL_ERROR      (PMCTL_RSTSTA_SYSSRC_DERREV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
+//! Device reset triggered by Serial Wire Debug reset event
+#define PMCTL_RESET_SWD                (PMCTL_RSTSTA_SYSSRC_SWDRSTEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
 //! Device reset due to LFXT clock loss
-#define PMCTL_RESET_LFXT         (PMCTL_RSTSTA_SYSSRC_LFLOSSEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
+#define PMCTL_RESET_LFXT               (PMCTL_RSTSTA_SYSSRC_LFLOSSEV | PMCTL_RSTSTA_RESETSRC_SYSRESET)
 //! Device woke up from thermal shutdown after temperature drop
-#define PMCTL_RESET_TSD          (PMCTL_RSTSTA_TSDEV | PMCTL_RSTSTA_RESETSRC_PINRESET)
+#define PMCTL_RESET_TSD                (PMCTL_RSTSTA_TSDEV | PMCTL_RSTSTA_RESETSRC_PINRESET)
 //! Device reset due to VDDR brownout event
-#define PMCTL_RESET_VDDR         PMCTL_RSTSTA_RESETSRC_VDDRLOSS
+#define PMCTL_RESET_VDDR               PMCTL_RSTSTA_RESETSRC_VDDRLOSS
 //! Device reset due to VDDS brownout event
-#define PMCTL_RESET_VDDS         PMCTL_RSTSTA_RESETSRC_VDDSLOSS
+#define PMCTL_RESET_VDDS               PMCTL_RSTSTA_RESETSRC_VDDSLOSS
 //! Device reset due to pin reset
-#define PMCTL_RESET_PIN          PMCTL_RSTSTA_RESETSRC_PINRESET
+#define PMCTL_RESET_PIN                PMCTL_RSTSTA_RESETSRC_PINRESET
 //! Device booted due to power on reset
-#define PMCTL_RESET_POR          PMCTL_RSTSTA_RESETSRC_PWRON
+#define PMCTL_RESET_POR                PMCTL_RSTSTA_RESETSRC_PWRON
 //@}
 
 //*****************************************************************************
@@ -123,11 +129,15 @@ extern "C" {
 //! - \ref PMCTL_RESET_SHUTDOWN_IO
 //! - \ref PMCTL_RESET_SHUTDOWN_SWD
 //! - \ref PMCTL_RESET_WATCHDOG
+//! - \ref PMCTL_RESET_SYSTEM
 //! - \ref PMCTL_RESET_CPU
 //! - \ref PMCTL_RESET_LOCKUP
-//! - \ref PMCTL_RESET_TSD
+//! - \ref PMCTL_RESET_ANALOG_FSM_TIMEOUT
+//! - \ref PMCTL_RESET_ANALOG_ERROR
+//! - \ref PMCTL_RESET_DIGITAL_ERROR
 //! - \ref PMCTL_RESET_SWD
 //! - \ref PMCTL_RESET_LFXT
+//! - \ref PMCTL_RESET_TSD
 //! - \ref PMCTL_RESET_VDDR
 //! - \ref PMCTL_RESET_VDDS
 //! - \ref PMCTL_RESET_PIN

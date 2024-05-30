@@ -19,6 +19,7 @@ if(CONFIG_HAS_CC23X0_SDK)
 
     # Utils
     source/ti/drivers/utils/List.c
+    source/ti/drivers/utils/Random.c
 
     # Drivers
     source/ti/drivers/AESCCM.c
@@ -27,6 +28,7 @@ if(CONFIG_HAS_CC23X0_SDK)
     source/ti/drivers/AESCTRDRBG.c
     source/ti/drivers/AESECB.c
     source/ti/drivers/ECDH.c
+    source/ti/drivers/RNG.c
     source/ti/drivers/aesccm/AESCCMLPF3.c
     source/ti/drivers/aescmac/AESCMACLPF3.c
     source/ti/drivers/aesctr/AESCTRLPF3.c
@@ -37,6 +39,7 @@ if(CONFIG_HAS_CC23X0_SDK)
     source/ti/drivers/cryptoutils/sharedresources/CryptoResourceLPF3.c
     source/ti/drivers/cryptoutils/utils/CryptoUtils.c
     source/ti/drivers/dma/UDMALPF3.c
+    source/ti/drivers/rng/RNGLPF3RF.c
 
     source/ti/drivers/Temperature.c
     source/ti/drivers/power/PowerCC23X0.c

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Texas Instruments Incorporated
+ * Copyright (c) 2021, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,54 +29,34 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 /*
- *  ======== Temperature.c ========
- *
+ *  ======== RNG.c ========
  */
 
 #include <stdlib.h>
 #include <string.h>
 
-#include <ti/drivers/Temperature.h>
+#include <ti/drivers/dpl/DebugP.h>
+#include <ti/drivers/dpl/SemaphoreP.h>
+#include <ti/drivers/RNG.h>
+
+/* Extern globals */
+extern const RNG_Config RNG_config[];
+extern const uint_least8_t RNG_count;
+
+const RNG_Params RNG_defaultParams = {.returnBehavior        = RNG_RETURN_BEHAVIOR_BLOCKING,
+                                      .cryptoKeyCallbackFxn  = NULL,
+                                      .randomBitsCallbackFxn = NULL,
+                                      .timeout               = SemaphoreP_WAIT_FOREVER};
 
 /*
- *  ======== Temperature_getThresholdHigh ========
+ *  ======== RNG_open ========
  */
-int16_t Temperature_getThresholdHigh(Temperature_NotifyObj *notifyObject)
+RNG_Handle RNG_open(uint_least8_t index, const RNG_Params *params)
 {
-    return notifyObject->thresholdHigh;
-}
+    DebugP_assert(index <= RNG_count);
 
-/*
- *  ======== Temperature_getThresholdLow ========
- */
-int16_t Temperature_getThresholdLow(Temperature_NotifyObj *notifyObject)
-{
-    return notifyObject->thresholdLow;
-}
+    const RNG_Config *config = (const RNG_Config *)&RNG_config[index];
 
-/*
- *  ======== Temperature_getThresholdRange ========
- */
-void Temperature_getThresholdRange(Temperature_NotifyObj *notifyObject, int16_t *thresholdHigh, int16_t *thresholdLow)
-{
-    *thresholdHigh = notifyObject->thresholdHigh;
-    *thresholdLow  = notifyObject->thresholdLow;
-}
-
-/*
- *  ======== Temperature_getClientArg ========
- */
-uintptr_t Temperature_getClientArg(Temperature_NotifyObj *notifyObject)
-{
-    return notifyObject->clientArg;
-}
-
-/*
- *  ======== Temperature_getNotifyFxn ========
- */
-Temperature_NotifyFxn Temperature_getNotifyFxn(Temperature_NotifyObj *notifyObject)
-{
-    return notifyObject->notifyFxn;
+    return RNG_construct(config, params);
 }

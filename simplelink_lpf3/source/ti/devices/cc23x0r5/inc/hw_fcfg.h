@@ -215,12 +215,8 @@ typedef struct {
         struct {
             // Sticky-0 bits written to VIMS.WEPRA (sectors 0-31, 1/bit)
             uint32_t mainSectors0_31;
-            union {
-                // Sticky-0 bits written to VIMS.WEPRB(0) (sectors 32-255, 8/bit)
-                uint32_t mainSectors32_255;
-                // Dummy symbol to allow code to remain the same across devices
-                uint32_t mainSectors256_511;
-            };
+            // Sticky-0 bits written to VIMS.WEPRB(0) (sectors 32-255, 8/bit)
+            uint32_t mainSectors32_255;
             // Sticky-0 bit written to VIMS.WEPRAUX
             union {
                 uint32_t auxSectors;
@@ -589,8 +585,18 @@ typedef struct {
                 uint32_t adcGainIntref2P5V   : 16;
                 uint32_t adcGainIntref1P4V   : 16;
             } adcGainWord1;
+            // Coefficients for AUX Diode temperature to voltage
+            struct {    // length: 8B
+                int16_t coeffP2;
+                int16_t coeffP1;
+                int16_t coeffP0;
+                uint16_t coeffP2Shift   :5;
+                uint16_t coeffP1Shift   :5;
+                uint16_t coeffP0Shift   :5;
+                uint16_t res0           :1;
+            } auxDiodeCoeff;
             // Unused space
-            uint8_t res3[28];
+            uint8_t res3[20];
             // Measured I2V resistor error values
             struct {    // length: 4B
                 uint32_t i2v20k   : 8;
@@ -649,5 +655,8 @@ typedef struct {
  * operator.
  */
 #define fcfg ((const fcfg_t *)FCFG_BASE)
+
+/* Define type used by hw_device.h */
+typedef struct appTrims_struct fcfg_appTrims_t;
 
 #endif // __HW_FCFG_H__

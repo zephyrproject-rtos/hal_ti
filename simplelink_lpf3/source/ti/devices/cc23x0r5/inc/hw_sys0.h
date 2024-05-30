@@ -777,6 +777,9 @@
 // Field:  [10:8] IPEAK
 //
 // DCDC: Set inductor peak current
+// Min = 0x0
+// Max = 0x7
+// DCDC load support increases from 0x0 to 0x7
 #define SYS0_TMUTE4_IPEAK_W                                                  3U
 #define SYS0_TMUTE4_IPEAK_M                                         0x00000700U
 #define SYS0_TMUTE4_IPEAK_S                                                  8U

@@ -86,7 +86,7 @@ typedef struct
     // 16: SHA256: Round constants
     const uint32_t (*sha256SW_K256)[64];
     // 17: SHA256: Initial constants
-    const uint32_t (*sha256SW_initialDigest256)[8];
+    const uint32_t (*sha256Sw_initialDigest256)[8];
     // 18: Busy loop that waits for nUs microseconds
     void (*waitUs)(uint32_t nUs);
     // 19: Count leading zeros
@@ -456,13 +456,13 @@ typedef struct
 #define HapiResetDevice() HAPI_TABLE_POINTER->resetDevice()
 
 // HAPI entry used for internal purposes
-#define HapiSha256SWProcessBlock(d, w) HAPI_TABLE_POINTER->pSHA256SWProcessBlock((d), (w))
+#define HapiSha256SwProcessBlock(d, w) HAPI_TABLE_POINTER->sha256SwProcessBlock((d), (w))
 
 // HAPI entry used for internal purposes
-#define HapiSha256SW_K256 (*HAPI_TABLE_POINTER->sha256SW_K256)
+#define HapiSha256Sw_K256 (*HAPI_TABLE_POINTER->sha256SW_K256)
 
 // HAPI entry used for internal purposes
-#define HapiSha256SW_initialDigest256 (*HAPI_TABLE_POINTER->sha256SW_initialDigest256)
+#define HapiSha256Sw_initialDigest256 (*HAPI_TABLE_POINTER->sha256Sw_initialDigest256)
 
 // void HapiWaitUs(uint32_t nUs)
 /*****************************************************************************

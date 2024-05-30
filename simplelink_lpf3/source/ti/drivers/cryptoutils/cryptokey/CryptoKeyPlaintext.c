@@ -112,3 +112,19 @@ int_fast16_t CryptoKeyPlaintext_setKeyLength(CryptoKey *keyHandle, size_t length
 
     return CryptoKey_STATUS_SUCCESS;
 }
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+
+/*
+ *  ======== CryptoKeyPlaintext_initKey ========
+ */
+int_fast16_t CryptoKeyPlaintextHSM_initKey(CryptoKey *keyHandle, uint8_t *key, size_t keyLength)
+{
+    keyHandle->encoding                = CryptoKey_PLAINTEXT_HSM;
+    keyHandle->u.plaintext.keyMaterial = key;
+    keyHandle->u.plaintext.keyLength   = keyLength;
+
+    return CryptoKey_STATUS_SUCCESS;
+}
+
+#endif
