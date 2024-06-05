@@ -30,46 +30,18 @@
 
 # All targets in this file are for Cortex-M0P
 
-zephyr_include_directories(
-  .
-  )
-
-zephyr_library()
-
-zephyr_library_sources(
-  driverlib/aes_gcc.s
-  driverlib/udma.c
-  driverlib/gpio.c
-  driverlib/interrupt.c
-  driverlib/lrfd.c
-  driverlib/setup.c
-  driverlib/uart.c
-  )
-
-# RF patches
 if(CONFIG_SIMPLELINK_F3_RADIO_DRIVER)
-  zephyr_library_sources(
-    rf_patches/lrf_mce_binary_ble5_cc23x0r5.c
-    rf_patches/lrf_mce_binary_ble_cs_cc23x0r5.c
-    rf_patches/lrf_mce_binary_common_cc23x0r5.c
-    rf_patches/lrf_mce_binary_genfsk_cc23x0r5.c
-    rf_patches/lrf_mce_binary_ieee_cc23x0r5.c
-    rf_patches/lrf_pbe_binary_ble5_cc23x0r5.c
-    rf_patches/lrf_pbe_binary_ble_cs_cc23x0r5.c
-    rf_patches/lrf_pbe_binary_common_cc23x0r5.c
-    rf_patches/lrf_pbe_binary_generic_cc23x0r5.c
-    rf_patches/lrf_pbe_binary_ieee_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_ble5_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_ble5_nopll_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_ble_cs_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_ble_cs_nopll_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_coherent_pll_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_coherent_pll_nopll_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_common_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_common_nopll_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_genfsk_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_genfsk_nopll_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_ieee_cc23x0r5.c
-    rf_patches/lrf_rfe_binary_ieee_nopll_cc23x0r5.c
+  zephyr_include_directories(
+    .
     )
+
+  zephyr_library()
+
+  zephyr_library_sources(
+    rcl_settings_adc_noise.c
+    )
+
+  # [Workaround]: Include the radio settings for ble by defualt
+  # TODO: radio settings should be selectable, see ZEPHYR-24
+  zephyr_library_sources_ifdef(CONFIG_SIMPLELINK_F3_RF_SETTING_PREGEN rcl_settings_ble.c)
 endif()
