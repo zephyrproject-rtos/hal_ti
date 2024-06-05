@@ -39,7 +39,7 @@
 // LRFDTXF component
 //
 //*****************************************************************************
-// Data to from TXFIFO
+// Data to from TXFIFO 
 #define LRFDTXF_O_TXD                                               0x00000000U
 
 //*****************************************************************************
@@ -47,13 +47,13 @@
 // Register: LRFDTXF_O_TXD
 //
 //*****************************************************************************
-// Field:  [31:0] DATA
+// Field:  [31:0] DATA 
 //
-// TX FIFO data. When written the register data is pushed to the TX FIFO. When
-// read, data is popped from the TX FIFO. When writing or reading this register
-// the access size will determine how many bytes are pushed to or popped from
-// the FIFO. It is possible to push or pop 1,2 or 4 bytes depending on the
-// access being done.
+// TX FIFO data. When written the register data is pushed to the TX FIFO. When 
+// read, data is popped from the TX FIFO. When writing or reading this register 
+// the access size will determine how many bytes are pushed to or popped from 
+// the FIFO. It is possible to push or pop 1,2 or 4 bytes depending on the 
+// access being done. 
 #define LRFDTXF_TXD_DATA_W                                                  32U
 #define LRFDTXF_TXD_DATA_M                                          0xFFFFFFFFU
 #define LRFDTXF_TXD_DATA_S                                                   0U
