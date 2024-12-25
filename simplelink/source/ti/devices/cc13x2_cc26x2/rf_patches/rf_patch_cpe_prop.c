@@ -3,7 +3,7 @@
 *
 *  Description: RF core patch for proprietary radio support ("PROP" API command set) in CC13x2 and CC26x2
 *
-*  Copyright (c) 2015-2020, Texas Instruments Incorporated
+*  Copyright (c) 2015-2022, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -67,14 +67,15 @@ extern "C"
 
 
 CPE_PATCH_TYPE patchImageProp[] = {
-   0x2100406d,
-   0x210040d7,
-   0x21004099,
-   0x210040f9,
-   0x21004105,
-   0x21004111,
-   0x21004129,
-   0x21004141,
+   0x21004071,
+   0x210040db,
+   0x2100409d,
+   0x21004109,
+   0x21004115,
+   0x21004121,
+   0x21004139,
+   0x21004151,
+   0x210042db,
    0x79654c07,
    0xf809f000,
    0x40697961,
@@ -90,30 +91,33 @@ CPE_PATCH_TYPE patchImageProp[] = {
    0x296cb2e1,
    0x2804d00b,
    0x2806d001,
-   0x490ed107,
+   0x4910d107,
    0x07c97809,
    0x7821d103,
    0xd4000709,
-   0x490b2002,
+   0x490d2002,
    0x210c780a,
    0xd0024211,
-   0x22804909,
+   0x2280490b,
    0xb003600a,
    0xb5f0bdf0,
-   0x4907b083,
-   0x48044708,
-   0x22407801,
-   0x70014391,
-   0x47004804,
+   0x4909b083,
+   0x20004708,
+   0x47884908,
+   0x78014804,
+   0x43912240,
+   0x48067001,
+   0x00004700,
    0x210000c8,
    0x21000133,
    0xe000e200,
    0x00031641,
+   0x000063f7,
    0x00031b23,
-   0xf882f000,
+   0xf888f000,
    0x47004800,
    0x00007f57,
-   0xf882f000,
+   0xf888f000,
    0x47004800,
    0x0000881b,
    0x781a4b09,
@@ -137,6 +141,9 @@ CPE_PATCH_TYPE patchImageProp[] = {
    0x40045000,
    0x40046000,
    0x00004285,
+   0x4901b5f8,
+   0x00004708,
+   0x0000640d,
    0x4d1fb570,
    0xb2c47828,
    0x4780481e,
@@ -191,14 +198,67 @@ CPE_PATCH_TYPE patchImageProp[] = {
    0x477081d1,
    0x210002e0,
    0x21000088,
+   0x4601b510,
+   0x482c4b2b,
+   0xbf20e000,
+   0x07926942,
+   0x4829d1fb,
+   0x30407ada,
+   0x2a0b6800,
+   0xf000d101,
+   0xbd10f843,
+   0x1a522220,
+   0x4a244090,
+   0x6993ba00,
+   0x48214043,
+   0xbf20e000,
+   0x07926942,
+   0x0088d4fb,
+   0x1840491f,
+   0x481c63c3,
+   0x60033040,
+   0xb5104770,
+   0xe0004819,
+   0x6942bf20,
+   0xd4fb0792,
+   0x4b176b42,
+   0x40506998,
+   0x07d48a5a,
+   0x2401d001,
+   0x08524060,
+   0x2220825a,
+   0x40881a51,
+   0xba00490f,
+   0x60083140,
+   0xb510bd10,
+   0xf7ff4604,
+   0x490cff49,
+   0x09897c09,
+   0xd00807c8,
+   0x07e1480b,
+   0x490bd001,
+   0x490be000,
+   0x490b6201,
+   0xbd106241,
+   0x1a512220,
+   0xba004088,
+   0x00004770,
+   0x21000160,
+   0x40042000,
+   0x21000028,
+   0x400421c0,
+   0x21000380,
+   0x210042a7,
+   0x2100427d,
+   0x21004259,
 };
-#define _NWORD_PATCHIMAGE_PROP 124
+#define _NWORD_PATCHIMAGE_PROP 184
 
 #define _NWORD_PATCHCPEHD_PROP 0
 
 #define _NWORD_PATCHSYS_PROP 0
 
-#define _IRQ_PATCH_0 0x21004165
+#define _IRQ_PATCH_0 0x21004181
 
 
 #ifndef _PROP_SYSRAM_START
@@ -258,6 +318,7 @@ PATCH_FUN_SPEC void configurePropPatch(void)
    pPatchTab[152] = 5;
    pPatchTab[151] = 6;
    pPatchTab[73] = 7;
+   pPatchTab[85] = 8;
 
    pIrqPatch[1] = _IRQ_PATCH_0;
 }

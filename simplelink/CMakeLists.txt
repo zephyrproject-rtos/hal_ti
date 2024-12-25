@@ -79,7 +79,9 @@ elseif(CONFIG_HAS_CC13X2_CC26X2_SDK OR CONFIG_HAS_CC13X2X7_CC26X2X7_SDK)
   zephyr_library_compile_definitions(${COMPILER})
   zephyr_library_sources(
     source/ti/drivers/power/PowerCC26X2.c
+    source/ti/drivers/power/PowerCC26X2_helpers.c
     source/ti/drivers/power/PowerCC26X2_calibrateRCOSC.c
+    source/ti/drivers/power/PowerCC26X2_calibrateRCOSC_helpers.c
     source/ti/drivers/utils/List.c
     source/ti/drivers/rf/RFCC26X2_multiMode.c
     source/ti/drivers/temperature/TemperatureCC26X2.c

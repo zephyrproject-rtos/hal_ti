@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2020, Texas Instruments Incorporated
+ * Copyright (c) 2015-2023, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,16 +31,16 @@
  */
 /*!****************************************************************************
  *  @file       I2C.h
- *  @brief      Inter-Integrated Circuit (I2C) Driver
+ *  @brief      Inter-Integrated Circuit (I2C) Controller Driver
  *
  *  @anchor ti_drivers_I2C_Overview
  *  # Overview
  *
- *  The I2C driver is designed to operate as an I2C master and will not
- *  function as an I2C slave. Multi-master arbitration is not supported;
- *  therefore, this driver assumes it is the only I2C master on the bus.
+ *  The I2C driver is designed to operate as an I2C controller and will not
+ *  function as an I2C target. Multi-controller arbitration is not supported;
+ *  therefore, this driver assumes it is the only I2C controller on the bus.
  *  This I2C driver's API set provides the ability to transmit and receive
- *  data over an I2C bus between the I2C master and I2C slave(s). The
+ *  data over an I2C bus between the I2C controller and I2C target(s). The
  *  application is responsible for manipulating and interpreting the data.
  *
  *
@@ -63,7 +63,7 @@
  *  // Define name for an index of an I2C bus
  *  #define SENSORS 0
  *
- *  // Define the slave address of device on the SENSORS bus
+ *  // Define the target address of device on the SENSORS bus
  *  #define OPT_ADDR 0x47
  *
  *  // One-time init of I2C driver
@@ -77,17 +77,17 @@
  *  // Open I2C bus for usage
  *  I2C_Handle i2cHandle = I2C_open(SENSORS, &params);
  *
- *  // Initialize slave address of transaction
+ *  // Initialize target address of transaction
  *  I2C_Transaction transaction = {0};
- *  transaction.slaveAddress = OPT_ADDR;
+ *  transaction.targetAddress = OPT_ADDR;
  *
- *  // Read from I2C slave device
+ *  // Read from I2C target device
  *  transaction.readBuf = data;
  *  transaction.readCount = sizeof(data);
  *  transaction.writeCount = 0;
  *  I2C_transfer(i2cHandle, &transaction);
  *
- *  // Write to I2C slave device
+ *  // Write to I2C target device
  *  transaction.writeBuf = command;
  *  transaction.writeCount = sizeof(command);
  *  transaction.readCount = 0;
@@ -135,7 +135,7 @@
  *  writeBuffer[1] = 0xCD;
  *  writeBuffer[2] = 0xEF;
  *
- *  i2cTransaction.slaveAddress = 0x50;
+ *  i2cTransaction.targetAddress = 0x50;
  *  i2cTransaction.writeBuf = writeBuffer;
  *  i2cTransaction.writeCount = 3;
  *  i2cTransaction.readBuf = NULL;
@@ -146,7 +146,7 @@
  *  if (status == false) {
  *      // Unsuccessful I2C transfer
  *      if (i2cTransaction.status == I2C_STATUS_ADDR_NACK) {
- *          // I2C slave address not acknowledged
+ *          // I2C target address not acknowledged
  *      }
  *  }
  *  @endcode
@@ -158,7 +158,7 @@
  *  I2C_Transaction i2cTransaction = {0};
  *  uint8_t readBuffer[5];
  *
- *  i2cTransaction.slaveAddress = 0x50;
+ *  i2cTransaction.targetAddress = 0x50;
  *  i2cTransaction.writeBuf = NULL;
  *  i2cTransaction.writeCount = 0;
  *  i2cTransaction.readBuf = readBuffer;
@@ -168,7 +168,7 @@
  *
  *  if (status == false) {
  *      if (i2cTransaction.status == I2C_STATUS_ADDR_NACK) {
- *          // I2C slave address not acknowledged
+ *          // I2C target address not acknowledged
  *      }
  *  }
  *  @endcode
@@ -184,7 +184,7 @@
  *  writeBuffer[0] = 0xAB;
  *  writeBuffer[1] = 0xCD;
  *
- *  i2cTransaction.slaveAddress = 0x50;
+ *  i2cTransaction.targetAddress = 0x50;
  *  i2cTransaction.writeBuf = writeBuffer;
  *  i2cTransaction.writeCount = 2;
  *  i2cTransaction.readBuf = readBuffer;
@@ -193,9 +193,9 @@
  *  status = I2C_transfer(i2cHandle, &i2cTransaction);
  *
  *  if (status == false) {
-*       if (i2cTransaction->status == I2C_STATUS_ADDR_NACK) {
-*           // slave address not acknowledged
-*       }
+ *       if (i2cTransaction->status == I2C_STATUS_ADDR_NACK) {
+ *           // target address not acknowledged
+ *       }
  *  }
  *  @endcode
  *
@@ -219,7 +219,7 @@
  *      // if transaction failed
  *      if (status == false) {
  *          if (msg->status == I2C_STATUS_ADDR_NACK) {
- *              // slave address not acknowledged
+ *              // target address not acknowledged
  *          }
  *          else if (msg->status == I2C_STATUS_CANCEL) {
  *              // transaction canceled by I2C_cancel()
@@ -290,6 +290,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#include <ti/drivers/dpl/HwiP.h>
+#include <ti/drivers/dpl/SemaphoreP.h>
 /*! @endcond */
 
 #ifdef __cplusplus
@@ -316,70 +319,70 @@ extern "C" {
  * #define I2CXYZ_STATUS_ERROR2     I2C_STATUS_RESERVED - 2
  * @endcode
  */
-#define I2C_STATUS_RESERVED        (-32)
+#define I2C_STATUS_RESERVED (-32)
 /*! @endcond */
 
 /*!
  * @brief  I2C transaction is queued but has not started
  */
-#define I2C_STATUS_QUEUED          (1)
+#define I2C_STATUS_QUEUED (1)
 
 /*!
  * @brief  Successful status code returned by I2C API.
  */
-#define I2C_STATUS_SUCCESS         (0)
+#define I2C_STATUS_SUCCESS (0)
 
 /*!
  * @brief  Generic error status code returned by I2C API.
  */
-#define I2C_STATUS_ERROR           (-1)
+#define I2C_STATUS_ERROR (-1)
 
 /*!
  * @brief  An error status code returned by I2C_control() for undefined
  * command codes.
  */
-#define I2C_STATUS_UNDEFINEDCMD    (-2)
+#define I2C_STATUS_UNDEFINEDCMD (-2)
 
 /*!
  * @brief  I2C operation timed-out
  */
-#define I2C_STATUS_TIMEOUT         (-3)
+#define I2C_STATUS_TIMEOUT (-3)
 
 /*!
  * @brief  I2C serial clock line timeout
  */
-#define I2C_STATUS_CLOCK_TIMEOUT   (-4)
+#define I2C_STATUS_CLOCK_TIMEOUT (-4)
 
 /*!
- * @brief  I2C slave address not acknowledged
+ * @brief  I2C target address not acknowledged
  */
-#define I2C_STATUS_ADDR_NACK       (-5)
+#define I2C_STATUS_ADDR_NACK (-5)
 
 /*!
  * @brief  I2C data byte not acknowledged
  */
-#define I2C_STATUS_DATA_NACK       (-6)
+#define I2C_STATUS_DATA_NACK (-6)
 
 /*!
- * @brief  I2C multi-master arbitration lost
+ * @brief  I2C multi-controller arbitration lost
  */
-#define I2C_STATUS_ARB_LOST        (-7)
+#define I2C_STATUS_ARB_LOST (-7)
 
 /*!
  * @brief  I2C transaction is in progress or returned without completing
  */
-#define I2C_STATUS_INCOMPLETE      (-8)
+#define I2C_STATUS_INCOMPLETE (-8)
 
 /*!
  * @brief  I2C bus already in use by another controller. The I2C transaction
  * was therefore unable to start.
  */
-#define I2C_STATUS_BUS_BUSY        (-9)
+#define I2C_STATUS_BUS_BUSY (-9)
 
 /*!
  * @brief  I2C transaction canceled by I2C_cancel()
  */
-#define I2C_STATUS_CANCEL          (-10)
+#define I2C_STATUS_CANCEL (-10)
 
 /*!
  * @brief  I2C transaction is invalid. This may occur if:
@@ -388,13 +391,13 @@ extern "C" {
  *   2. A call to I2C_transfer() is made from a #I2C_CallbackFxn while queued
  *      transactions are being canceled. See also: I2C_cancel()
  */
-#define I2C_STATUS_INVALID_TRANS   (-11)
+#define I2C_STATUS_INVALID_TRANS (-11)
 /** @} */
 
 /*!
  *  @brief  Wait forever define used to specify timeouts.
  */
-#define I2C_WAIT_FOREVER           (~(0U))
+#define I2C_WAIT_FOREVER (~(0U))
 
 /*!
  *  @brief      A handle that is returned from an I2C_open() call.
@@ -410,20 +413,21 @@ typedef struct I2C_Config_ *I2C_Handle;
  *
  *  @sa I2C_transfer(), I2C_transferTimeout()
  */
-typedef struct {
+typedef struct
+{
     /*!
      *  Pointer to a buffer of at least #I2C_Transaction.writeCount bytes.
      *  If #I2C_Transaction.writeCount is 0, this pointer is not used.
      */
-    void         *writeBuf;
+    void *writeBuf;
 
     /*!
-     *  Number of bytes to write to the I2C slave device. A value of 0
-     *  indicates no data will be written to the slave device and only a read
+     *  Number of bytes to write to the I2C target device. A value of 0
+     *  indicates no data will be written to the target device and only a read
      *  will occur. If this value
      *  is not 0, the driver will always perform the write transfer first.
      *  The data written to the I2C bus is preceded by the
-     *  #I2C_Transaction.slaveAddress with the write bit set. If
+     *  #I2C_Transaction.targetAddress with the write bit set. If
      *  @p writeCount bytes are successfully sent and
      *  acknowledged, the transfer will complete or perform a read--depending
      *  on #I2C_Transaction.readCount.
@@ -431,27 +435,27 @@ typedef struct {
      *  @note Both #I2C_Transaction.writeCount and #I2C_Transaction.readCount
      *  can not be 0.
      */
-    size_t        writeCount;
+    size_t writeCount;
 
     /*!
      *  Pointer to a buffer of at least #I2C_Transaction.readCount bytes.
      *  If #I2C_Transaction.readCount is 0, this pointer is not used.
      */
-    void         *readBuf;
+    void *readBuf;
 
     /*!
-     *  Number of bytes to read from the I2C slave device. A value of 0
+     *  Number of bytes to read from the I2C target device. A value of 0
      *  indicates no data will be read and only a write will occur. If
      *  #I2C_Transaction.writeCount is not 0, this driver will perform the
      *  write first, followed by the read. The data read from the bus is
-     *  preceded by the #I2C_Transaction.slaveAddress with the read bit set.
+     *  preceded by the #I2C_Transaction.targetAddress with the read bit set.
      *  After @p readCount bytes are successfully read, the transfer will
      *  complete.
      *
      *  @note Both #I2C_Transaction.writeCount and #I2C_Transaction.readCount
      *  can not be 0.
      */
-    size_t        readCount;
+    size_t readCount;
 
     /*!
      * Pointer to a custom argument to be passed to the #I2C_CallbackFxn
@@ -463,7 +467,7 @@ typedef struct {
      * @sa  #I2C_MODE_CALLBACK
      * @sa  #I2C_CallbackFxn
      */
-    void         *arg;
+    void *arg;
 
     /*!
      *  I2C status of the current transaction. The status may be used to
@@ -486,18 +490,18 @@ typedef struct {
     volatile int_fast16_t status;
 
     /*!
-     *  I2C slave address used for the transaction. The slave address is
+     *  I2C target address used for the transaction. The target address is
      *  the first byte transmitted during an I2C transfer. The read/write bit
      *  is automatically set based upon the #I2C_Transaction.writeCount and
      *  #I2C_Transaction.readCount.
      */
-    uint_least8_t slaveAddress;
+    uint_least16_t targetAddress;
 
     /*!
      *  @private This is reserved for use by the driver and must never be
      *  modified by the application.
      */
-    void         *nextPtr;
+    void *nextPtr;
 } I2C_Transaction;
 
 /*!
@@ -507,7 +511,8 @@ typedef struct {
  *
  *  @sa  #I2C_Params
  */
-typedef enum {
+typedef enum
+{
     /*!
      *  In #I2C_MODE_BLOCKING, calls to I2C_transfer() block until the
      *  #I2C_Transaction completes. Other threads calling I2C_transfer()
@@ -557,8 +562,7 @@ typedef enum {
  *  was successful. If @p true, the transaction was successful. If @p false,
  *  the transaction failed.
  */
-typedef void (*I2C_CallbackFxn)(I2C_Handle handle, I2C_Transaction *transaction,
-    bool transferStatus);
+typedef void (*I2C_CallbackFxn)(I2C_Handle handle, I2C_Transaction *transaction, bool transferStatus);
 
 /*!
  *  @brief  Bit rate for an I2C driver instance specified in the #I2C_Params.
@@ -568,13 +572,29 @@ typedef void (*I2C_CallbackFxn)(I2C_Handle handle, I2C_Transaction *transaction,
  *  @note You must check that the device specific implementation supports the
  *  desired #I2C_BitRate.
  */
-typedef enum {
-    I2C_100kHz     = 0,    /*!< I2C Standard-mode. Up to 100 kbit/s. */
-    I2C_400kHz     = 1,    /*!< I2C Fast-mode. Up to 400 kbit/s. */
-    I2C_1000kHz    = 2,    /*!< I2C Fast-mode Plus. Up to 1Mbit/s. */
-    I2C_3330kHz    = 3,    /*!< I2C High-speed mode. Up to 3.4Mbit/s. */
-    I2C_3400kHz    = 3,    /*!< I2C High-speed mode. Up to 3.4Mbit/s. */
+typedef enum
+{
+    I2C_100kHz  = 0, /*!< I2C Standard-mode. Up to 100 kbit/s. */
+    I2C_400kHz  = 1, /*!< I2C Fast-mode. Up to 400 kbit/s. */
+    I2C_1000kHz = 2, /*!< I2C Fast-mode Plus. Up to 1Mbit/s. */
+    I2C_3330kHz = 3, /*!< I2C High-speed mode. Up to 3.4Mbit/s. */
+    I2C_3400kHz = 3, /*!< I2C High-speed mode. Up to 3.4Mbit/s. */
 } I2C_BitRate;
+
+/*!
+ *  @brief  Address mode for an I2C driver instance specified selected by
+ *  #I2C_setAddressMode()
+ *
+ *  This enumeration defines the address modes selected by #I2C_setAddressMode().
+ *
+ *  @note You must check that the device specific implementation supports the
+ *  desired #I2C_AddressMode.
+ */
+typedef enum
+{
+    I2C_ADDRESS_MODE_7_BIT  = 0, /*!< 7-bit address mode */
+    I2C_ADDRESS_MODE_10_BIT = 1, /*!< 10-bit address mode */
+} I2C_AddressMode;
 
 /*!
  *  @brief I2C parameters used with I2C_open().
@@ -584,7 +604,8 @@ typedef enum {
  *
  *  @sa  I2C_Params_init()
  */
-typedef struct {
+typedef struct
+{
     /*! #I2C_TransferMode for all I2C transfers. */
     I2C_TransferMode transferMode;
 
@@ -600,67 +621,88 @@ typedef struct {
      */
     I2C_BitRate bitRate;
 
+    /*!
+     * A #I2C_AddressMode specifying the address mode to configure the I2C
+     * peripheral to use. This will be the address mode used after calling
+     * #I2C_open().
+     * The address mode can later be changed using #I2C_setAddressMode().
+     *
+     * @note Not all address modes are supported for by devices. Please refer to
+     * the device-specific documentation for a list of supported address modes.
+     */
+    I2C_AddressMode addressMode;
+
     /*! Pointer to a device specific extension of the #I2C_Params */
     void *custom;
 } I2C_Params;
 
-/*!
- *  @private
- *  @brief      A function pointer to a driver-specific implementation of
- *              I2C_cancel().
- */
-typedef void (*I2C_CancelFxn) (I2C_Handle handle);
+/*! @cond NODOC */
+#define I2C_BASE_OBJECT                                                       \
+    /* I2C control variables */                                               \
+    I2C_TransferMode transferMode;       /* Blocking or Callback mode */      \
+    I2C_CallbackFxn transferCallbackFxn; /* Callback function pointer */      \
+    I2C_Transaction *currentTransaction; /* Ptr to current I2C transaction */ \
+                                                                              \
+    /* I2C transaction pointers for I2C_MODE_CALLBACK */                      \
+    I2C_Transaction *volatile headPtr; /* Head ptr for queued transactions */ \
+    I2C_Transaction *tailPtr;          /* Tail ptr for queued transactions */ \
+                                                                              \
+    /* I2C RTOS objects */                                                    \
+    HwiP_Struct hwi;                    /* Hwi object handle */               \
+    SemaphoreP_Struct mutex;            /* Grants exclusive access to I2C */  \
+    SemaphoreP_Struct transferComplete; /* Signal I2C transfer complete */    \
+                                                                              \
+    /* Read and write variables */                                            \
+    const uint8_t *writeBuf; /* Internal inc. writeBuf index */               \
+    size_t writeCount;       /* Internal dec. writeCounter */                 \
+    uint8_t *readBuf;        /* Internal inc. readBuf index */                \
+    size_t readCount;        /* Internal dec. readCounter */                  \
+                                                                              \
+    bool isOpen; /* Flag to show module is open */                            \
+/*! @endcond */
 
 /*!
- *  @private
- *  @brief      A function pointer to a driver-specific implementation of
- *              I2C_close().
+ *  @cond NODOC
+ *  I2C Object. Applications must not access any member variables of
+ *  this structure!
  */
-typedef void (*I2C_CloseFxn) (I2C_Handle handle);
+typedef struct
+{
+    I2C_BASE_OBJECT
+} I2C_Object;
+/*! @endcond */
+
+/*! @cond NODOC */
+#define I2C_BASE_HWATTRS                                                        \
+    /*! I2C Peripheral's base address */                                        \
+    uint32_t baseAddr;                                                          \
+    /*! I2C Peripheral's interrupt vector */                                    \
+    uint32_t intNum;                                                            \
+    /*! I2C Peripheral's interrupt priority.                                    \
+     *                                                                          \
+     *  Note for CC26XX: The CC26XX uses three of the priority bits,            \
+     *  meaning ~0 has the same effect as (7 << 5).                             \
+     *                                                                          \
+     *  (7 << 5) will apply the lowest priority.                                \
+     *  (1 << 5) will apply the highest priority.                               \
+     *                                                                          \
+     *  Setting the priority to 0 is not supported by the I2CCC26XX driver.     \
+     *                                                                          \
+     *  Hwi's with priority 0 ignore the Hwi dispatcher to support zero-latency \
+     *  interrupts, thus invalidating the critical sections in this driver.     \
+     */                                                                         \
+    uint32_t intPriority;
+/*! @endcond */
 
 /*!
- *  @private
- *  @brief      A function pointer to a driver-specific implementation of
- *              I2C_control().
+ *  @cond NODOC
+ *  I2C HWAttrs.
  */
-typedef int_fast16_t (*I2C_ControlFxn) (I2C_Handle handle, uint_fast16_t cmd,
-    void *controlArg);
-
-/*!
- *  @private
- *  @brief      A function pointer to a driver-specific implementation of
- *              I2C_init().
- */
-typedef void (*I2C_InitFxn) (I2C_Handle handle);
-
-/*!
- *  @private
- *  @brief      A function pointer to a driver-specific implementation of
- *              I2C_open().
- */
-typedef I2C_Handle (*I2C_OpenFxn) (I2C_Handle handle, I2C_Params *params);
-
-/*!
- *  @private
- *  @brief      A function pointer to a driver-specific implementation of
- *              I2C_transfer().
- */
-typedef int_fast16_t (*I2C_TransferFxn) (I2C_Handle handle,
-                      I2C_Transaction *transaction, uint32_t timeout);
-
-/*!
- *  @brief      The definition of an I2C function table that contains the
- *              required set of functions to control a specific I2C driver
- *              implementation.
- */
-typedef struct {
-    I2C_CancelFxn   cancelFxn;
-    I2C_CloseFxn    closeFxn;
-    I2C_ControlFxn  controlFxn;
-    I2C_InitFxn     initFxn;
-    I2C_OpenFxn     openFxn;
-    I2C_TransferFxn transferFxn;
-} I2C_FxnTable;
+typedef struct
+{
+    I2C_BASE_HWATTRS
+} I2C_HWAttrs;
+/*! @endcond */
 
 /*!
  *  @brief I2C driver's custom @ref driver_configuration "configuration"
@@ -669,18 +711,18 @@ typedef struct {
  *  @sa     I2C_init()
  *  @sa     I2C_open()
  */
-typedef struct I2C_Config_ {
-    /*! Pointer to a @ref driver_function_table "function pointer table"
-     *  with driver-specific implementations of I2C APIs */
-    I2C_FxnTable const *fxnTablePtr;
-
+typedef struct I2C_Config_
+{
     /*! Pointer to a driver specific @ref driver_objects "data object". */
-    void               *object;
+    void *object;
 
     /*! Pointer to a driver specific @ref driver_hardware_attributes
      *  "hardware attributes structure". */
-    void         const *hwAttrs;
+    void const *hwAttrs;
 } I2C_Config;
+
+extern const I2C_Config I2C_config[];
+extern const uint_least8_t I2C_count;
 
 /*!
  *  @brief  Cancels all I2C transfers
@@ -704,16 +746,16 @@ typedef struct I2C_Config_ {
  *  A canceled transaction may be identified when the #I2C_Transaction.status
  *  is set to #I2C_STATUS_CANCEL.
  *
- *  @note This API may not handle cases where the I2C slave holds the clock
+ *  @note This API may not handle cases where the I2C target holds the clock
  *  line indefinitely.
  *
  *  @pre    I2C_Transfer() has been called.
  *
  *  @param[in]  handle  An #I2C_Handle returned from I2C_open()
  *
- *  @note   Different I2C slave devices will behave differently when an
- *          in-progress transfer fails and needs to be canceled. The slave
- *          may need to be reset, or there may be other slave-specific
+ *  @note   Different I2C target devices will behave differently when an
+ *          in-progress transfer fails and needs to be canceled. The target
+ *          may need to be reset, or there may be other target-specific
  *          steps that can be used to successfully resume communication.
  *
  *  @sa  I2C_transfer()
@@ -751,8 +793,7 @@ extern void I2C_close(I2C_Handle handle);
  *  @retval #I2C_STATUS_UNDEFINEDCMD The @p cmd value is not supported by
  *                                   the device specific implementation.
  */
-extern int_fast16_t I2C_control(I2C_Handle handle, uint_fast16_t cmd,
-    void *controlArg);
+extern int_fast16_t I2C_control(I2C_Handle handle, uint_fast16_t cmd, void *controlArg);
 
 /*!
  *  @brief  Function to initialize the I2C driver.
@@ -788,12 +829,49 @@ extern I2C_Handle I2C_open(uint_least8_t index, I2C_Params *params);
  *  @arg #I2C_Params.transferMode = #I2C_MODE_BLOCKING
  *  @arg #I2C_Params.transferCallbackFxn = @p NULL
  *  @arg #I2C_Params.bitRate = #I2C_100kHz
+ *  @arg #I2C_Params.addressMode = #I2C_ADDRESS_MODE_7_BIT
  *  @arg #I2C_Params.custom = @p NULL
  */
 extern void I2C_Params_init(I2C_Params *params);
 
 /*!
- *  @brief  Perform an I2C transaction with an I2C slave peripheral.
+ *  @brief  Set the I2C address mode
+ *
+ *  @note Not all I2C driver implementations implement this function.
+ *
+ *  @param[in]  handle      An #I2C_Handle returned from #I2C_open()
+ *
+ *  @param[in]  addressMode The address mode the I2C instance should use.
+ *
+ */
+extern void I2C_setAddressMode(I2C_Handle handle, I2C_AddressMode addressMode);
+
+/*!
+ *  @brief  Set the I2C SCL clock timeout.
+ *
+ *  An I2C target can extend a I2C transaction by periodically pulling the
+ *  clock low to create a slow bit transfer rate. The application can use this
+ *  API to program a counter in the I2C module. The count is used to force a
+ *  timeout if an I2C target holds the clock line low for longer than the
+ *  @p timeout duration. An #I2C_STATUS_CLOCK_TIMEOUT status indicates a
+ *  timeout event occured.
+ *
+ *  @param[in]  handle      An #I2C_Handle returned from I2C_open()
+ *
+ *  @param[in]  timeout     Timeout in units of I2C clock cycles. Refer to
+ *                          the device specifc reference manual to determine
+ *                          how to calculate the timeout value.
+ *
+ *  @return  Possible return values include:
+ *            @li #I2C_STATUS_SUCCESS
+ *            @li #I2C_STATUS_ERROR
+ *
+ *  @sa I2C_transfer()
+ */
+extern int_fast16_t I2C_setClockTimeout(I2C_Handle handle, uint32_t timeout);
+
+/*!
+ *  @brief  Perform an I2C transaction with an I2C target peripheral.
  *
  *  This function will perform an I2C transfer, as specified by an
  *  #I2C_Transaction structure.
@@ -827,7 +905,7 @@ extern void I2C_Params_init(I2C_Params *params);
 extern bool I2C_transfer(I2C_Handle handle, I2C_Transaction *transaction);
 
 /*!
- *  @brief  Perform an I2C transaction with an I2C slave peripheral.
+ *  @brief  Perform an I2C transaction with an I2C target peripheral.
  *
  *  This function will perform an I2C transfer, as specified by an
  *  #I2C_Transaction structure. If the timeout is exceeded, then the
@@ -839,7 +917,7 @@ extern bool I2C_transfer(I2C_Handle handle, I2C_Transaction *transaction);
  *  @note  The timeout restriction is only applied when using
  *  #I2C_MODE_BLOCKING. If using #I2C_MODE_CALLBACK, the application should
  *  manage timeouts using I2C_cancel(). Additionally, this timeout may not
- *  handle cases where the I2C slave holds the clock line indefinitely.
+ *  handle cases where the I2C target holds the clock line indefinitely.
  *
  *  @param[in]  handle    An #I2C_Handle returned from I2C_open()
  *
@@ -879,8 +957,7 @@ extern bool I2C_transfer(I2C_Handle handle, I2C_Transaction *transaction);
  *  @sa  I2C_open(), I2C_transfer()
  *  @sa  I2C_Transaction
  */
-extern int_fast16_t I2C_transferTimeout(I2C_Handle handle,
-    I2C_Transaction *transaction, uint32_t timeout);
+extern int_fast16_t I2C_transferTimeout(I2C_Handle handle, I2C_Transaction *transaction, uint32_t timeout);
 
 #ifdef __cplusplus
 }

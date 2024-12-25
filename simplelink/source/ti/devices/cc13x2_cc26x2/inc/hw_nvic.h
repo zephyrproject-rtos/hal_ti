@@ -1,9 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_nvic.h
-*  Revised:        2015-01-13 16:59:55 +0100 (Tue, 13 Jan 2015)
-*  Revision:       42365
 *
-*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

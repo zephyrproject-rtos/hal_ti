@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Texas Instruments Incorporated
+ * Copyright (c) 2018-2023, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,19 +43,17 @@
 
 #include <ti/devices/DeviceFamily.h>
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2 || \
-     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0 || \
+     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X1_CC26X1 || \
+     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2 || \
+     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4)
 
     #include <ti/drivers/TRNG.h>
     #include <ti/drivers/trng/TRNGCC26XX.h>
     #include <ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintext.h>
-
-#elif (DeviceFamily_ID == DeviceFamily_ID_MSP432E401Y || \
-       DeviceFamily_ID == DeviceFamily_ID_MSP432E411Y)
-
-    #include DeviceFamily_constructPath(driverlib/inc/hw_sysctl.h)
-    #include DeviceFamily_constructPath(driverlib/types.h)
-
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X0)
+    #include <ti/drivers/RNG.h>
+    #include <ti/drivers/rng/RNGLPF3RF.h>
 #endif
 
 #define STATE_SIZE_IN_WORDS 5
@@ -65,10 +63,13 @@ static uint32_t state[STATE_SIZE_IN_WORDS];
 /*
  *  ======== Random_seedAutomatic ========
  */
-int_fast16_t Random_seedAutomatic(void) {
+int_fast16_t Random_seedAutomatic(void)
+{
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2 || \
-     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0 || \
+     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X1_CC26X1 || \
+     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2 || \
+     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4)
 
     TRNGCC26XX_Object object = {0};
     TRNG_Params params;
@@ -80,16 +81,14 @@ int_fast16_t Random_seedAutomatic(void) {
      * to kickstart the PRNG.
      */
     const TRNGCC26XX_HWAttrs hwAttrs = {
-        .samplesPerCycle = TRNGCC26XX_SAMPLES_PER_CYCLE_MIN
+        .samplesPerCycle = TRNGCC26XX_SAMPLES_PER_CYCLE_MIN,
+        .intPriority     = ~0,
     };
 
     /* Allocate TRNG instance on the stack since we will not need it
      * hereafter. This also helps avoid problems with hardcoded indexes.
      */
-    TRNG_Config config = {
-        .object = &object,
-        .hwAttrs = &hwAttrs
-    };
+    TRNG_Config config = {.object = &object, .hwAttrs = &hwAttrs};
 
     params.returnBehavior = TRNG_RETURN_BEHAVIOR_POLLING;
 
@@ -97,32 +96,62 @@ int_fast16_t Random_seedAutomatic(void) {
 
     TRNG_Handle handle = TRNG_construct(&config, &params);
 
-    if (!handle) {
+    if (!handle)
+    {
         return Random_STATUS_ERROR;
     }
 
-    CryptoKeyPlaintext_initBlankKey(&seedKey,
-                                    (uint8_t *)state,
-                                    sizeof(state));
+    CryptoKeyPlaintext_initBlankKey(&seedKey, (uint8_t *)state, sizeof(state));
 
     status = TRNG_generateEntropy(handle, &seedKey);
 
     TRNG_close(handle);
 
-    if (status != TRNG_STATUS_SUCCESS) {
+    if (status != TRNG_STATUS_SUCCESS)
+    {
         return Random_STATUS_ERROR;
     }
 
     return Random_STATUS_SUCCESS;
-#elif (DeviceFamily_ID == DeviceFamily_ID_MSP432E401Y || \
-       DeviceFamily_ID == DeviceFamily_ID_MSP432E411Y)
 
-    /* MSP432E4 has a 128-bit unique device ID that we can use */
-    state[0] = HWREG(SYSCTL_UNIQUEID0);
-    state[1] = HWREG(SYSCTL_UNIQUEID1);
-    state[2] = HWREG(SYSCTL_UNIQUEID2);
-    state[3] = HWREG(SYSCTL_UNIQUEID3);
-    state[4] = 0x00000001;
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X0)
+    RNG_Config rngConfig;
+    RNG_Handle rngHandle;
+    RNG_Params rngParams;
+    RNGLPF3RF_Object rngObject = {0};
+
+    int_fast16_t status;
+
+    /*
+     * Note: For CC23X0, RNG must be initialized by application in a task context with interrupts enabled
+     * using the following steps, before using Random_seedAutomatic() and prior to the use of the Radio.
+     * 1. Read radio noise using RCL_AdcNoise_get_samples_blocking(). This RCL function must
+     *    be called from a task context with interrupts enabled and therefore cannot be called
+     *    by startup code. This must be executed prior to the use of the radio.
+     * 2. Condition the noise to seed the RNG using RNGLPF3RF_conditionNoiseToGenerateSeed().
+     * 3. Initialize the RNG from the application with RNG_init()
+     * RNG_init() need not be called again here or by any other code.
+     */
+    rngConfig.object  = &rngObject;
+    rngConfig.hwAttrs = NULL;
+
+    RNG_Params_init(&rngParams);
+
+    rngHandle = RNG_construct(&rngConfig, &rngParams);
+
+    if (!rngHandle)
+    {
+        return Random_STATUS_ERROR;
+    }
+
+    status = RNG_getRandomBits(rngHandle, &state, sizeof(state) * 8);
+
+    RNG_close(rngHandle);
+
+    if (status != RNG_STATUS_SUCCESS)
+    {
+        return Random_STATUS_ERROR;
+    }
 
     return Random_STATUS_SUCCESS;
 #else
@@ -141,7 +170,8 @@ int_fast16_t Random_seedAutomatic(void) {
 /*
  *  ======== Random_seedManual ========
  */
-void Random_seedManual(uint8_t seed[Random_SEED_LENGTH]) {
+void Random_seedManual(uint8_t seed[Random_SEED_LENGTH])
+{
     uintptr_t key;
 
     key = HwiP_disable();
@@ -154,7 +184,8 @@ void Random_seedManual(uint8_t seed[Random_SEED_LENGTH]) {
 /*
  *  ======== Random_getNumber ========
  */
-uint32_t Random_getNumber(void) {
+uint32_t Random_getNumber(void)
+{
     uintptr_t key;
     uint32_t s;
     uint32_t v;
@@ -171,7 +202,7 @@ uint32_t Random_getNumber(void) {
     state[3] = state[2];
     state[2] = state[1];
     state[1] = state[0];
-    s = state[0];
+    s        = state[0];
 
     v ^= s;
     v ^= s << 4;
@@ -190,17 +221,17 @@ uint32_t Random_getNumber(void) {
 /*
  *  ======== Random_getBytes ========
  */
-void Random_getBytes(void *buffer, size_t bufferSize) {
+void Random_getBytes(void *buffer, size_t bufferSize)
+{
     uint32_t i;
     uint32_t randomNumber;
 
-    for (i = 0; i < bufferSize / sizeof(uint32_t); i++){
+    for (i = 0; i < bufferSize / sizeof(uint32_t); i++)
+    {
         ((uint32_t *)buffer)[i] = Random_getNumber();
     }
 
     randomNumber = Random_getNumber();
 
-    memcpy((uint32_t *)buffer + bufferSize / sizeof(uint32_t),
-           &randomNumber,
-           bufferSize % sizeof(uint32_t));
+    memcpy((uint32_t *)buffer + bufferSize / sizeof(uint32_t), &randomNumber, bufferSize % sizeof(uint32_t));
 }

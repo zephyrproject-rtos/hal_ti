@@ -3,7 +3,7 @@
 *
 *  Description: RF core patch for Bluetooth 5 support ("BLE" and "BLE5" API command sets) in CC13x2 and CC26x2
 *
-*  Copyright (c) 2015-2020, Texas Instruments Incorporated
+*  Copyright (c) 2015-2021, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -67,17 +67,17 @@ extern "C"
 
 
 CPE_PATCH_TYPE patchImageBt5[] = {
-   0x210043f9,
+   0x210043f5,
    0x21004079,
    0x21004095,
-   0x2100446d,
-   0x210044a9,
+   0x21004469,
+   0x210044a5,
    0x210040c5,
    0x210040d1,
    0x210040dd,
    0x210040f9,
-   0x21004553,
-   0x21004145,
+   0x2100454f,
+   0x21004141,
    0xd00507db,
    0xf803f000,
    0x70084902,
@@ -97,23 +97,23 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x40041108,
    0x0000592d,
    0x4700b570,
-   0xfa18f000,
+   0xfa16f000,
    0x47004800,
    0x00007f57,
-   0xfa18f000,
+   0xfa16f000,
    0x47004800,
    0x0000881b,
    0x0a889905,
    0xd1052880,
    0x78884913,
    0x0f800780,
-   0xfa22f000,
+   0xfa20f000,
    0x47004800,
    0x00006ed9,
-   0x4810b40f,
+   0x480fb40f,
    0x290088c1,
    0x4610d002,
-   0xfa16f000,
+   0xfa14f000,
    0x0a9b9b07,
    0x2b834d08,
    0x4c08d108,
@@ -122,11 +122,10 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x2800f805,
    0x3542d000,
    0x4728bc0f,
-   0x4805b570,
+   0x4804b570,
    0x00004700,
    0x00020b1f,
    0x21000160,
-   0x00020b1f,
    0x21000380,
    0x000209eb,
    0x4a094808,
@@ -326,11 +325,11 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x00023d8f,
    0x00023075,
    0x00022a15,
-   0x210043ed,
-   0x21004379,
-   0x2100431b,
-   0x2100429b,
-   0x2100421d,
+   0x210043e9,
+   0x21004375,
+   0x21004317,
+   0x21004297,
+   0x21004219,
    0x490cb510,
    0x4a0c4788,
    0x5e512106,
@@ -354,7 +353,7 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x6ba26022,
    0x00520852,
    0x602163a2,
-   0xfdfaf7ff,
+   0xfdfcf7ff,
    0x07006ba0,
    0x2001d408,
    0x60606020,
@@ -362,7 +361,7 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0xdbfc280c,
    0x62202014,
    0xf7ffbd10,
-   0xbd10fdeb,
+   0xbd10fded,
    0x21000380,
    0x00005b3f,
    0x40046000,
@@ -403,7 +402,7 @@ CPE_PATCH_TYPE patchImageBt5[] = {
    0x06000a09,
    0x47704308,
 };
-#define _NWORD_PATCHIMAGE_BT5 335
+#define _NWORD_PATCHIMAGE_BT5 334
 
 CPE_PATCH_TYPE patchCpeHd[] = {
    0x00000000,
@@ -412,7 +411,7 @@ CPE_PATCH_TYPE patchCpeHd[] = {
 
 #define _NWORD_PATCHSYS_BT5 0
 
-#define _IRQ_PATCH_0 0x21004181
+#define _IRQ_PATCH_0 0x2100417d
 
 
 #ifndef _BT5_SYSRAM_START

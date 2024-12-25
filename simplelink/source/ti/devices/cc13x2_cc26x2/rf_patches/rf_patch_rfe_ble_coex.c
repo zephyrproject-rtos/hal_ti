@@ -56,7 +56,7 @@
 #define RFE_PATCH_MODE 0
 #endif
 
-RFE_PATCH_TYPE patchBleCoexRfe[510] = { 
+RFE_PATCH_TYPE patchBleCoexRfe[510] = {
    0x35f86145,
    0xa24675f9,
    0x1f40a357,

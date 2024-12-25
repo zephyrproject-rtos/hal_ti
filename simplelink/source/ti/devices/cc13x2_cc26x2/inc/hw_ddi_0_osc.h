@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_ddi_0_osc_h
-*  Revised:        2019-03-08 14:23:17 +0100 (Fri, 08 Mar 2019)
-*  Revision:       55206
+*  Revised:        $Date$
+*  Revision:       $Revision$
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.

@@ -1,11 +1,9 @@
 /******************************************************************************
 *  Filename:       aon_rtc.h
-*  Revised:        2020-08-25 16:10:23 +0200 (Tue, 25 Aug 2020)
-*  Revision:       58298
 *
 *  Description:    Defines and prototypes for the AON RTC
 *
-*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -63,6 +61,7 @@ extern "C"
 #include <stdint.h>
 #include "../inc/hw_types.h"
 #include "../inc/hw_memmap.h"
+#include "../inc/hw_memmap_common.h"
 #include "../inc/hw_aon_rtc.h"
 #include "debug.h"
 
@@ -373,17 +372,17 @@ AONRTCEventClear(uint32_t ui32Channel)
 
     if(ui32Channel & AON_RTC_CH0)
     {
-        HWREG(AON_RTC_BASE + AON_RTC_O_EVFLAGS) = AON_RTC_EVFLAGS_CH0;
+        HWREG(AON_RTC_BASE + AON_RTC_O_EVFLAGS + NONSECURE_OFFSET) = AON_RTC_EVFLAGS_CH0;
     }
 
     if(ui32Channel & AON_RTC_CH1)
     {
-        HWREG(AON_RTC_BASE + AON_RTC_O_EVFLAGS) = AON_RTC_EVFLAGS_CH1;
+        HWREG(AON_RTC_BASE + AON_RTC_O_EVFLAGS + NONSECURE_OFFSET) = AON_RTC_EVFLAGS_CH1;
     }
 
     if(ui32Channel & AON_RTC_CH2)
     {
-        HWREG(AON_RTC_BASE + AON_RTC_O_EVFLAGS) = AON_RTC_EVFLAGS_CH2;
+        HWREG(AON_RTC_BASE + AON_RTC_O_EVFLAGS + NONSECURE_OFFSET) = AON_RTC_EVFLAGS_CH2;
     }
 }
 
@@ -457,7 +456,7 @@ AONRTCSecGet(void)
 {
     // The following read gets the seconds, but also latches the fractional
     // part.
-    return(HWREG(AON_RTC_BASE + AON_RTC_O_SEC));
+    return(HWREG(AON_RTC_BASE + AON_RTC_O_SEC + NONSECURE_OFFSET));
 }
 
 //*****************************************************************************
@@ -489,7 +488,7 @@ AONRTCFractionGet(void)
     //        consistent reading.
     // Note3: Interrupts must be disabled between the call to AONRTCSecGet() and this
     //        call since there are interrupt functions that reads AON_RTC_O_SEC
-    return(HWREG(AON_RTC_BASE + AON_RTC_O_SUBSEC));
+    return(HWREG(AON_RTC_BASE + AON_RTC_O_SUBSEC + NONSECURE_OFFSET));
 }
 
 //*****************************************************************************
@@ -513,7 +512,7 @@ AONRTCFractionGet(void)
 __STATIC_INLINE uint32_t
 AONRTCSubSecIncrGet(void)
 {
-    return(HWREG(AON_RTC_BASE + AON_RTC_O_SUBSECINC));
+    return(HWREG(AON_RTC_BASE + AON_RTC_O_SUBSECINC + NONSECURE_OFFSET));
 }
 
 //*****************************************************************************
@@ -743,17 +742,17 @@ AONRTCCompareValueSet(uint32_t ui32Channel, uint32_t ui32CompValue)
 
     if(ui32Channel & AON_RTC_CH0)
     {
-        HWREG(AON_RTC_BASE + AON_RTC_O_CH0CMP) = ui32CompValue;
+        HWREG(AON_RTC_BASE + AON_RTC_O_CH0CMP + NONSECURE_OFFSET) = ui32CompValue;
     }
 
     if(ui32Channel & AON_RTC_CH1)
     {
-        HWREG(AON_RTC_BASE + AON_RTC_O_CH1CMP) = ui32CompValue;
+        HWREG(AON_RTC_BASE + AON_RTC_O_CH1CMP + NONSECURE_OFFSET) = ui32CompValue;
     }
 
     if(ui32Channel & AON_RTC_CH2)
     {
-        HWREG(AON_RTC_BASE + AON_RTC_O_CH2CMP) = ui32CompValue;
+        HWREG(AON_RTC_BASE + AON_RTC_O_CH2CMP + NONSECURE_OFFSET) = ui32CompValue;
     }
 }
 
@@ -784,17 +783,17 @@ AONRTCCompareValueGet(uint32_t ui32Channel)
 
     if(ui32Channel & AON_RTC_CH0)
     {
-        ui32Value = HWREG(AON_RTC_BASE + AON_RTC_O_CH0CMP);
+        ui32Value = HWREG(AON_RTC_BASE + AON_RTC_O_CH0CMP + NONSECURE_OFFSET);
     }
 
     if(ui32Channel & AON_RTC_CH1)
     {
-        ui32Value = HWREG(AON_RTC_BASE + AON_RTC_O_CH1CMP);
+        ui32Value = HWREG(AON_RTC_BASE + AON_RTC_O_CH1CMP + NONSECURE_OFFSET);
     }
 
     if(ui32Channel & AON_RTC_CH2)
     {
-        ui32Value = HWREG(AON_RTC_BASE + AON_RTC_O_CH2CMP);
+        ui32Value = HWREG(AON_RTC_BASE + AON_RTC_O_CH2CMP + NONSECURE_OFFSET);
     }
 
     return(ui32Value);
@@ -818,7 +817,7 @@ AONRTCCompareValueGet(uint32_t ui32Channel)
 __STATIC_INLINE uint32_t
 AONRTCCurrentCompareValueGet( void )
 {
-   return ( HWREG( AON_RTC_BASE + AON_RTC_O_TIME ));
+   return ( HWREG( AON_RTC_BASE + AON_RTC_O_TIME + NONSECURE_OFFSET ));
 }
 
 //*****************************************************************************
@@ -854,7 +853,7 @@ extern uint64_t AONRTCCurrent64BitValueGet(void);
 __STATIC_INLINE void
 AONRTCIncValueCh2Set(uint32_t ui32IncValue)
 {
-    HWREG(AON_RTC_BASE + AON_RTC_O_CH2CMPINC) = ui32IncValue;
+    HWREG(AON_RTC_BASE + AON_RTC_O_CH2CMPINC + NONSECURE_OFFSET) = ui32IncValue;
 }
 
 //*****************************************************************************
@@ -876,7 +875,7 @@ AONRTCIncValueCh2Set(uint32_t ui32IncValue)
 __STATIC_INLINE uint32_t
 AONRTCIncValueCh2Get(void)
 {
-    return(HWREG(AON_RTC_BASE + AON_RTC_O_CH2CMPINC));
+    return(HWREG(AON_RTC_BASE + AON_RTC_O_CH2CMPINC + NONSECURE_OFFSET));
 }
 
 //*****************************************************************************
@@ -894,7 +893,7 @@ AONRTCIncValueCh2Get(void)
 __STATIC_INLINE uint32_t
 AONRTCCaptureValueCh1Get(void)
 {
-    return(HWREG(AON_RTC_BASE + AON_RTC_O_CH1CAPT));
+    return(HWREG(AON_RTC_BASE + AON_RTC_O_CH1CAPT + NONSECURE_OFFSET));
 }
 
 //*****************************************************************************

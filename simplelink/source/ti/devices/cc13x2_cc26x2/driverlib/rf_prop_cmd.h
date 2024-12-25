@@ -900,7 +900,7 @@ struct __RFC_STRUCT rfc_CMD_PROP_RX_ADV_SNIFF_s {
 //! @{
 //! Proprietary Mode Radio Setup Command for 2.4 GHz with PA Switching Fields
 struct __RFC_STRUCT rfc_CMD_PROP_RADIO_SETUP_PA_s {
-   uint16_t commandNo;                  //!<        The command ID number 
+   uint16_t commandNo;                  //!<        The command ID number
    uint16_t status;                     //!< \brief An integer telling the status of the command. This value is
                                         //!<        updated by the radio CPU during operation and may be read by the
                                         //!<        system CPU at any time.
@@ -1011,7 +1011,7 @@ struct __RFC_STRUCT rfc_CMD_PROP_RADIO_SETUP_PA_s {
 //! @{
 //! Proprietary Mode Radio Setup Command for All Frequency Bands with PA Switching Fields
 struct __RFC_STRUCT rfc_CMD_PROP_RADIO_DIV_SETUP_PA_s {
-   uint16_t commandNo;                  //!<        The command ID number 
+   uint16_t commandNo;                  //!<        The command ID number
    uint16_t status;                     //!< \brief An integer telling the status of the command. This value is
                                         //!<        updated by the radio CPU during operation and may be read by the
                                         //!<        system CPU at any time.

@@ -56,7 +56,7 @@
 #define RFE_PATCH_MODE 0
 #endif
 
-RFE_PATCH_TYPE patchGenookRfe[383] = { 
+RFE_PATCH_TYPE patchGenookRfe[383] = {
    0x00006122,
    0x11011000,
    0x004d1203,

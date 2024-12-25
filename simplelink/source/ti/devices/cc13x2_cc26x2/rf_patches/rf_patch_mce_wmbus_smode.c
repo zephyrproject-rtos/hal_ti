@@ -55,7 +55,7 @@
 #define MCE_PATCH_MODE 0
 #endif
 
-MCE_PATCH_TYPE patchWmbusStmodeMce[473] = { 
+MCE_PATCH_TYPE patchWmbusStmodeMce[473] = {
    0x2fcf6042,
    0x030c3f9d,
    0x070c680a,
