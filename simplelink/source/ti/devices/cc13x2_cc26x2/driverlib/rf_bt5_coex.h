@@ -158,6 +158,7 @@ struct  rfCoreHal_bleCoExConfig_s {
       uint8_t bKeepRequestIfNoGrant:1;  //!< \brief 0: Deassert REQUEST if GRANT was not given
                                         //!<        1: Keep REQUEST asserted if no GRANT was given
    } cmdBleTxTestConfig;
+   uint8_t grantLatencyTime;            //!< \brief Reserved for future use. Writes to this variable have no effect.
 } ;
 
 //! @}

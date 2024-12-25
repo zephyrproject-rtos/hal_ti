@@ -1,11 +1,9 @@
 /******************************************************************************
 *  Filename:       i2c.h
-*  Revised:        2020-08-25 16:10:23 +0200 (Tue, 25 Aug 2020)
-*  Revision:       58298
 *
 *  Description:    Defines and prototypes for the I2C.
 *
-*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -237,7 +235,7 @@ I2CMasterControl(uint32_t ui32Base, uint32_t ui32Cmd)
            (ui32Cmd == I2C_MASTER_CMD_BURST_RECEIVE_ERROR_STOP));
 
     // Send the command.
-    HWREG(I2C0_BASE + I2C_O_MCTRL) = ui32Cmd;
+    HWREG(ui32Base + I2C_O_MCTRL) = ui32Cmd;
 
     // Delay minimum four cycles in order to ensure that the I2C_O_MSTAT
     // register has been correctly updated before function exit
@@ -272,7 +270,7 @@ I2CMasterSlaveAddrSet(uint32_t ui32Base, uint8_t ui8SlaveAddr,
     ASSERT(!(ui8SlaveAddr & 0x80));
 
     // Set the address of the slave with which the master will communicate.
-    HWREG(I2C0_BASE + I2C_O_MSA) = (ui8SlaveAddr << 1) | bReceive;
+    HWREG(ui32Base + I2C_O_MSA) = (ui8SlaveAddr << 1) | bReceive;
 }
 
 //*****************************************************************************
@@ -293,10 +291,10 @@ I2CMasterEnable(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Enable the clock for the master.
-    HWREGBITW(I2C0_BASE + I2C_O_MCR, I2C_MCR_MFE_BITN) = 1;
+    HWREGBITW(ui32Base + I2C_O_MCR, I2C_MCR_MFE_BITN) = 1;
 
     // Enable the master block.
-    HWREG(I2C0_BASE + I2C_O_MCTRL) = I2C_MCTRL_RUN;
+    HWREG(ui32Base + I2C_O_MCTRL) = I2C_MCTRL_RUN;
 }
 
 //*****************************************************************************
@@ -317,10 +315,10 @@ I2CMasterDisable(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Disable the master block.
-    HWREG(I2C0_BASE + I2C_O_MCTRL) = 0;
+    HWREG(ui32Base + I2C_O_MCTRL) = 0;
 
     // Disable the clock for the master.
-    HWREGBITW(I2C0_BASE + I2C_O_MCR, I2C_MCR_MFE_BITN) = 0;
+    HWREGBITW(ui32Base + I2C_O_MCR, I2C_MCR_MFE_BITN) = 0;
 }
 
 //*****************************************************************************
@@ -344,7 +342,7 @@ I2CMasterBusy(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Return the busy status.
-    if(HWREG(I2C0_BASE + I2C_O_MSTAT) & I2C_MSTAT_BUSY)
+    if(HWREG(ui32Base + I2C_O_MSTAT) & I2C_MSTAT_BUSY)
     {
         return(true);
     }
@@ -376,7 +374,7 @@ I2CMasterBusBusy(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Return the bus busy status.
-    if(HWREG(I2C0_BASE + I2C_O_MSTAT) & I2C_MSTAT_BUSBSY)
+    if(HWREG(ui32Base + I2C_O_MSTAT) & I2C_MSTAT_BUSBSY)
     {
         return(true);
     }
@@ -405,7 +403,7 @@ I2CMasterDataGet(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Read a byte.
-    return(HWREG(I2C0_BASE + I2C_O_MDR));
+    return(HWREG(ui32Base + I2C_O_MDR));
 }
 
 //*****************************************************************************
@@ -427,7 +425,7 @@ I2CMasterDataPut(uint32_t ui32Base, uint8_t ui8Data)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Write the byte.
-    HWREG(I2C0_BASE + I2C_O_MDR) = ui8Data;
+    HWREG(ui32Base + I2C_O_MDR) = ui8Data;
 }
 
 //*****************************************************************************
@@ -466,7 +464,7 @@ I2CMasterIntEnable(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Enable the master interrupt.
-    HWREG(I2C0_BASE + I2C_O_MIMR) = I2C_MIMR_IM;
+    HWREG(ui32Base + I2C_O_MIMR) = I2C_MIMR_IM;
 }
 
 //*****************************************************************************
@@ -487,7 +485,7 @@ I2CMasterIntDisable(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Disable the master interrupt.
-    HWREG(I2C0_BASE + I2C_O_MIMR) = 0;
+    HWREG(ui32Base + I2C_O_MIMR) = 0;
 }
 
 //*****************************************************************************
@@ -525,7 +523,7 @@ I2CMasterIntClear(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Clear the I2C master interrupt source.
-    HWREG(I2C0_BASE + I2C_O_MICR) = I2C_MICR_IC;
+    HWREG(ui32Base + I2C_O_MICR) = I2C_MICR_IC;
 }
 
 //*****************************************************************************
@@ -556,11 +554,11 @@ I2CMasterIntStatus(uint32_t ui32Base, bool bMasked)
     // requested.
     if(bMasked)
     {
-        return((HWREG(I2C0_BASE + I2C_O_MMIS)) ? true : false);
+        return((HWREG(ui32Base + I2C_O_MMIS)) ? true : false);
     }
     else
     {
-        return((HWREG(I2C0_BASE + I2C_O_MRIS)) ? true : false);
+        return((HWREG(ui32Base + I2C_O_MRIS)) ? true : false);
     }
 }
 
@@ -582,10 +580,10 @@ I2CSlaveEnable(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Enable the clock to the slave block.
-    HWREGBITW(I2C0_BASE + I2C_O_MCR, I2C_MCR_SFE_BITN) = 1;
+    HWREGBITW(ui32Base + I2C_O_MCR, I2C_MCR_SFE_BITN) = 1;
 
     // Enable the slave.
-    HWREG(I2C0_BASE + I2C_O_SCTL) = I2C_SCTL_DA;
+    HWREG(ui32Base + I2C_O_SCTL) = I2C_SCTL_DA;
 }
 
 //*****************************************************************************
@@ -613,10 +611,10 @@ I2CSlaveInit(uint32_t ui32Base, uint8_t ui8SlaveAddr)
     ASSERT(!(ui8SlaveAddr & 0x80));
 
     // Must enable the device before doing anything else.
-    I2CSlaveEnable(I2C0_BASE);
+    I2CSlaveEnable(ui32Base);
 
     // Set up the slave address.
-    HWREG(I2C0_BASE + I2C_O_SOAR) = ui8SlaveAddr;
+    HWREG(ui32Base + I2C_O_SOAR) = ui8SlaveAddr;
 }
 
 //*****************************************************************************
@@ -639,7 +637,7 @@ I2CSlaveAddressSet(uint32_t ui32Base, uint8_t ui8SlaveAddr)
     ASSERT(!(ui8SlaveAddr & 0x80));
 
     // Set up the primary slave address.
-    HWREG(I2C0_BASE + I2C_O_SOAR) = ui8SlaveAddr;
+    HWREG(ui32Base + I2C_O_SOAR) = ui8SlaveAddr;
 }
 
 //*****************************************************************************
@@ -660,10 +658,10 @@ I2CSlaveDisable(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Disable the slave.
-    HWREG(I2C0_BASE + I2C_O_SCTL) = 0x0;
+    HWREG(ui32Base + I2C_O_SCTL) = 0x0;
 
     // Disable the clock to the slave block.
-    HWREGBITW(I2C0_BASE + I2C_O_MCR, I2C_MCR_SFE_BITN) = 0;
+    HWREGBITW(ui32Base + I2C_O_MCR, I2C_MCR_SFE_BITN) = 0;
 }
 
 //*****************************************************************************
@@ -689,7 +687,7 @@ I2CSlaveStatus(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Return the slave status.
-    return(HWREG(I2C0_BASE + I2C_O_SSTAT));
+    return(HWREG(ui32Base + I2C_O_SSTAT));
 }
 
 //*****************************************************************************
@@ -711,7 +709,7 @@ I2CSlaveDataGet(uint32_t ui32Base)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Read a byte.
-    return(HWREG(I2C0_BASE + I2C_O_SDR));
+    return(HWREG(ui32Base + I2C_O_SDR));
 }
 
 //*****************************************************************************
@@ -733,7 +731,7 @@ I2CSlaveDataPut(uint32_t ui32Base, uint8_t ui8Data)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Write the byte.
-    HWREG(I2C0_BASE + I2C_O_SDR) = ui8Data;
+    HWREG(ui32Base + I2C_O_SDR) = ui8Data;
 }
 
 //*****************************************************************************
@@ -765,9 +763,9 @@ I2CSlaveIntEnable(uint32_t ui32Base, uint32_t ui32IntFlags)
                            I2C_SLAVE_INT_DATA));
 
     // Enable the slave interrupt.
-    ui32Val = HWREG(I2C0_BASE + I2C_O_SIMR);
+    ui32Val = HWREG(ui32Base + I2C_O_SIMR);
     ui32Val |= ui32IntFlags;
-    HWREG(I2C0_BASE + I2C_O_SIMR) = ui32Val;
+    HWREG(ui32Base + I2C_O_SIMR) = ui32Val;
 }
 
 //*****************************************************************************
@@ -799,9 +797,9 @@ I2CSlaveIntDisable(uint32_t ui32Base, uint32_t ui32IntFlags)
                            I2C_SLAVE_INT_DATA));
 
     // Disable the slave interrupt.
-    ui32Val = HWREG(I2C0_BASE + I2C_O_SIMR);
+    ui32Val = HWREG(ui32Base + I2C_O_SIMR);
     ui32Val &= ~ui32IntFlags;
-    HWREG(I2C0_BASE + I2C_O_SIMR) = ui32Val;
+    HWREG(ui32Base + I2C_O_SIMR) = ui32Val;
 }
 
 //*****************************************************************************
@@ -844,7 +842,7 @@ I2CSlaveIntClear(uint32_t ui32Base, uint32_t ui32IntFlags)
     ASSERT(I2CBaseValid(ui32Base));
 
     // Clear the I2C slave interrupt source.
-    HWREG(I2C0_BASE + I2C_O_SICR) = ui32IntFlags;
+    HWREG(ui32Base + I2C_O_SICR) = ui32IntFlags;
 }
 
 //*****************************************************************************
@@ -876,11 +874,11 @@ I2CSlaveIntStatus(uint32_t ui32Base, bool bMasked)
     // requested.
     if(bMasked)
     {
-        return(HWREG(I2C0_BASE + I2C_O_SMIS));
+        return(HWREG(ui32Base + I2C_O_SMIS));
     }
     else
     {
-        return(HWREG(I2C0_BASE + I2C_O_SRIS));
+        return(HWREG(ui32Base + I2C_O_SRIS));
     }
 }
 

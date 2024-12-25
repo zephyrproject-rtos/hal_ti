@@ -124,7 +124,7 @@ typedef struct __RFC_STRUCT rfc_ble5RxStatus_s rfc_ble5RxStatus_t;
 //! \addtogroup bleRadioOp
 //! @{
 struct __RFC_STRUCT rfc_bleRadioOp_s {
-   uint16_t commandNo;                  //!<        The command ID number 
+   uint16_t commandNo;                  //!<        The command ID number
    uint16_t status;                     //!< \brief An integer telling the status of the command. This value is
                                         //!<        updated by the radio CPU during operation and may be read by the
                                         //!<        system CPU at any time.
@@ -163,7 +163,7 @@ struct __RFC_STRUCT rfc_bleRadioOp_s {
 //! \addtogroup ble5RadioOp
 //! @{
 struct __RFC_STRUCT rfc_ble5RadioOp_s {
-   uint16_t commandNo;                  //!<        The command ID number 
+   uint16_t commandNo;                  //!<        The command ID number
    uint16_t status;                     //!< \brief An integer telling the status of the command. This value is
                                         //!<        updated by the radio CPU during operation and may be read by the
                                         //!<        system CPU at any time.
@@ -217,7 +217,7 @@ struct __RFC_STRUCT rfc_ble5RadioOp_s {
 //! @{
 //! Command structure for Bluetooth commands which includes the optional field for 20-dBm PA TX power
 struct __RFC_STRUCT rfc_ble5Tx20RadioOp_s {
-   uint16_t commandNo;                  //!<        The command ID number 
+   uint16_t commandNo;                  //!<        The command ID number
    uint16_t status;                     //!< \brief An integer telling the status of the command. This value is
                                         //!<        updated by the radio CPU during operation and may be read by the
                                         //!<        system CPU at any time.
@@ -1642,7 +1642,7 @@ struct __RFC_STRUCT rfc_CMD_BLE5_ADV_SCAN_s {
 //! @{
 //! Bluetooth 5 Radio Setup Command for all PHYs with PA Switching Fields
 struct __RFC_STRUCT rfc_CMD_BLE5_RADIO_SETUP_PA_s {
-   uint16_t commandNo;                  //!<        The command ID number 
+   uint16_t commandNo;                  //!<        The command ID number
    uint16_t status;                     //!< \brief An integer telling the status of the command. This value is
                                         //!<        updated by the radio CPU during operation and may be read by the
                                         //!<        system CPU at any time.

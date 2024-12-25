@@ -1,12 +1,10 @@
 /*******************************************************************************
 *  Filename:       rom_crypto.c
-*  Revised:        2020-09-17 15:26:49 +0200 (Thu, 17 Sep 2020)
-*  Revision:       58682
 *
 *  Description:    This is the implementation for the API to the ECC functions
 *                  built into ROM on the CC13x2/CC26x2.
 *
-*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -43,6 +41,12 @@
 
 ////////////////////////////////////* ECC *////////////////////////////////////
 
+#if defined(__GNUC__) && !defined(__ti__)
+// Disable string operation overflow warning when writing a
+// value to memory given by a uint8_t pointer.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow=2"
+#endif
 //*****************************************************************************
 // ECC_initialize
 //*****************************************************************************
@@ -76,6 +80,10 @@ ECC_initialize(uint32_t *pWorkzone)
   //workzone = (uint32_t *) pWorkzone;
   *((uint32_t **)0x20000134) = (uint32_t *) pWorkzone;
 }
+#if defined(__GNUC__) && !defined(__ti__)
+// GCC: Stop ignoring -Wstringop-overflow=2
+#pragma GCC diagnostic pop
+#endif
 
 //*****************************************************************************
 // ECC_init

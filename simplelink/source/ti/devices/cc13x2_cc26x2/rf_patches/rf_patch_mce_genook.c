@@ -55,7 +55,7 @@
 #define MCE_PATCH_MODE 0
 #endif
 
-MCE_PATCH_TYPE patchGenookMce[489] = { 
+MCE_PATCH_TYPE patchGenookMce[489] = {
    0x0000603b,
    0x01952fcf,
    0x7fff0001,

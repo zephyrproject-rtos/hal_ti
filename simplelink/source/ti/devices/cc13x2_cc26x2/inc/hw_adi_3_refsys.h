@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_adi_3_refsys_h
-*  Revised:        2018-09-27 10:33:21 +0200 (Thu, 27 Sep 2018)
-*  Revision:       52772
+*  Revised:        $Date$
+*  Revision:       $Revision$
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.

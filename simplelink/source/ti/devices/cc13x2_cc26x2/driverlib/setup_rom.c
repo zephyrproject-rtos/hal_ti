@@ -1,11 +1,9 @@
 /******************************************************************************
 *  Filename:       setup_rom.c
-*  Revised:        2020-09-17 15:26:49 +0200 (Thu, 17 Sep 2020)
-*  Revision:       58682
 *
 *  Description:    Setup file for CC13xx/CC26xx devices.
 *
-*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -109,6 +107,7 @@
 // Function declarations
 //
 //*****************************************************************************
+
 
 //*****************************************************************************
 //
@@ -312,7 +311,6 @@ SetupAfterColdResetWakeupFromShutDownCfg2( uint32_t ui32Fcfg1Revision, uint32_t 
     // Remaining register bit fields are set to their reset values of 0.
     ui32Trim = SetupGetTrimForRadcExtCfg(ui32Fcfg1Revision);
     DDI32RegWrite(AUX_DDI0_OSC_BASE, DDI_0_OSC_O_RADCEXTCFG, ui32Trim);
-
 }
 
 //*****************************************************************************
@@ -940,4 +938,5 @@ SetupSetAonRtcSubSecInc( uint32_t subSecInc )
    HWREG( AUX_SYSIF_BASE + AUX_SYSIF_O_RTCSUBSECINCCTL ) = AUX_SYSIF_RTCSUBSECINCCTL_UPD_REQ;
    while( ! ( HWREGBITW( AUX_SYSIF_BASE + AUX_SYSIF_O_RTCSUBSECINCCTL, AUX_SYSIF_RTCSUBSECINCCTL_UPD_ACK_BITN )));
    HWREG( AUX_SYSIF_BASE + AUX_SYSIF_O_RTCSUBSECINCCTL ) = 0;
+
 }

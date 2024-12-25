@@ -55,7 +55,7 @@
 #define MCE_PATCH_MODE 0
 #endif
 
-MCE_PATCH_TYPE patchWbDsssMce[303] = { 
+MCE_PATCH_TYPE patchWbDsssMce[303] = {
    0x2fcf6076,
    0xdb3e0f9d,
    0x7f7f0303,

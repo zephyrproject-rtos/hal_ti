@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_fcfg1_h
-*  Revised:        2020-09-04 11:58:29 +0200 (Fri, 04 Sep 2020)
-*  Revision:       58475
+*  Revised:        $Date$
+*  Revision:       $Revision$
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.

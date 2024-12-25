@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_adi_4_aux_h
-*  Revised:        2018-05-14 12:24:52 +0200 (Mon, 14 May 2018)
-*  Revision:       51990
+*  Revised:        $Date$
+*  Revision:       $Revision$
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.

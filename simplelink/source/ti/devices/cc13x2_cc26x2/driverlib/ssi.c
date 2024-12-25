@@ -1,11 +1,9 @@
 /******************************************************************************
 *  Filename:       ssi.c
-*  Revised:        2020-07-14 12:55:48 +0200 (Tue, 14 Jul 2020)
-*  Revision:       57992
 *
 *  Description:    Driver for Synchronous Serial Interface
 *
-*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
