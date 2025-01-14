@@ -227,6 +227,19 @@ extern void UARTDisable(uint32_t base);
 
 //*****************************************************************************
 //
+//! \brief Enable transmitting and receiving.
+//!
+//! This function enable UARTEN, TXE and RXE.
+//!
+//! \param base is the base address of the UART port.
+//!
+//! \return None
+//
+//*****************************************************************************
+extern void UARTEnable(uint32_t base);
+
+//*****************************************************************************
+//
 //! \brief Enables the transmit and receive FIFOs.
 //!
 //! This functions enables the transmit and receive FIFOs in the UART.

@@ -583,6 +583,46 @@ __STATIC_INLINE void GPIOClearEventMultiDio(uint32_t dioMask)
 
 //*****************************************************************************
 //
+//! \brief Set configuration to DIO.
+//!
+//! \param iocfgRegAddr is address where config should be written
+//! \param config is the configuration to be written
+//! \return None
+//!
+//! \sa \ref GPIOGetConfigDio()
+//
+//*****************************************************************************
+__STATIC_INLINE void GPIOSetConfigDio(uint32_t iocfgRegAddr, uint32_t config)
+{
+    // Check the arguments.
+    ASSERT(iocfgRegAddr);
+
+    // Set the specified DIO config.
+    HWREG( iocfgRegAddr ) = config;
+}
+
+//*****************************************************************************
+//
+//! \brief Get configuration for DIO.
+//!
+//! \param iocfgRegAddr is address from where config should be read
+//!
+//! \return Raw register value
+//!
+//! \sa \ref GPIOSetConfigDio()
+//
+//*****************************************************************************
+__STATIC_INLINE uint32_t GPIOGetConfigDio(uint32_t iocfgRegAddr)
+{
+    // Check the arguments.
+    ASSERT(iocfgRegAddr);
+
+    // Return Raw register value.
+    return HWREG( iocfgRegAddr );
+}
+
+//*****************************************************************************
+//
 // Mark the end of the C bindings section for C++ compilers.
 //
 //*****************************************************************************

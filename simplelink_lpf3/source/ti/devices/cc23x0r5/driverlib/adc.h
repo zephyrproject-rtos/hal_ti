@@ -589,6 +589,126 @@ __STATIC_INLINE void ADCClearInterrupt(uint32_t intFlags)
 
 //*****************************************************************************
 //
+//! \brief Enable DMA trigger for data transfer.
+//!
+//! This function enables DMA trigger for data transfer. DMAEN bit is cleared by hardware
+//! based on DMA done signal at the end of data transfer. Software has to re-enable DMAEN
+//! bit for ADC to generate DMA triggers.
+//!
+//! \return None
+//
+//*****************************************************************************
+__STATIC_INLINE void ADCEnableDMATrigger(void)
+{
+    HWREG(ADC_BASE + ADC_O_CTL2) |= ADC_CTL2_DMAEN;
+}
+
+//*****************************************************************************
+//
+//! \brief Enables individual ADC interrupt sources for DMA Trigger Event Publisher (INT_EVENT2).
+//!
+//! This function enables the indicated ADC interrupt sources (INT_EVENT2).
+//!
+//! \param intFlags is the bit mask of the interrupt sources to be enabled.
+//! The parameter is the bitwise OR of any of the following:
+//! - ADC_INT_MEMRES_N (\ref ADC_INT_MEMRES_00, \ref ADC_INT_MEMRES_01, etc)
+//!
+//! \return None
+//
+//*****************************************************************************
+__STATIC_INLINE void ADCEnableDMAInterrupt(uint32_t intFlags)
+{
+    // Enable the specified interrupts.
+    HWREG(ADC_BASE + ADC_O_IMASK2) |= intFlags;
+}
+
+//*****************************************************************************
+//
+//! \brief Disables individual ADC interrupt sources for DMA Trigger Event Publisher (INT_EVENT2).
+//!
+//! This function disables the indicated ADC interrupt sources (INT_EVENT2).
+//!
+//! \param intFlags is the bit mask of the interrupt sources to be disabled.
+//! The parameter is the bitwise OR of any of the following:
+//! - ADC_INT_MEMRES_N (\ref ADC_INT_MEMRES_00, \ref ADC_INT_MEMRES_01, etc)
+//!
+//! \return None
+//
+//*****************************************************************************
+__STATIC_INLINE void ADCDisableDMAInterrupt(uint32_t intFlags)
+{
+    // Disable the specified interrupts.
+    HWREG(ADC_BASE + ADC_O_IMASK2) &= ~(intFlags);
+}
+
+//*****************************************************************************
+//
+//! \brief Gets the current raw interrupt status for DMA Trigger Event Publisher (INT_EVENT2).
+//!
+//! This function returns the raw interrupt status for the ADC (INT_EVENT2).
+//!
+//! \return Returns the current interrupt status, enumerated as a bit field of:
+//! - ADC_INT_MEMRES_N (\ref ADC_INT_MEMRES_00, \ref ADC_INT_MEMRES_01, etc)
+//
+//*****************************************************************************
+__STATIC_INLINE uint32_t ADCRawDMAInterruptStatus(void)
+{
+    return (HWREG(ADC_BASE + ADC_O_RIS2));
+}
+
+//*****************************************************************************
+//
+//! \brief Gets the current masked interrupt status for DMA Trigger Event Publisher (INT_EVENT2).
+//!
+//! This function returns the masked interrupt status for the ADC (INT_EVENT2).
+//!
+//! \return Returns the current interrupt status, enumerated as a bit field of:
+//! - ADC_INT_MEMRES_N (\ref ADC_INT_MEMRES_00, \ref ADC_INT_MEMRES_01, etc)
+//
+//*****************************************************************************
+__STATIC_INLINE uint32_t ADCMaskedDMAInterruptStatus(void)
+{
+    return (HWREG(ADC_BASE + ADC_O_MIS2));
+}
+
+//*****************************************************************************
+//
+//! \brief Clears ADC interrupt sources for DMA Trigger Event Publisher (INT_EVENT2).
+//!
+//! The specified ADC interrupt sources are cleared, so that they no longer
+//! assert. This function must be called in the interrupt handler to keep the
+//! interrupt from being recognized again immediately upon exit.
+//!
+//! \note Due to write buffers and synchronizers in the system it may take several
+//! clock cycles from a register write clearing an event in a module and until the
+//! event is actually cleared in the NVIC of the system CPU. It is recommended to
+//! clear the event source early in the interrupt service routine (ISR) to allow
+//! the event clear to propagate to the NVIC before returning from the ISR.
+//! At the same time, an early event clear allows new events of the same type to be
+//! pended instead of ignored if the event is cleared later in the ISR.
+//! It is the responsibility of the programmer to make sure that enough time has passed
+//! before returning from the ISR to avoid false re-triggering of the cleared event.
+//! A simple, although not necessarily optimal, way of clearing an event before
+//! returning from the ISR is:
+//! -# Write to clear event (interrupt source). (buffered write)
+//! -# Dummy read from the event source module. (making sure the write has propagated)
+//! -# Wait two system CPU clock cycles (user code or two NOPs). (allowing cleared event to propagate through any
+//! synchronizers)
+//!
+//! \param intFlags is a bit mask of the interrupt sources to be cleared.
+//! - ADC_INT_MEMRES_N (\ref ADC_INT_MEMRES_00, \ref ADC_INT_MEMRES_01, etc)
+//!
+//! \return None
+//
+//*****************************************************************************
+__STATIC_INLINE void ADCClearDMAInterrupt(uint32_t intFlags)
+{
+    // Clear the requested interrupt sources
+    HWREG(ADC_BASE + ADC_O_ICLR2) = intFlags;
+}
+
+//*****************************************************************************
+//
 //! \brief Returns ADC gain value for given reference
 //!
 //! This returns a gain value that should be passed to \ref ADCAdjustValueForGain.
