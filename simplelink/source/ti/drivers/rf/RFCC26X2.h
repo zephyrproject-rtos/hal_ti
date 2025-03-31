@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2023, Texas Instruments Incorporated
+ * Copyright (c) 2016-2020, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,7 +68,6 @@ RF User Guide</b></a>.
 @li @ref rf_scheduling "Preemptive scheduler for RF operations" of different RF driver instances
 @li Convenient @ref rf_rat "Access to the radio timer" (RAT)
 @li @ref rf_tx_power "Programming the TX power level"
-@li @ref rf_temperature_compensation "Temperature Compensation"
 
 @anchor rf_setup_and_configuration
 Setup and configuration
@@ -106,9 +105,10 @@ Board configuration
 
 The RF driver handles RF core hardware interrupts and uses software interrupts
 for its internal state machine. For managing the interrupt priorities, it
-expects the existence of a global #RFCC26XX_HWAttrsV2 object. This object is configured
-in SysConfig and defined in the generated file `ti_drivers_config.c`.
-By default, the priorities are set to the lowest possible value:
+expects the existence of a global #RFCC26XX_HWAttrsV2 object. This is
+usually defined in the board support file, for example `CC2652RB_LAUNCHXL.c`,
+but when developing on custom boards, it might be kept anywhere in the
+application. By default, the priorities are set to the lowest possible value:
 
 @code
 const RFCC26XX_HWAttrsV2 RFCC26XX_hwAttrs = {
@@ -322,9 +322,8 @@ The function #RF_open() takes a radio setup command as parameter and expects a
 `CMD_FS` command to follow. The pointer to the radio setup command and the
 whole `CMD_FS` command are cached internally in the RF driver. They will be
 used for every proceeding power-up procedure. Whenever the client re-runs a
-setup command, the driver updates its internal cache with the new settings.
-RF driver also caches the first CMD_FS from the list of done commands. Please
-refer #RF_postCmd() for limitations of command chains.
+setup command or a `CMD_FS` command, the driver updates its internal cache
+with the new settings.
 
 By default, the RF driver measures the time that it needs for the power-up
 procedure and uses that as an estimate for the next power cycle. On the
@@ -507,12 +506,9 @@ The RAT may be used to capture a time stamp on an edge of a physical pin. This
 can be achieved with #RF_ratCapture().
 
 @code
-#include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/ioc.h)
-#include <ti/drivers/GPIO.h>
-#include <ti/drivers/gpio/GPIOCC26XX.h>
+#include <ti/drivers/pin/PINCC26XX.h>
 // Map IO 26 to RFC_GPI0
-GPIO_setConfigAndMux(IOID_26, GPIO_CFG_NO_DIR, IOC_PORT_RFC_GPI0);
+PINCC26XX_setMux(pinHandle, IOID_26, PINCC26XX_MUX_RFC_GPI0);
 
 RF_Handle rfDriver;
 RF_RatConfigCapture config;
@@ -560,11 +556,8 @@ static uint32_t pOverrides[] =
 }
 
 // Finally, route the intermediate doorbell signal to a physical pin.
-#include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/ioc.h)
-#include <ti/drivers/GPIO.h>
-#include <ti/drivers/gpio/GPIOCC26XX.h>
-GPIO_setConfigAndMux(IOID_17, GPIO_CFG_NO_DIR, IOC_PORT_RFC_GPO2);
+#include <ti/drivers/pin/PINCC26XX.h>
+PINCC26XX_setMux(pinHandle, IOID_17, PINCC26XX_MUX_RFC_GPO2);
 @endcode
 
 <hr>
@@ -627,49 +620,6 @@ int8_t power = RF_TxPowerTable_findPowerLevel(txPowerTable, RF_getTxPower(h));
 @endcode
 
 <hr>
-@anchor rf_temperature_compensation
-Temperature Compensation
-==============================
-
-The RF driver improves the accuracy of XOSC_HF by performing temperature
-dependent compensation. This is commonly done in the BAW/SIP devices where the
-compensation parameters are already available inside the package.
-
-When temperature compensation is enabled, RF_enableHPOSCTemperatureCompensation()
-is called during the board initialization(in Board_init()). This function enables
-the RF driver to update HPOSC_OVERRIDE with the correct frequency offset according
-to the ambient temperature at radio setup.
-
-@code
-// Enable RF Temperature Compensation
-status = RF_enableHPOSCTemperatureCompensation(void)
-@endcode
-
-The RF driver also subscribes to a temperature notification event that triggers
-for 3 degree Celsius change in temperature. At every 3 degree Celsius change in
-temperature, it updates the RF core with the new frequency offset and re-subscribes
-to the temperature notification with updated thresholds.
-
-@warning At the moment, temperature compensation is only supported on BAW or SIP
-device variants.
-
-Error Handling
---------------
-When temperature compensation is enabled, but HPOSC_OVERRIDE is not found, then
-RF_open() returns a NULL handle.
-
-RF_enableHPOSCTemperatureCompensation() returns #RF_StatInvalidParamsError if
-the temperature notification fails to register.
-
-When the temperature notification fails to register, a global callback can be
-executed by subscribing to the event #RF_GlobalEventTempNotifyFail defined in
-#RF_GlobalEvent.
-
-@note The #RF_Handle in the global callback function will belong to the current
-active client and this client is not causing the failure, since neither the
-temperature event nor the failure is client specific.
-
-<hr>
 @anchor rf_convenience_features
 Convenience features
 ====================
@@ -714,7 +664,6 @@ extern "C" {
 #include DeviceFamily_constructPath(driverlib/rf_common_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_prop_cmd.h)
 #include DeviceFamily_constructPath(driverlib/rf_ble_cmd.h)
-#include DeviceFamily_constructPath(driverlib/rf_ieee_cmd.h)
 
 /**
  *  @name RF Core Events
@@ -895,7 +844,7 @@ extern "C" {
  * This control code can be used to manually override the statically configured setting for global enable/disable
  * of the coexistence feature. It will have no effect if coexistence is not originally enabled and included
  * in the compiled project.
- *
+ * 
  * Example:
  * @code
  * // Disable the CoEx feature
@@ -975,25 +924,16 @@ extern "C" {
  * Creates a TX power table entry for the default PA.
  *
  * The values for \a bias, \a gain, \a boost and \a coefficient are usually measured by Texas Instruments
- * for a specific front-end configuration. They can then be obtained from SmartRFStudio or SysConfig.
+ * for a specific front-end configuration. They can then be obtained from SmartRFStudio.
  */
 #define RF_TxPowerTable_DEFAULT_PA_ENTRY(bias, gain, boost, coefficient) \
         { .rawValue = ((bias) << 0) | ((gain) << 6) | ((boost) << 8) | ((coefficient) << 9), .paType = RF_TxPowerTable_DefaultPA }
 
 /**
- * Creates a TX power table Sub1-GHz entry for the default PA.
- *
- * The values for \a bias, \a gain, \a boost, \a coefficient and \a gain2 are usually measured by Texas Instruments
- * for a specific front-end configuration. They can then be obtained from SmartRFStudio or SysConfig.
- */
-#define RF_TxPowerTable_CC13x4Sub1GHz_DEFAULT_PA_ENTRY(bias, gain, boost, coefficient, gain2) \
-        { .rawValue = ((bias) << 0) | ((gain) << 6) | ((boost) << 8) | ((coefficient) << 9) | ((gain2) << 16), .paType = RF_TxPowerTable_DefaultPA }
-
-/**
  * Creates a TX power table entry for the High-power PA.
  *
  * The values for \a bias, \a ibboost, \a boost, \a coefficient and \a ldoTrim are usually measured by Texas Instruments
- * for a specific front-end configuration. They can then be obtained from SmartRFStudio or SysConfig.
+ * for a specific front-end configuration. They can then be obtained from SmartRFStudio.
  */
 #define RF_TxPowerTable_HIGH_PA_ENTRY(bias, ibboost, boost, coefficient, ldotrim) \
         { .rawValue = ((bias) << 0) | ((ibboost) << 6) | ((boost) << 8) | ((coefficient) << 9) | ((ldotrim) << 16), .paType = RF_TxPowerTable_HighPA }
@@ -1179,14 +1119,14 @@ typedef enum {
     RF_PriorityNormal  = 0, ///< Default priority. Use this in single-client applications.
 } RF_Priority;
 
-/**
+/** 
  *  @brief Priority level for coexistence priority signal.
  *
  *  When the RF driver is configured for three-wire coexistence mode, one of the
  *  output wires will signal the priority level of the coexistence request. When
  *  RF operations are scheduled with RF_scheduleCmd(), the scheduler can be configured
  *  to override the default coexistence priority level for the RF operation.
- *
+ *  
  *  The coexistence priority level is binary because it translates to a high/low output signal.
  */
 typedef enum {
@@ -1195,14 +1135,14 @@ typedef enum {
     RF_PriorityCoexHigh     = 2,  ///< High priority. Override default value configured by setup command.
 } RF_PriorityCoex;
 
-/**
+/** 
  *  @brief Behavior for coexistence request signal.
  *
  *  When the RF driver is configured for three-wire coexistence mode, one of the
  *  output wires will signal the request level of the coexistence request. When
  *  RF operations are scheduled with RF_scheduleCmd(), the scheduler can be configured
  *  to override the default coexistence request line behavior for the RF operation in RX.
- *
+ * 
  *  This override will be ignored if the option to set request for an entire chain is active.
  */
 typedef enum {
@@ -1211,7 +1151,7 @@ typedef enum {
     RF_RequestCoexNoAssertRx  = 2, ///< Do not assert REQUEST in RX. Override default value configured by setup command.
 } RF_RequestCoex;
 
-/**
+/** 
  *  @brief Runtime coexistence override parameters
  *
  *  When  RF operations are scheduled with RF_scheduleCmd(), the scheduler can be configured
@@ -1222,7 +1162,7 @@ typedef struct {
     RF_RequestCoex    request;    ///< Behavior for coexistence request signal.
 } RF_CoexOverride;
 
-/**
+/** 
  *  @brief Coexistence override settings for BLE5 application scenarios
  *
  *  This configuration is provided to the BLE Stack to override the default coexistence configuration
@@ -1357,12 +1297,12 @@ typedef enum {
  *
  *  For the coexistence (coex) feature, some of the events are used to handle
  *  the I/O muxing of the GPIO signals for REQUEST, PRIORITY and GRANT.
- *
+ * 
  *  @code
  *  void globalCallback(RF_Handle h, RF_GlobalEvent event, void* arg)
  *  {
  *      RF_Cmd* pCurrentCmd = (RF_Cmd*)arg;
- *
+ *  
  *      if (event & RF_GlobalEventInit) {
  *          // Initialize and mux coex I/O pins to RF Core I/O signals
  *      }
@@ -1377,7 +1317,7 @@ typedef enum {
  *          }
  *      }
  *  }
- *  @endcode
+ *  @endcode 
  *
  * \sa #RF_GlobalCallback
  */
@@ -1405,12 +1345,6 @@ typedef enum {
     RF_GlobalEventCoexControl    = (1 << 5),             ///< Change to coex configuration is requested
                                                          ///< The \a arg argument is pointer to at least 8-bit wide int with value 1=enable, or 0=disable
                                                          ///< Task/HWI context.
-
-    RF_GlobalEventTempNotifyFail  = (1 << 6),            ///< Registration of temperature notification was unsuccessful
-                                                         ///< (failure returned from temperature driver)
-                                                         ///< The \a arg argument is empty.
-                                                         ///< HWI context
-
 } RF_GlobalEvent;
 
 
@@ -1471,7 +1405,6 @@ struct RF_ObjectMultiMode{
         RF_RadioSetup*      pRadioSetup;                 ///< Pointer to the setup command to be executed at power up.
         uint32_t            nPhySwitchingDuration;       ///< Radio reconfiguration time to this client's phy and protocol.
         uint32_t            nPowerUpDuration;            ///< Radio power up time to be used to calculate future wake-up events.
-        uint32_t            nPowerUpDurationFs;          ///< Same as nPowerUpDuration, specifically when radio wakes up to execute an FS cmd.
         bool                bMeasurePowerUpDuration;     ///< Indicates if nPowerUpDuration holds a fix value or being measured and updated at every power up.
         bool                bUpdateSetup;                ///< Indicates if an analog configuration update should be performed at the next setup command execution.
         uint16_t            nPowerUpDurationMargin;      ///< Power up duration margin in us.
@@ -1669,7 +1602,7 @@ typedef struct {
     RF_ClientEventMask  nClientEventMask;        ///< Event mask used to subscribe certain client events.
                                                  ///< The purpose is to keep the number of callback executions small.
 
-    uint32_t            nID;                     ///< RF handle identifier.
+    uint32_t            nID;                     ///< RF handle identifier.                 
 } RF_Params;
 
 /** @brief Controls the behavior of the RF_scheduleCmd() API.
@@ -2003,9 +1936,6 @@ extern RF_Handle RF_open(RF_Object *pObj, RF_Mode *pRfMode, RF_RadioSetup *pRadi
  *
  *  Allows a RF client (high-level driver or application) to close its connection
  *  to the RF driver.
- *  RF_close pends on all commands in the command queue before closing the connection.
- *  If a client has access to the radio by using RF_RequestAccess API, and the same client calls RF_close,
- *  then the connection to the RF driver is closed immediately without waiting for the access duration to be over.
  *
  *  @note Calling context : Task
  *
@@ -2062,10 +1992,10 @@ extern uint32_t RF_getCurrentTime(void);
  *    can not be used for any other command. This is because the RF driver may insert a
  *    frequency-select command (CMD_FS) at the front of the chain when it performs an
  *    automatic power-up.
- *  - If a command chain has more than one CMD_FS, the first CMD_FS in the chain is cached.
- *    This CMD_FS is used on the next automatic power-up.
- *  - To avoid execution of cached CMD_FS and directly use a new CMD_FS on power up, place CMD_FS
- *    at the head of the command chain.
+ *  - Having more than one CMD_FS in a chain may lead to unexpected behavior.
+ *    If a chain contains a CMD_FS and the command can be reached by iterating over the pNextOp
+ *    field, then RF driver will always update the cached CMD_FS with the new settings. On the
+ *    next automatic power-up, the RF driver will use the updated frequency.
  *
  *  @note Calling context : Task/SWI
  *
@@ -2645,12 +2575,8 @@ extern RF_TxPowerTable_Value RF_TxPowerTable_findValue(RF_TxPowerTable_Entry tab
 /**
  * @brief Enables temperature monitoring and temperature based drift compensation
  *
- * @return #RF_StatSuccess if succesful or
- *         #RF_StatInvalidParamsError if temperature notification fails
- *          to register.
- *
  */
-extern RF_Stat RF_enableHPOSCTemperatureCompensation(void);
+extern void RF_enableHPOSCTemperatureCompensation(void);
 
 #ifdef __cplusplus
 }

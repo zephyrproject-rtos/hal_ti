@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       sys_ctrl.c
+*  Revised:        2020-12-10 16:31:27 +0100 (Thu, 10 Dec 2020)
+*  Revision:       59841
 *
 *  Description:    Driver for the System Control.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -72,6 +74,7 @@
 #endif
 
 
+
 //*****************************************************************************
 //
 // Force the system in to idle mode
@@ -80,7 +83,7 @@
 void SysCtrlIdle(uint32_t vimsPdMode)
 {
     // Configure the VIMS mode
-    HWREG(PRCM_BASE + NONSECURE_OFFSET + PRCM_O_PDCTL1VIMS) = vimsPdMode;
+    HWREG(PRCM_BASE + PRCM_O_PDCTL1VIMS) = vimsPdMode;
 
     // Always keep cache retention ON in IDLE
     PRCMCacheRetentionEnable();
@@ -102,11 +105,18 @@ void SysCtrlIdle(uint32_t vimsPdMode)
 //*****************************************************************************
 void SysCtrlShutdownWithAbort(void)
 {
-    uint32_t wakeupDetected = 0;
-    uint32_t ioIndex = 0;
+    uint32_t wu_detect_vector = 0;
+    uint32_t io_num = 0;
 
-    uint32_t ioCount = (( HWREG( FCFG1_BASE + FCFG1_O_IOCONF ) &
-            FCFG1_IOCONF_GPIO_CNT_M ) >> FCFG1_IOCONF_GPIO_CNT_S ) ;
+    // For all IO CFG registers check if wakeup detect is enabled
+    for(io_num = 0; io_num < 32; io_num++)
+    {
+        // Read MSB from WU_CFG bit field
+        if( HWREG(IOC_BASE + IOC_O_IOCFG0 + (io_num * 4) ) & (1 << (IOC_IOCFG0_WU_CFG_S + IOC_IOCFG0_WU_CFG_W - 1)) )
+        {
+            wu_detect_vector |= (1 << io_num);
+        }
+    }
 
     // Wakeup events are detected when pads are in sleep mode
     PowerCtrlPadSleepEnable();
@@ -115,22 +125,8 @@ void SysCtrlShutdownWithAbort(void)
     SysCtrlAonUpdate();
     SysCtrlAonUpdate();
 
-    // For all IO CFG registers check if wakeup detect is enabled
-    for(ioIndex = 0; ioIndex < ioCount; ioIndex++)
-    {
-        // Read MSB from WU_CFG bit field
-        if( HWREG(IOC_BASE + IOC_O_IOCFG0 + (ioIndex * 4) ) & (1 << (IOC_IOCFG0_WU_CFG_S + IOC_IOCFG0_WU_CFG_W - 1)) )
-        {
-            if (GPIO_getEventDio(ioIndex))
-            {
-                wakeupDetected = 1;
-                break;
-            }
-        }
-    }
-
     // If no edge detect flags for wakeup enabled IOs are set then shut down the device
-    if( wakeupDetected == 0 )
+    if( GPIO_getEventMultiDio(wu_detect_vector) == 0 )
     {
         SysCtrlShutdown();
     }

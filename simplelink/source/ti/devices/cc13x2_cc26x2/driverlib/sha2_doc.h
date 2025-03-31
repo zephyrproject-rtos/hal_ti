@@ -1,7 +1,9 @@
 /******************************************************************************
 *  Filename:       sha2_doc.h
+*  Revised:        2020-09-14 11:12:36 +0200 (Mon, 14 Sep 2020)
+*  Revision:       58614
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

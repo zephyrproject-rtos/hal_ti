@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       chipinfo.h
+*  Revised:        2020-10-22 14:03:07 +0200 (Thu, 22 Oct 2020)
+*  Revision:       59146
 *
 *  Description:    Collection of functions returning chip information.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -84,7 +86,6 @@ extern "C"
     #define ChipInfo_GetHwRevision          NOROM_ChipInfo_GetHwRevision
     #define ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated NOROM_ThisLibraryIsFor_CC13x2_CC26x2_HwRev20AndLater_HaltIfViolated
 #endif
-
 
 //*****************************************************************************
 //
@@ -339,7 +340,7 @@ typedef enum {
    CHIP_TYPE_CUSTOM_1      =  7,    //!<  7 means that this is a CUSTOM_1 chip.
    CHIP_TYPE_CC2640R2      =  8,    //!<  8 means that this is a CC2640R2 chip.
    CHIP_TYPE_CC2642        =  9,    //!<  9 means that this is a CC2642 chip.
-   CHIP_TYPE_CC1312P       =  10,   //!< 10 means that this is a CC1312P chip.
+   CHIP_TYPE_unused        =  10,   //!< 10 unused value
    CHIP_TYPE_CC2652        =  11,   //!< 11 means that this is a CC2652 chip.
    CHIP_TYPE_CC1312        =  12,   //!< 12 means that this is a CC1312 chip.
    CHIP_TYPE_CC1352        =  13,   //!< 13 means that this is a CC1352 chip.
@@ -347,25 +348,12 @@ typedef enum {
    CHIP_TYPE_CC2652P       =  15,   //!< 15 means that this is a CC2652P chip.
    CHIP_TYPE_CC2652RB      =  16,   //!< 16 means that this is a CC2652RB chip.
    CHIP_TYPE_CC2652PB      =  17,   //!< 17 means that this is a CC2652PB chip.
-   CHIP_TYPE_CC1311R3      =  18,   //!< 18 means that this is a CC1311R3 chip.
-   CHIP_TYPE_CC1311P3      =  19,   //!< 19 means that this is a CC1311P3 chip.
-   CHIP_TYPE_CC2651R3      =  20,   //!< 20 means that this is a CC2651R3 chip.
-   CHIP_TYPE_CC2651P3      =  21,   //!< 21 means that this is a CC2651P3 chip.
-   CHIP_TYPE_CC2641R3      =  22,   //!< 22 means that this is a CC2641R3 chip.
    CHIP_TYPE_CC1312R7      =  23,   //!< 23 means that this is a CC1312R7 chip.
-   CHIP_TYPE_unused0       =  24,   //!< 24 unused value
+   CHIP_TYPE_unused1       =  24,   //!< 24 unused value
    CHIP_TYPE_CC1352R7      =  25,   //!< 25 means that this is a CC1352R7 chip.
    CHIP_TYPE_CC1352P7      =  26,   //!< 26 means that this is a CC1352P7 chip.
    CHIP_TYPE_CC2652R7      =  27,   //!< 27 means that this is a CC2652R7 chip.
    CHIP_TYPE_CC2652P7      =  28,   //!< 28 means that this is a CC2652P7 chip.
-   CHIP_TYPE_unused1       =  29,   //!< 29 unused value
-   CHIP_TYPE_CC1314R10     =  30,   //!< 30 means that this is a CC1314R10 chip.
-   CHIP_TYPE_CC1354P10     =  31,   //!< 31 means that this is a CC1354P10 chip.
-   CHIP_TYPE_CC1354R10     =  32,   //!< 32 means that this is a CC1354R10 chip.
-   CHIP_TYPE_CC2653P10     =  33,   //!< 33 means that this is a CC2653P10 chip.
-   CHIP_TYPE_unused2       =  34,   //!< 34 unused value
-   CHIP_TYPE_CC2674P10     =  35,   //!< 35 means that this is a CC2674P10 chip.
-   CHIP_TYPE_CC2674R10     =  36,   //!< 36 means that this is a CC2674R10 chip.
 } ChipType_t;
 
 //*****************************************************************************
@@ -391,7 +379,6 @@ typedef enum {
    FAMILY_CC26x0R2          =  3, //!<  3 means that the chip is a CC26x0R2 family (new ROM contents).
    FAMILY_CC13x2_CC26x2     =  4, //!<  4 means that the chip is a CC13x2, CC26x2 family member.
    FAMILY_CC13x2x7_CC26x2x7 =  5, //!<  5 means that the chip is a CC13x2x7, CC26x2x7 family member.
-   FAMILY_CC13x4_CC26x4     =  6, //!<  6 means that the chip is a CC13x4, CC26x4 family member.
 } ChipFamily_t;
 
 //*****************************************************************************
@@ -415,8 +402,6 @@ extern ChipFamily_t ChipInfo_GetChipFamily( void );
 #define DRIVERLIB_BUILD_CC26X0R2          3 //!< 3 is the driverlib build ID for the cc26x0r2 driverlib.
 #define DRIVERLIB_BUILD_CC13X2_CC26X2     4 //!< 4 is the driverlib build ID for the cc13x2_cc26x2 driverlib.
 #define DRIVERLIB_BUILD_CC13X2X7_CC26X2X7 5 //!< 5 is the driverlib build ID for the cc13x2x7_cc26x2x7 driverlib.
-#define DRIVERLIB_BUILD_CC13X4_CC26X4     6 //!< 6 is the driverlib build ID for the cc13x4_cc26x4 driverlib.
-
 
 //*****************************************************************************
 //
@@ -509,20 +494,6 @@ __STATIC_INLINE bool
 ChipInfo_ChipFamilyIs_CC13x2x7_CC26x2x7( void )
 {
    return ( ChipInfo_GetChipFamily() == FAMILY_CC13x2x7_CC26x2x7 );
-}
-
-//*****************************************************************************
-//
-//! \brief Returns true if this chip is member of the CC13x4, CC26x4 family.
-//!
-//! \return
-//! Returns \c true if this chip is member of the CC13x4, CC26x4 family, \c false otherwise.
-//
-//*****************************************************************************
-__STATIC_INLINE bool
-ChipInfo_ChipFamilyIs_CC13x4_CC26x4( void )
-{
-   return ( ChipInfo_GetChipFamily() == FAMILY_CC13x4_CC26x4 );
 }
 
 //*****************************************************************************
@@ -676,20 +647,6 @@ __STATIC_INLINE bool
 ChipInfo_HwRevisionIs_GTEQ_2_4( void )
 {
    return ( ChipInfo_GetHwRevision() >= HWREV_2_4 );
-}
-
-//*****************************************************************************
-//
-//! \brief Returns true if HW revision for this chip is 3.0 or greater.
-//!
-//! \return
-//! Returns \c true if HW revision for this chip is 3.0 or greater, \c false otherwise.
-//
-//*****************************************************************************
-__STATIC_INLINE bool
-ChipInfo_HwRevisionIs_GTEQ_3_0( void )
-{
-   return ( ChipInfo_GetHwRevision() >= HWREV_3_0 );
 }
 
 //*****************************************************************************

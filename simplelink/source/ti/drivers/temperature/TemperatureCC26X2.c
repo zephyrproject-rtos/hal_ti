@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, Texas Instruments Incorporated
+ * Copyright (c) 2020, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,8 +40,6 @@
 #include <ti/drivers/Temperature.h>
 #include <ti/drivers/temperature/TemperatureCC26X2.h>
 
-#include <ti/drivers/utils/Math.h>
-
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(inc/hw_memmap.h)
 #include DeviceFamily_constructPath(inc/hw_ints.h)
@@ -52,11 +50,15 @@
 #include DeviceFamily_constructPath(driverlib/aon_batmon.h)
 #include DeviceFamily_constructPath(driverlib/aon_event.h)
 
+/* Macros */
+#define MIN(x,y)   (((x) < (y)) ?  (x) : (y))
+#define MAX(x,y)   (((x) > (y)) ?  (x) : (y))
+
 /* Defines */
-#define BATMON_TEMPERATURE_MAX           (250)
-#define BATMON_TEMPERATURE_MIN           (-250)
-#define BATMON_TEMPERATURE_CODE_MAX      0x0000FF00
-#define BATMON_TEMPERATURE_CODE_MIN      0x00010000
+#define BATMON_TEMPERATURE_MAX (250)
+#define BATMON_TEMPERATURE_MIN (-250)
+#define BATMON_TEMPERATURE_CODE_MAX 0x0000FF00
+#define BATMON_TEMPERATURE_CODE_MIN 0x00010000
 #define BATMON_TEMPERATURE_MASK_POSITIVE 0x0000FF00
 #define BATMON_TEMPERATURE_MASK_NEGATIVE 0x0001FF00
 
@@ -96,18 +98,18 @@
 #define INVALID_TEMPERATURE_MIN BATMON_TEMPERATURE_MIN
 
 /* Forward declarations */
-static void walkNotifyList(void);
-static void setNextThresholds(void);
+static void walkNotifyList();
+static void setNextThresholds();
 static void temperatureHwiFxn(uintptr_t arg0);
 static void updateThresholds(int16_t thresholdHigh, int16_t thresholdLow);
 static uint32_t degreesToCode(int32_t temperatureDegreesC);
 static void setTempLowerLimit(int16_t thresholdLow);
 static void setTempUpperLimit(int16_t thresholdHigh);
-static void enableTempLowerLimit(void);
-static void enableTempUpperLimit(void);
-static void disableTempLowerLimit(void);
-static void disableTempUpperLimit(void);
-static void clearEventFlags(void);
+static void enableTempLowerLimit();
+static void enableTempUpperLimit();
+static void disableTempLowerLimit();
+static void disableTempUpperLimit();
+static void clearEventFlags();
 
 /* Globals */
 
@@ -122,7 +124,7 @@ static List_List notificationList;
  * extend the values.
  */
 static volatile int16_t currentThresholdHigh = INVALID_TEMPERATURE_MAX;
-static volatile int16_t currentThresholdLow  = INVALID_TEMPERATURE_MIN;
+static volatile int16_t currentThresholdLow = INVALID_TEMPERATURE_MIN;
 
 static bool isInitialized = 0;
 
@@ -131,8 +133,7 @@ extern const TemperatureCC26X2_Config TemperatureCC26X2_config;
 /*
  *  ======== degreesToCode ========
  */
-static uint32_t degreesToCode(int32_t temperatureDegreesC)
-{
+static uint32_t degreesToCode(int32_t temperatureDegreesC) {
     /* Voltage dependent temp correction with 8 fractional bits */
     int32_t correctionOffset;
     /* Signed byte value representing the TEMP offset slope with battery
@@ -176,21 +177,17 @@ static uint32_t degreesToCode(int32_t temperatureDegreesC)
 
     temperatureCode = temperatureCode + correctionOffset;
 
-    if (temperatureDegreesC <= BATMON_TEMPERATURE_MIN)
-    {
+    if (temperatureDegreesC <= BATMON_TEMPERATURE_MIN) {
         temperatureCode = BATMON_TEMPERATURE_CODE_MIN;
     }
-    else if (temperatureDegreesC >= BATMON_TEMPERATURE_MAX)
-    {
+    else if (temperatureDegreesC >= BATMON_TEMPERATURE_MAX) {
         temperatureCode = BATMON_TEMPERATURE_CODE_MAX;
     }
 
-    if (temperatureCode < 0)
-    {
+    if (temperatureCode < 0) {
         temperatureCode &= BATMON_TEMPERATURE_MASK_NEGATIVE;
     }
-    else if (temperatureCode >= 0)
-    {
+    else if (temperatureCode >= 0) {
         temperatureCode &= BATMON_TEMPERATURE_MASK_POSITIVE;
     }
 
@@ -200,8 +197,7 @@ static uint32_t degreesToCode(int32_t temperatureDegreesC)
 /*
  *  ======== setTempLowerLimit ========
  */
-static void setTempLowerLimit(int16_t thresholdLow)
-{
+static void setTempLowerLimit(int16_t thresholdLow) {
     uint32_t temperatureCode = degreesToCode(thresholdLow - DISTRIBUTION_OFFSET);
 
     HWREG(AON_BATMON_BASE + AON_BATMON_O_TEMPLL) = temperatureCode;
@@ -212,8 +208,7 @@ static void setTempLowerLimit(int16_t thresholdLow)
 /*
  *  ======== setTempUpperLimit ========
  */
-static void setTempUpperLimit(int16_t thresholdHigh)
-{
+static void setTempUpperLimit(int16_t thresholdHigh) {
     uint32_t temperatureCode = degreesToCode(thresholdHigh + DISTRIBUTION_OFFSET);
 
     HWREG(AON_BATMON_BASE + AON_BATMON_O_TEMPUL) = temperatureCode;
@@ -224,55 +219,49 @@ static void setTempUpperLimit(int16_t thresholdHigh)
 /*
  *  ======== enableTempLowerLimit ========
  */
-static void enableTempLowerLimit(void)
-{
+static void enableTempLowerLimit() {
     HWREG(AON_BATMON_BASE + AON_BATMON_O_EVENTMASK) |= AON_BATMON_EVENTMASK_TEMP_BELOW_LL_MASK;
 }
 
 /*
  *  ======== enableTempUpperLimit ========
  */
-static void enableTempUpperLimit(void)
-{
+static void enableTempUpperLimit() {
     HWREG(AON_BATMON_BASE + AON_BATMON_O_EVENTMASK) |= AON_BATMON_EVENTMASK_TEMP_OVER_UL_MASK;
 }
 
 /*
  *  ======== disableTempLowerLimit ========
  */
-static void disableTempLowerLimit(void)
-{
+static void disableTempLowerLimit() {
     HWREG(AON_BATMON_BASE + AON_BATMON_O_EVENTMASK) &= ~AON_BATMON_EVENTMASK_TEMP_BELOW_LL_MASK;
 }
 
 /*
  *  ======== disableTempUpperLimit ========
  */
-static void disableTempUpperLimit(void)
-{
+static void disableTempUpperLimit() {
     HWREG(AON_BATMON_BASE + AON_BATMON_O_EVENTMASK) &= ~AON_BATMON_EVENTMASK_TEMP_OVER_UL_MASK;
 }
 
 /*
  *  ======== clearEventFlags ========
  */
-static void clearEventFlags(void)
-{
-    do
-    {
-        HWREG(AON_BATMON_BASE + AON_BATMON_O_EVENT) &= AON_BATMON_EVENT_TEMP_BELOW_LL | AON_BATMON_EVENT_TEMP_OVER_UL;
+static void clearEventFlags() {
+    do {
+        HWREG(AON_BATMON_BASE + AON_BATMON_O_EVENT) &= AON_BATMON_EVENT_TEMP_BELOW_LL |
+                                                       AON_BATMON_EVENT_TEMP_OVER_UL;
     } while (HWREG(AON_BATMON_BASE + AON_BATMON_O_EVENT) &
-                   (AON_BATMON_EVENT_TEMP_BELOW_LL | AON_BATMON_EVENT_TEMP_OVER_UL));
+             (AON_BATMON_EVENT_TEMP_BELOW_LL | AON_BATMON_EVENT_TEMP_OVER_UL));
 }
 
 /*
  *  ======== setNextThresholds ========
  */
-static void setNextThresholds(void)
-{
+static void setNextThresholds() {
     List_Elem *notifyLink;
     int16_t nextThresholdHigh = INVALID_TEMPERATURE_MAX;
-    int16_t nextThresholdLow  = INVALID_TEMPERATURE_MIN;
+    int16_t nextThresholdLow = INVALID_TEMPERATURE_MIN;
     uint32_t key;
 
     key = HwiP_disable();
@@ -282,12 +271,13 @@ static void setNextThresholds(void)
      */
     notifyLink = List_head(&notificationList);
 
-    while (notifyLink != NULL)
-    {
-        Temperature_NotifyObj *notifyObject = (Temperature_NotifyObj *)notifyLink;
+    while (notifyLink != NULL) {
+        Temperature_NotifyObj* notifyObject = (Temperature_NotifyObj *)notifyLink;
 
-        nextThresholdHigh = Math_MIN(nextThresholdHigh, notifyObject->thresholdHigh);
-        nextThresholdLow  = Math_MAX(nextThresholdLow, notifyObject->thresholdLow);
+        nextThresholdHigh = MIN(nextThresholdHigh,
+                                notifyObject->thresholdHigh);
+        nextThresholdLow = MAX(nextThresholdLow,
+                               notifyObject->thresholdLow);
 
         notifyLink = List_next(notifyLink);
     }
@@ -304,17 +294,15 @@ static void setNextThresholds(void)
 /*
  *  ======== walkNotifyList ========
  */
-static void walkNotifyList(void)
-{
-    List_Elem *notifyLink      = List_head(&notificationList);
-    int16_t currentTemperature = Temperature_getTemperature();
+static void walkNotifyList() {
+    List_Elem *notifyLink       = List_head(&notificationList);
+    int16_t currentTemperature  = Temperature_getTemperature();
 
     /* If the notification list is empty, the head pointer will be
      * NULL and the while loop will never execute the statement.
      */
-    while (notifyLink != NULL)
-    {
-        Temperature_NotifyObj *notifyObject = (Temperature_NotifyObj *)notifyLink;
+    while (notifyLink != NULL) {
+        Temperature_NotifyObj* notifyObject = (Temperature_NotifyObj *)notifyLink;
 
         /* Buffer the next link in case the notification triggers.
          * Without buffering, we might skip list entries if the
@@ -327,19 +315,22 @@ static void walkNotifyList(void)
          * threshold or above its high threshold, remove it from the list and
          * call the callback fxn
          */
-        if (currentTemperature <= notifyObject->thresholdLow || currentTemperature >= notifyObject->thresholdHigh)
-        {
+        if (currentTemperature <= notifyObject->thresholdLow ||
+            currentTemperature >= notifyObject->thresholdHigh) {
 
             /* Choose the threshold to provide to the notifyFxn based on the
              * thresholds and the current temperature.
              */
-            int16_t threshold = (currentTemperature <= notifyObject->thresholdLow) ? notifyObject->thresholdLow
-                                                                                   : notifyObject->thresholdHigh;
+            int16_t threshold = (currentTemperature <= notifyObject->thresholdLow) ?
+                                notifyObject->thresholdLow : notifyObject->thresholdHigh;
 
             List_remove(&notificationList, notifyLink);
             notifyObject->isRegistered = false;
 
-            notifyObject->notifyFxn(currentTemperature, threshold, notifyObject->clientArg, notifyObject);
+            notifyObject->notifyFxn(currentTemperature,
+                                    threshold,
+                                    notifyObject->clientArg,
+                                    notifyObject);
         }
 
         notifyLink = notifyLinkNext;
@@ -349,16 +340,13 @@ static void walkNotifyList(void)
 /*
  *  ======== updateThresholds ========
  */
-static void updateThresholds(int16_t thresholdHigh, int16_t thresholdLow)
-{
-    if (thresholdHigh < currentThresholdHigh)
-    {
+static void updateThresholds(int16_t thresholdHigh, int16_t thresholdLow) {
+    if (thresholdHigh < currentThresholdHigh) {
         setTempUpperLimit(thresholdHigh);
         enableTempUpperLimit();
     }
 
-    if (thresholdLow > currentThresholdLow)
-    {
+    if (thresholdLow > currentThresholdLow) {
         setTempLowerLimit(thresholdLow);
         enableTempLowerLimit();
     }
@@ -369,14 +357,14 @@ static void updateThresholds(int16_t thresholdHigh, int16_t thresholdLow)
  *
  *  Batmon interrupt triggered on high or low temperature event
  */
-static void temperatureHwiFxn(uintptr_t arg0)
-{
+static void temperatureHwiFxn(uintptr_t arg0) {
 
     setTempUpperLimit(INVALID_TEMPERATURE_MAX);
     disableTempUpperLimit();
 
     setTempLowerLimit(INVALID_TEMPERATURE_MIN);
     disableTempLowerLimit();
+
 
     /* Walk the notification list and issue any callbacks that have triggered
      * at the current temperature.
@@ -388,6 +376,8 @@ static void temperatureHwiFxn(uintptr_t arg0)
      */
     setNextThresholds();
 
+
+
     /* Clear event flags. They may not immediately clear properly. */
     clearEventFlags();
 
@@ -397,22 +387,20 @@ static void temperatureHwiFxn(uintptr_t arg0)
 /*
  *  ======== Temperature_init ========
  */
-void Temperature_init(void)
-{
+void Temperature_init() {
     uint32_t key;
 
     key = HwiP_disable();
 
-    if (isInitialized == false)
-    {
+    if (isInitialized == false) {
         /* Initialise the batmon hwi. The temperature sensor shares this
          * interrupt with the battery voltage monitoring events.
          */
         HwiP_Params hwiParams;
         HwiP_Params_init(&hwiParams);
-        hwiParams.priority  = TemperatureCC26X2_config.intPriority;
+        hwiParams.priority = TemperatureCC26X2_config.intPriority;
         hwiParams.enableInt = true;
-        HwiP_construct(&batmonHwi, INT_BATMON_COMB, temperatureHwiFxn, &hwiParams);
+        HwiP_construct(&batmonHwi, INT_BATMON_COMB, temperatureHwiFxn, NULL);
 
         disableTempUpperLimit();
         disableTempLowerLimit();
@@ -426,11 +414,6 @@ void Temperature_init(void)
          */
         AONEventMcuWakeUpSet(AON_EVENT_MCU_WU2, AON_EVENT_BATMON_COMBINED);
 
-        /* Wait until first measurement is ready to prevent
-         * Temperature_getTemperature from returning an invalid value
-         */
-        while (AONBatMonNewTempMeasureReady() == false) {}
-
         isInitialized = true;
     }
 
@@ -440,8 +423,7 @@ void Temperature_init(void)
 /*
  *  ======== Temperature_getTemperature ========
  */
-int16_t Temperature_getTemperature(void)
-{
+int16_t Temperature_getTemperature(void) {
     /* The temperature on CC13X2/CC26X2 is stored in a 32-bit register
      * containing a 9-bit signed integer part and a 2-bit unsigned fractional
      * part.
@@ -459,8 +441,7 @@ int16_t Temperature_getTemperature(void)
 int_fast16_t Temperature_registerNotifyHigh(Temperature_NotifyObj *notifyObject,
                                             int16_t thresholdHigh,
                                             Temperature_NotifyFxn notifyFxn,
-                                            uintptr_t clientArg)
-{
+                                            uintptr_t clientArg) {
     uint32_t key;
 
     key = HwiP_disable();
@@ -470,8 +451,7 @@ int_fast16_t Temperature_registerNotifyHigh(Temperature_NotifyObj *notifyObject,
     notifyObject->notifyFxn     = notifyFxn;
     notifyObject->clientArg     = clientArg;
 
-    if (notifyObject->isRegistered == false)
-    {
+    if (notifyObject->isRegistered == false) {
         /* Add the notification to the end of the list.
          * There is the implicit assumption that the notification is not already
          * in the list. Otherwise the list linkage will be corrupted.
@@ -494,8 +474,7 @@ int_fast16_t Temperature_registerNotifyHigh(Temperature_NotifyObj *notifyObject,
 int_fast16_t Temperature_registerNotifyLow(Temperature_NotifyObj *notifyObject,
                                            int16_t thresholdLow,
                                            Temperature_NotifyFxn notifyFxn,
-                                           uintptr_t clientArg)
-{
+                                           uintptr_t clientArg){
     uint32_t key;
 
     key = HwiP_disable();
@@ -505,8 +484,7 @@ int_fast16_t Temperature_registerNotifyLow(Temperature_NotifyObj *notifyObject,
     notifyObject->notifyFxn     = notifyFxn;
     notifyObject->clientArg     = clientArg;
 
-    if (notifyObject->isRegistered == false)
-    {
+    if (notifyObject->isRegistered == false) {
         /* Add the notification to the end of the list.
          * There is the implicit assumption that the notification is not already
          * in the list. Otherwise the list linkage will be corrupted.
@@ -530,8 +508,7 @@ int_fast16_t Temperature_registerNotifyRange(Temperature_NotifyObj *notifyObject
                                              int16_t thresholdHigh,
                                              int16_t thresholdLow,
                                              Temperature_NotifyFxn notifyFxn,
-                                             uintptr_t clientArg)
-{
+                                             uintptr_t clientArg) {
     uint32_t key;
 
     key = HwiP_disable();
@@ -541,8 +518,7 @@ int_fast16_t Temperature_registerNotifyRange(Temperature_NotifyObj *notifyObject
     notifyObject->notifyFxn     = notifyFxn;
     notifyObject->clientArg     = clientArg;
 
-    if (notifyObject->isRegistered == false)
-    {
+    if (notifyObject->isRegistered == false) {
         /* Add the notification to the end of the list.
          * There is the implicit assumption that the notification is not already
          * in the list. Otherwise the list linkage will be corrupted.
@@ -562,14 +538,12 @@ int_fast16_t Temperature_registerNotifyRange(Temperature_NotifyObj *notifyObject
 /*
  *  ======== Temperature_unregisterNotify ========
  */
-int_fast16_t Temperature_unregisterNotify(Temperature_NotifyObj *notifyObject)
-{
+int_fast16_t Temperature_unregisterNotify(Temperature_NotifyObj *notifyObject) {
     uint32_t key;
 
     key = HwiP_disable();
 
-    if (notifyObject->isRegistered == true)
-    {
+    if (notifyObject->isRegistered == true) {
         /* Remove the notification from the list */
         List_remove(&notificationList, &(notifyObject->link));
 

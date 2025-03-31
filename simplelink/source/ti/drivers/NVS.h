@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2022, Texas Instruments Incorporated
+ * Copyright (c) 2015-2019, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,7 @@
  *  nvsRegion = NVS_open(config_NVS0, &nvsParams);
  *
  *  // write "Hello" to the base address of region 0, verify after write
- *  status = NVS_write(nvsRegion, 0, "Hello", strlen("Hello")+1, NVS_WRITE_POST_VERIFY);
+ *  status = NVS_write(nvsRegion, 0, "Hello", strlen("Hello")+1, NVS_POST_VERIFY);
  *
  *  // Close NVS region
  *  NVS_close(nvsRegion);
@@ -152,7 +152,7 @@
  *      }
  *
  *      // Write "Hello" to the base address of nvsRegion, verify after write
- *      status = NVS_write(nvsRegion, 0, "Hello", strlen("Hello")+1, NVS_WRITE_POST_VERIFY);
+ *      status = NVS_write(nvsRegion, 0, "Hello", strlen("Hello")+1, NVS_POST_VERIFY);
  *      if (status != NVS_STATUS_SUCCESS) {
  *          // Error handling code
  *      }
@@ -263,7 +263,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#if defined(__cplusplus)
+#if defined (__cplusplus)
 extern "C" {
 #endif
 
@@ -284,7 +284,7 @@ extern "C" {
  *  #define NVSXYZ_CMD_COMMAND1     NVS_CMD_RESERVED + 1
  *  @endcode
  */
-#define NVS_CMD_RESERVED (32)
+#define NVS_CMD_RESERVED            (32)
 
 /*!
  *  Common NVS_control status code reservation offset.
@@ -298,7 +298,7 @@ extern "C" {
  *  #define NVSXYZ_STATUS_ERROR2    NVS_STATUS_RESERVED - 2
  *  @endcode
  */
-#define NVS_STATUS_RESERVED (-32)
+#define NVS_STATUS_RESERVED         (-32)
 
 /**
  *  @defgroup NVS_STATUS Status Codes
@@ -315,7 +315,7 @@ extern "C" {
  *  APIs returns NVS_STATUS_SUCCESS if the API was executed
  *  successfully.
  */
-#define NVS_STATUS_SUCCESS (0)
+#define NVS_STATUS_SUCCESS          (0)
 
 /*!
  *  @brief   Generic error status code returned by:
@@ -324,7 +324,7 @@ extern "C" {
  *  APIs return NVS_STATUS_ERROR if the API was not executed
  *  successfully.
  */
-#define NVS_STATUS_ERROR (-1)
+#define NVS_STATUS_ERROR            (-1)
 
 /*!
  *  @brief   An error status code returned by NVS_control() for undefined
@@ -333,14 +333,14 @@ extern "C" {
  *  NVS_control() returns #NVS_STATUS_UNDEFINEDCMD if the control code is not
  *  recognized by the driver implementation.
  */
-#define NVS_STATUS_UNDEFINEDCMD (-2)
+#define NVS_STATUS_UNDEFINEDCMD     (-2)
 
 /*!
  *  @brief An error status code returned by NVS_lock()
  *
  *  NVS_lock() will return this value if the @p timeout has expired
  */
-#define NVS_STATUS_TIMEOUT (-3)
+#define NVS_STATUS_TIMEOUT          (-3)
 
 /*!
  *  @brief An error status code returned by NVS_read(), NVS_write(), or
@@ -349,7 +349,7 @@ extern "C" {
  *  Error status code returned if the @p offset argument is invalid
  *  (e.g., when offset + bufferSize exceeds the size of the region).
  */
-#define NVS_STATUS_INV_OFFSET (-4)
+#define NVS_STATUS_INV_OFFSET       (-4)
 
 /*!
  *  @brief An error status code
@@ -357,7 +357,7 @@ extern "C" {
  *  Error status code returned by NVS_erase() if the @p offset argument is
  *  not aligned on a flash sector address.
  */
-#define NVS_STATUS_INV_ALIGNMENT (-5)
+#define NVS_STATUS_INV_ALIGNMENT    (-5)
 
 /*!
  *  @brief An error status code returned by NVS_erase() and NVS_write()
@@ -366,7 +366,7 @@ extern "C" {
  *  not a multiple of the flash sector size, or if @p offset + @p size
  *  extends past the end of the region.
  */
-#define NVS_STATUS_INV_SIZE (-6)
+#define NVS_STATUS_INV_SIZE         (-6)
 
 /*!
  *  @brief An error status code returned by NVS_write()
@@ -375,15 +375,7 @@ extern "C" {
  *  requested and a flash location can not be changed to the value
  *  desired.
  */
-#define NVS_STATUS_INV_WRITE (-7)
-
-/*!
- *  @brief   An error status code returned by NVS_write()
- *
- *  NVS_write() will return this value if #NVS_WRITE_PRE_VERIFY
- *  or #NVS_WRITE_POST_VERIFY is requested but the verification buffer has not been configured.
- */
-#define NVS_STATUS_VERIFYBUFFER (-8)
+#define NVS_STATUS_INV_WRITE        (-7)
 
 /** @}*/
 
@@ -401,6 +393,7 @@ extern "C" {
 
 /** @} end NVS_CONTROL group */
 
+
 /*!
  *  @brief NVS write flags
  *
@@ -416,7 +409,7 @@ extern "C" {
  *  affected destination flash sectors will be erased prior to the
  *  start of the write operation.
  */
-#define NVS_WRITE_ERASE (0x1)
+#define NVS_WRITE_ERASE             (0x1)
 
 /*!
  *  @brief Validate write flag.
@@ -426,7 +419,7 @@ extern "C" {
  *  data can be successfully written. If #NVS_WRITE_ERASE is also requested in
  *  the write flags, then the #NVS_WRITE_PRE_VERIFY modifier is ignored.
  */
-#define NVS_WRITE_PRE_VERIFY (0x2)
+#define NVS_WRITE_PRE_VERIFY        (0x2)
 
 /*!
  *  @brief Validate write flag.
@@ -435,7 +428,7 @@ extern "C" {
  *  destination address range will be tested after the write is finished to
  *  verify that the write operation was completed successfully.
  */
-#define NVS_WRITE_POST_VERIFY (0x4)
+#define NVS_WRITE_POST_VERIFY       (0x4)
 
 /** @} */
 
@@ -444,15 +437,15 @@ extern "C" {
  *  @{
  */
 
-/*!
+ /*!
  *  @brief    NVS_lock() Wait forever define
  */
-#define NVS_LOCK_WAIT_FOREVER (~(0U))
+#define NVS_LOCK_WAIT_FOREVER       (~(0U))
 
 /*!
  *  @brief    NVS_lock() No wait define
  */
-#define NVS_LOCK_NO_WAIT (0U)
+#define NVS_LOCK_NO_WAIT            (0U)
 
 /** @} */
 
@@ -461,14 +454,14 @@ extern "C" {
  *  @{
  */
 
-/*!
+ /*!
  *  @brief    This region is not directly addressable (e.g.,: SPI flash region)
  *
  *  The NVS_Attrs.regionBase field returned by NVS_getAttrs() is set to this
  *  value by the NVSSPI driver to indicate that the region is not directly
  *  addressable.
  */
-#define NVS_REGION_NOT_ADDRESSABLE ((void *)(~(0U)))
+#define NVS_REGION_NOT_ADDRESSABLE  ((void *)(~(0U)))
 
 /** @} */
 
@@ -482,7 +475,7 @@ extern "C" {
  */
 typedef struct
 {
-    void *custom; /*!< Custom argument used by driver implementation */
+    void *custom;    /*!< Custom argument used by driver implementation */
 } NVS_Params;
 
 /*!
@@ -494,13 +487,13 @@ typedef struct
  */
 typedef struct
 {
-    void *regionBase;  /*!< Base address of the NVS region. If the NVS
-                            region is not directly accessible by the MCU
-                            (such as SPI flash), this field will be set to
-                            #NVS_REGION_NOT_ADDRESSABLE. */
-    size_t regionSize; /*!< NVS region size in bytes. */
-    size_t sectorSize; /*!< Erase sector size in bytes. This attribute is
-                            device specific. */
+    void   *regionBase;   /*!< Base address of the NVS region. If the NVS
+                               region is not directly accessible by the MCU
+                               (such as SPI flash), this field will be set to
+                               #NVS_REGION_NOT_ADDRESSABLE. */
+    size_t  regionSize;   /*!< NVS region size in bytes. */
+    size_t  sectorSize;   /*!< Erase sector size in bytes. This attribute is
+                               device specific. */
 } NVS_Attrs;
 
 /*!
@@ -512,62 +505,66 @@ typedef struct NVS_Config_ *NVS_Handle;
  *  @brief      A function pointer to a driver specific implementation of
  *              NVS_close().
  */
-typedef void (*NVS_CloseFxn)(NVS_Handle handle);
+typedef void (*NVS_CloseFxn) (NVS_Handle handle);
 
 /*!
  *  @brief      A function pointer to a driver specific implementation of
  *              NVS_control().
  */
-typedef int_fast16_t (*NVS_ControlFxn)(NVS_Handle handle, uint_fast16_t cmd, uintptr_t arg);
+typedef int_fast16_t (*NVS_ControlFxn) (NVS_Handle handle, uint_fast16_t cmd,
+                                        uintptr_t arg);
 
 /*!
  *  @brief      A function pointer to a driver specific implementation of
  *              NVS_erase().
  */
-typedef int_fast16_t (*NVS_EraseFxn)(NVS_Handle handle, size_t offset, size_t size);
+typedef int_fast16_t (*NVS_EraseFxn) (NVS_Handle handle, size_t offset,
+                                      size_t size);
 
 /*!
  *  @brief      A function pointer to a driver specific implementation of
  *              NVS_getAttrs().
  */
-typedef void (*NVS_GetAttrsFxn)(NVS_Handle handle, NVS_Attrs *attrs);
+typedef void (*NVS_GetAttrsFxn) (NVS_Handle handle, NVS_Attrs *attrs);
 
 /*!
  *  @brief      A function pointer to a driver specific implementation of
  *              NVS_init().
  */
-typedef void (*NVS_InitFxn)(void);
+typedef void (*NVS_InitFxn) (void);
 
 /*!
  *  @brief      A function pointer to a driver specific implementation of
  *              NVS_open().
  */
-typedef NVS_Handle (*NVS_OpenFxn)(uint_least8_t index, NVS_Params *params);
+typedef NVS_Handle (*NVS_OpenFxn) (uint_least8_t index, NVS_Params *params);
 
 /*!
  *  @brief      A function pointer to a driver specific implementation of
  *              NVS_read().
  */
-typedef int_fast16_t (*NVS_ReadFxn)(NVS_Handle handle, size_t offset, void *buffer, size_t bufferSize);
+typedef int_fast16_t (*NVS_ReadFxn) (NVS_Handle handle, size_t offset,
+                                     void *buffer, size_t bufferSize);
 
 /*!
  *  @brief      A function pointer to a driver specific implementation of
  *              NVS_write().
  */
-typedef int_fast16_t (
-    *NVS_WriteFxn)(NVS_Handle handle, size_t offset, void *buffer, size_t bufferSize, uint_fast16_t flags);
+typedef int_fast16_t (*NVS_WriteFxn) (NVS_Handle handle, size_t offset,
+                                      void *buffer, size_t bufferSize,
+                                      uint_fast16_t flags);
 
 /*!
  *  @brief      A function pointer to a driver specific implementation of
  *              NVS_lock().
  */
-typedef int_fast16_t (*NVS_LockFxn)(NVS_Handle handle, uint32_t timeout);
+typedef int_fast16_t (*NVS_LockFxn) (NVS_Handle handle, uint32_t timeout);
 
 /*!
  *  @brief      A function pointer to a driver specific implementation of
  *              NVS_unlock().
  */
-typedef void (*NVS_UnlockFxn)(NVS_Handle handle);
+typedef void (*NVS_UnlockFxn) (NVS_Handle handle);
 
 /*!
  *  @brief      The definition of an NVS function table that contains the
@@ -577,34 +574,34 @@ typedef void (*NVS_UnlockFxn)(NVS_Handle handle);
 typedef struct
 {
     /*! Function to close the specified NVS region */
-    NVS_CloseFxn closeFxn;
+    NVS_CloseFxn        closeFxn;
 
     /*! Function to apply control command to the specified NVS region */
-    NVS_ControlFxn controlFxn;
+    NVS_ControlFxn      controlFxn;
 
     /*! Function to erase a portion of the specified NVS region */
-    NVS_EraseFxn eraseFxn;
+    NVS_EraseFxn        eraseFxn;
 
     /*! Function to get the NVS device-specific attributes */
-    NVS_GetAttrsFxn getAttrsFxn;
+    NVS_GetAttrsFxn     getAttrsFxn;
 
     /*! Function to initialize the NVS module */
-    NVS_InitFxn initFxn;
+    NVS_InitFxn         initFxn;
 
     /*! Function to lock the specified NVS flash region */
-    NVS_LockFxn lockFxn;
+    NVS_LockFxn         lockFxn;
 
     /*! Function to open an NVS region */
-    NVS_OpenFxn openFxn;
+    NVS_OpenFxn         openFxn;
 
     /*! Function to read from the specified NVS region */
-    NVS_ReadFxn readFxn;
+    NVS_ReadFxn         readFxn;
 
     /*! Function to unlock the specified NVS flash region */
-    NVS_UnlockFxn unlockFxn;
+    NVS_UnlockFxn       unlockFxn;
 
     /*! Function to write to the specified NVS region */
-    NVS_WriteFxn writeFxn;
+    NVS_WriteFxn        writeFxn;
 } NVS_FxnTable;
 
 /*!
@@ -621,13 +618,13 @@ typedef struct
 typedef struct NVS_Config_
 {
     /*! Pointer to a table of driver-specific implementations of NVS APIs */
-    NVS_FxnTable const *fxnTablePtr;
+    NVS_FxnTable  const *fxnTablePtr;
 
     /*! Pointer to a driver specific data object */
-    void *object;
+    void                *object;
 
     /*! Pointer to a driver specific hardware attributes structure */
-    void const *hwAttrs;
+    void          const *hwAttrs;
 } NVS_Config;
 
 /*!
@@ -782,7 +779,8 @@ extern void NVS_Params_init(NVS_Params *params);
  *  @retval  #NVS_STATUS_INV_OFFSET  If @p offset + @p size exceed the size
  *                                   of the region.
  */
-extern int_fast16_t NVS_read(NVS_Handle handle, size_t offset, void *buffer, size_t bufferSize);
+extern int_fast16_t NVS_read(NVS_Handle handle, size_t offset, void *buffer,
+                    size_t bufferSize);
 
 /*!
  *  @brief  Function to unlock the NVS driver
@@ -831,15 +829,13 @@ extern void NVS_unlock(NVS_Handle handle);
  *  @retval  #NVS_STATUS_INV_ALIGNMENT  If #NVS_WRITE_ERASE is requested
  *                                      and @p offset is not aligned on
  *                                      a sector boundary
- *  @retval  #NVS_STATUS_VERIFYBUFFER   If #NVS_WRITE_PRE_VERIFY or #NVS_WRITE_POST_VERIFY
- *                                      is requested but the verification buffer has not
- *                                      been configured.
  *
  *  @remark  This call may lock a region to ensure atomic access to the region.
  */
-extern int_fast16_t NVS_write(NVS_Handle handle, size_t offset, void *buffer, size_t bufferSize, uint_fast16_t flags);
+extern int_fast16_t NVS_write(NVS_Handle handle, size_t offset, void *buffer,
+                     size_t bufferSize, uint_fast16_t flags);
 
-#if defined(__cplusplus)
+#if defined (__cplusplus)
 }
 #endif /* defined (__cplusplus) */
 

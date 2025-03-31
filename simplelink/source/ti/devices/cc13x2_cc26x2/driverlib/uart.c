@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       uart.c
+*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
+*  Revision:       56760
 *
 *  Description:    Driver for the UART.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -269,14 +271,11 @@ UARTIntRegister(uint32_t ui32Base, void (*pfnHandler)(void))
     ASSERT(UARTBaseValid(ui32Base));
 
     // Register and enable the interrupt handler.
-    // (Doing the '& 0xFFFF' to catch both buffered and unbuffered offsets)
-    if (( ui32Base & 0xFFFF ) == ( UART0_BASE & 0xFFFF ))
-    {
+    // (Doing the '& 0xFFFF' to catch both buffered and unbufferd offsets)
+    if (( ui32Base & 0xFFFF ) == ( UART0_BASE & 0xFFFF )) {
         IntRegister(INT_UART0_COMB, pfnHandler);
         IntEnable(INT_UART0_COMB);
-    }
-    else
-    {
+    } else {
         IntRegister(INT_UART1_COMB, pfnHandler);
         IntEnable(INT_UART1_COMB);
     }
@@ -294,14 +293,11 @@ UARTIntUnregister(uint32_t ui32Base)
     ASSERT(UARTBaseValid(ui32Base));
 
     // Disable and unregister the interrupt.
-    // (Doing the '& 0xFFFF' to catch both buffered and unbuffered offsets)
-    if (( ui32Base & 0xFFFF ) == ( UART0_BASE & 0xFFFF ))
-    {
+    // (Doing the '& 0xFFFF' to catch both buffered and unbufferd offsets)
+    if (( ui32Base & 0xFFFF ) == ( UART0_BASE & 0xFFFF )) {
         IntDisable(INT_UART0_COMB);
         IntUnregister(INT_UART0_COMB);
-    }
-    else
-    {
+    } else {
         IntDisable(INT_UART1_COMB);
         IntUnregister(INT_UART1_COMB);
     }

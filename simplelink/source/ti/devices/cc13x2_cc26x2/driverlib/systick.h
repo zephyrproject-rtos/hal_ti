@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       systick.h
+*  Revised:        2017-05-23 12:08:52 +0200 (Tue, 23 May 2017)
+*  Revision:       49048
 *
 *  Description:    Prototypes for the SysTick driver.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -59,9 +61,9 @@ extern "C"
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../inc/hw_types.h"
 #include "../inc/hw_ints.h"
 #include "../inc/hw_nvic.h"
+#include "../inc/hw_types.h"
 #include "debug.h"
 #include "interrupt.h"
 
@@ -80,8 +82,8 @@ extern "C"
 //!
 //! \note Calling this function will cause the SysTick counter to (re)commence
 //! counting from its current value. The counter is not automatically reloaded
-//! with the period as specified in a previous call to \ref SysTickPeriodSet().
-//! If an immediate reload is required, the NVIC_ST_CURRENT register must be
+//! with the period as specified in a previous call to \ref SysTickPeriodSet(). If
+//! an immediate reload is required, the NVIC_ST_CURRENT register must be
 //! written to force this. Any write to this register clears the SysTick
 //! counter to 0 and will cause a reload with the supplied period on the next
 //! clock.
@@ -93,7 +95,7 @@ __STATIC_INLINE void
 SysTickEnable(void)
 {
     // Enable SysTick.
-    HWREG(NVIC_ST_CTRL) |= (NVIC_ST_CTRL_CLK_SRC | NVIC_ST_CTRL_ENABLE);
+    HWREG(NVIC_ST_CTRL) |= NVIC_ST_CTRL_CLK_SRC | NVIC_ST_CTRL_ENABLE;
 }
 
 //*****************************************************************************
@@ -172,8 +174,8 @@ SysTickIntUnregister(void)
 //! reflected to the processor.
 //!
 //! \note The SysTick interrupt handler does not need to clear the SysTick
-//! interrupt source as this is done automatically when the interrupt handler
-//! is called.
+//! interrupt source as this is done automatically by NVIC when the interrupt
+//! handler is called.
 //!
 //! \return None
 //
@@ -210,7 +212,6 @@ SysTickIntDisable(void)
 //! equals to the number of processor clocks between interrupts.
 //!
 //! \note Calling this function does not cause the SysTick counter to reload
-
 //! immediately. If an immediate reload is required, the NVIC_ST_CURRENT
 //! register must be written. Any write to this register clears the SysTick
 //! counter to 0 and will cause a reload with the \c ui32Period supplied here

@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       asmdefs.h
+*  Revised:        2015-06-05 14:39:10 +0200 (Fri, 05 Jun 2015)
+*  Revision:       43803
 *
 *  Description:    Macros to allow assembly code be portable among tool chains.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

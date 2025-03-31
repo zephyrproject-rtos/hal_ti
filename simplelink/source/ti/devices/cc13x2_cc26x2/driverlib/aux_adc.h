@@ -1,10 +1,12 @@
 /******************************************************************************
 *  Filename:       aux_adc.h
+*  Revised:        2020-10-02 17:15:55 +0200 (Fri, 02 Oct 2020)
+*  Revision:       58927
 *
 *  Description:    Defines and prototypes for the AUX Analog-to-Digital
 *                  Converter
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

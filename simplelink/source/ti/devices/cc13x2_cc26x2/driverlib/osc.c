@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       osc.c
+*  Revised:        2020-12-11 09:58:05 +0100 (Fri, 11 Dec 2020)
+*  Revision:       59848
 *
 *  Description:    Driver for setting up the system Oscillators
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -77,18 +79,12 @@
     #define OSC_HPOSCInitializeSingleInsertionFreqOffsParams NOROM_OSC_HPOSCInitializeSingleInsertionFreqOffsParams
     #undef  OSC_HPOSCRelativeFrequencyOffsetGet
     #define OSC_HPOSCRelativeFrequencyOffsetGet NOROM_OSC_HPOSCRelativeFrequencyOffsetGet
-    #undef  OSC_CapArrayAdjustWorkaround_Boot
-    #define OSC_CapArrayAdjustWorkaround_Boot NOROM_OSC_CapArrayAdjustWorkaround_Boot
     #undef  OSC_AdjustXoscHfCapArray
     #define OSC_AdjustXoscHfCapArray        NOROM_OSC_AdjustXoscHfCapArray
     #undef  OSC_HPOSCRelativeFrequencyOffsetToRFCoreFormatConvert
     #define OSC_HPOSCRelativeFrequencyOffsetToRFCoreFormatConvert NOROM_OSC_HPOSCRelativeFrequencyOffsetToRFCoreFormatConvert
     #undef  OSC_HPOSCRtcCompensate
     #define OSC_HPOSCRtcCompensate          NOROM_OSC_HPOSCRtcCompensate
-    #undef  OSC_LFXOSCInitStaticOffset
-    #define OSC_LFXOSCInitStaticOffset      NOROM_OSC_LFXOSCInitStaticOffset
-    #undef  OSC_LFXOSCRelativeFrequencyOffsetGet
-    #define OSC_LFXOSCRelativeFrequencyOffsetGet NOROM_OSC_LFXOSCRelativeFrequencyOffsetGet
 #endif
 
 //*****************************************************************************
@@ -109,14 +105,6 @@ typedef struct {
 } OscHfGlobals_t;
 
 static OscHfGlobals_t oscHfGlobals;
-
-//*****************************************************************************
-//
-// XOSC_LF coefficients and scale factor for temperature-dependent ppm offset.
-// Must be defined in application before calling OSC_LFXOSCInitStaticOffset
-//
-//*****************************************************************************
-extern XoscLf_Params_t _lfXoscParams __attribute__((weak));
 
 //*****************************************************************************
 //
@@ -182,7 +170,7 @@ OSCClockSourceGet(uint32_t ui32SrcClk)
                                             DDI_0_OSC_STAT0_SCLK_HF_SRC_M,
                                             DDI_0_OSC_STAT0_SCLK_HF_SRC_S);
     }
-    return ( ui32ClockSource );
+    return (ui32ClockSource);
 }
 
 //*****************************************************************************
@@ -330,85 +318,20 @@ OSCHF_SwitchToRcOscTurnOffXosc( void )
 
 //*****************************************************************************
 //
-// Internal functions called from one of the two functions below
-//
-//*****************************************************************************
-static void
-InternCapArrayAdjustWithBaseline7001F( int32_t capArrayDelta )
-{
-    int32_t     capArrayIndex       ;
-    uint32_t    row                 ;
-    uint32_t    col                 ;
-
-    capArrayIndex = 36 + capArrayDelta ; // index = 36 corresponds to row/col 7/001F (which corresponds to 6.1pF)
-    if ( capArrayIndex <  0 ) capArrayIndex =  0 ;
-    if ( capArrayIndex > 63 ) capArrayIndex = 63 ;
-    row = 0xF >> ( 3 - ( capArrayIndex >> 4 ));
-    col = 0xFFFF >> ( 15 - ( capArrayIndex & 0xF ));
-    HWREG( AUX_DDI0_OSC_BASE + DDI_0_OSC_O_ANABYPASSVAL1 ) = (( row << DDI_0_OSC_ANABYPASSVAL1_XOSC_HF_ROW_Q12_S    ) |
-                                                              ( col << DDI_0_OSC_ANABYPASSVAL1_XOSC_HF_COLUMN_Q12_S )   );
-}
-
-static uint32_t
-SpecialCapArrayWorkaroundEnabledAndNeeded( void )
-{
-    if ((( HWREG( CCFG_BASE + CCFG_O_SIZE_AND_DIS_FLAGS ) & CCFG_SIZE_AND_DIS_FLAGS_DIS_LINEAR_CAPARRAY_DELTA_WORKAROUND ) == 0      ) &&
-        ((( HWREG( FCFG1_BASE + FCFG1_O_CONFIG_OSC_TOP ) >> FCFG1_CONFIG_OSC_TOP_XOSC_HF_COLUMN_Q12_S ) & 0x000FFFF1 ) == 0x000701F0 )    )
-    {
-        return ( 1 );
-    } else {
-        return ( 0 );
-    }
-}
-
-//*****************************************************************************
-//
-// Workaround function to be called at boot
-// Must be called after SetupAfterColdResetWakeupFromShutDownCfg2()
-//
-//*****************************************************************************
-void
-OSC_CapArrayAdjustWorkaround_Boot( void )
-{
-    uint32_t    ccfg_ModeConfReg    ;
-    int32_t     ccfg_CapArrayDelta  ;
-
-    if ( SpecialCapArrayWorkaroundEnabledAndNeeded() ) {
-        // Workaround for chip settings like 0x701F0 and 0x701FE which get readjusted with baseline 7001F/6.1pF
-        ccfg_CapArrayDelta = 0 ;
-        ccfg_ModeConfReg = HWREG( CCFG_BASE + CCFG_O_MODE_CONF );
-        if (( ccfg_ModeConfReg & CCFG_MODE_CONF_XOSC_CAP_MOD ) == 0 ) {
-            // CCFG CapArrayDelta is enabled get sign-extended delta
-            ccfg_CapArrayDelta =
-                (((int32_t)( ccfg_ModeConfReg << ( 32 - CCFG_MODE_CONF_XOSC_CAPARRAY_DELTA_W - CCFG_MODE_CONF_XOSC_CAPARRAY_DELTA_S )))
-                                              >> ( 32 - CCFG_MODE_CONF_XOSC_CAPARRAY_DELTA_W ));
-        }
-        InternCapArrayAdjustWithBaseline7001F( ccfg_CapArrayDelta );
-    }
-}
-
-//*****************************************************************************
-//
 // Adjust the XOSC HF cap array relative to the factory setting
 //
 //*****************************************************************************
 void
 OSC_AdjustXoscHfCapArray( int32_t capArrDelta )
 {
-    if ( SpecialCapArrayWorkaroundEnabledAndNeeded() ) {
-        // Workaround for chip settings like 0x701F0 and 0x701FE which get readjusted with baseline 7001F/6.1pF
-        InternCapArrayAdjustWithBaseline7001F( capArrDelta );
-    } else
-    {
-        // Read the MODE_CONF register in CCFG
-        uint32_t ccfg_ModeConfReg = HWREG( CCFG_BASE + CCFG_O_MODE_CONF );
-        // Clear CAP_MODE and the CAPARRAY_DELATA field
-        ccfg_ModeConfReg &= ~( CCFG_MODE_CONF_XOSC_CAPARRAY_DELTA_M | CCFG_MODE_CONF_XOSC_CAP_MOD_M );
-        // Insert new delta value
-        ccfg_ModeConfReg |= ((((uint32_t)capArrDelta) << CCFG_MODE_CONF_XOSC_CAPARRAY_DELTA_S ) & CCFG_MODE_CONF_XOSC_CAPARRAY_DELTA_M );
-        // Update the HW register with the new delta value
-        DDI32RegWrite(AUX_DDI0_OSC_BASE, DDI_0_OSC_O_ANABYPASSVAL1, SetupGetTrimForAnabypassValue1( ccfg_ModeConfReg ));
-    }
+   // read the MODE_CONF register in CCFG
+   uint32_t ccfg_ModeConfReg = HWREG( CCFG_BASE + CCFG_O_MODE_CONF );
+   // Clear CAP_MODE and the CAPARRAY_DELATA field
+   ccfg_ModeConfReg &= ~( CCFG_MODE_CONF_XOSC_CAPARRAY_DELTA_M | CCFG_MODE_CONF_XOSC_CAP_MOD_M );
+   // Insert new delta value
+   ccfg_ModeConfReg |= ((((uint32_t)capArrDelta) << CCFG_MODE_CONF_XOSC_CAPARRAY_DELTA_S ) & CCFG_MODE_CONF_XOSC_CAPARRAY_DELTA_M );
+   // Update the HW register with the new delta value
+   DDI32RegWrite(AUX_DDI0_OSC_BASE, DDI_0_OSC_O_ANABYPASSVAL1, SetupGetTrimForAnabypassValue1( ccfg_ModeConfReg ));
 }
 
 //*****************************************************************************
@@ -648,7 +571,7 @@ OSC_HPOSCInitializeSingleInsertionFreqOffsParams( uint32_t measFieldAddress )
     {
         /* Coefficients for SW-TCXO */
         .pu0b = {44, 44, 27, 20},
-        .pu0c = {8183, -2546, -210, -104866}
+        .pu0c = {7322, -5021, -209, -104861}
     };
 
     /* Retrieve insertions from FCFG */
@@ -657,62 +580,6 @@ OSC_HPOSCInitializeSingleInsertionFreqOffsParams( uint32_t measFieldAddress )
     /* Compute HPOSC polynomial coefficients */
     findHposcPc(hposcParm.pu0c, hposcParm.pu0b, &hposcMeas.temp[0], 1, &pu0);
     findHposcCoefficients(&hposcMeas.dFreq[0], &pu0, NULL, NULL, &hposcParm);
-}
-
-//*****************************************************************************
-// XOSC_LF compensation initialization function
-// - Should be called once, and before OSC_LFXOSCRelativeFrequencyOffsetGet
-// - _lfXoscParams must be defined before calling this function
-//*****************************************************************************
-void OSC_LFXOSCInitStaticOffset(void)
-{
-    int16_t xoscLfCorrection;
-    int8_t xoscLfCorrectionTemperature;
-
-    /* If device is untrimmed, apply default values */
-    if (HWREG(FCFG1_BASE + FCFG1_O_HPOSC_MEAS_5) == 0xFFFFFFFF)
-    {
-        /* These values correspond to a 0 ppm offset measurement at 25 degC */
-        xoscLfCorrection            = 0;
-        xoscLfCorrectionTemperature = 25;
-    }
-    else
-    {
-        xoscLfCorrection = (int16_t)((HWREG(FCFG1_BASE + FCFG1_O_HPOSC_MEAS_5) & FCFG1_HPOSC_MEAS_5_HPOSC_D5_M) >>
-                                      FCFG1_HPOSC_MEAS_5_HPOSC_D5_S);
-        xoscLfCorrectionTemperature = (int8_t)((
-            HWREG(FCFG1_BASE + FCFG1_O_HPOSC_MEAS_5) & FCFG1_HPOSC_MEAS_5_HPOSC_T5_M) >>
-            FCFG1_HPOSC_MEAS_5_HPOSC_T5_S);
-        /* Temperature in FCFG is offset by 27 degrees */
-        xoscLfCorrectionTemperature += 27;
-    }
-
-    /* Calculate the difference between expected offset at FCFG1 temperature, vs actual offset at FCFG1 temperature.
-     * This becomes a static offset whenever a new temperature offset is calculated.
-     * ppm(T) = a*T^2 + b*T + c - d, where d represents a device specific offset from the ideal polynomial
-     * d = ppm(T_trim) - ppm_trim, where ppm_trim is the actual ppm offset measured at production, at the temperature T_trim
-     * ppm_trim is found from FCFG1_HPOSC_MEAS_5_HPOSC_D5 in FCFG, where FCFG1_HPOSC_MEAS_5_HPOSC_D5 = (f/32768 - 1) * 2^22
-     */
-    _lfXoscParams.coeffD = (_lfXoscParams.coeffA * xoscLfCorrectionTemperature * xoscLfCorrectionTemperature +
-                            _lfXoscParams.coeffB * xoscLfCorrectionTemperature + _lfXoscParams.coeffC) -
-                           (int32_t)((int64_t)xoscLfCorrection * (1000000LL << _lfXoscParams.shift) / 4194304LL);
-}
-
-//*****************************************************************************
-//
-// Calculate the temperature dependent relative frequency offset of XOSC_LF
-//
-//*****************************************************************************
-int32_t OSC_LFXOSCRelativeFrequencyOffsetGet(int32_t temperature)
-{
-    /* The offset (ppm) is given by
-     * ppm(T) = a*T^2 + b*T + c - d
-     * The coefficients a, b, c and d are taken from the internal structure _lfXoscParams, which
-     * must be defined and initialised before this function is called.
-     */
-    return ((_lfXoscParams.coeffA * temperature * temperature) + (_lfXoscParams.coeffB * temperature) +
-            _lfXoscParams.coeffC - _lfXoscParams.coeffD) >>
-           _lfXoscParams.shift;
 }
 
 //*****************************************************************************
@@ -850,10 +717,8 @@ OSCHF_DebugGetCrystalAmplitude( void )
    // 3. Read out the crystal amplitude value from the peek detector.
    // 4. Restore original oscillator amplitude calibrations interval.
    // 5. Return crystal amplitude value converted to millivolt.
-
    oscCfgRegCopy = HWREG( AON_PMCTL_BASE + AON_PMCTL_O_OSCCFG );
    HWREG( AON_PMCTL_BASE + AON_PMCTL_O_OSCCFG ) = ( 1 << AON_PMCTL_OSCCFG_PER_E_S );
-
    startTime = AONRTCCurrentCompareValueGet();
    do {
       deltaTime = AONRTCCurrentCompareValueGet() - startTime;
@@ -861,7 +726,6 @@ OSCHF_DebugGetCrystalAmplitude( void )
    ampValue = ( HWREG( AUX_DDI0_OSC_BASE + DDI_0_OSC_O_STAT1 ) &
       DDI_0_OSC_STAT1_HPM_UPDATE_AMP_M ) >>
       DDI_0_OSC_STAT1_HPM_UPDATE_AMP_S ;
-
    HWREG( AON_PMCTL_BASE + AON_PMCTL_O_OSCCFG ) = oscCfgRegCopy;
 
    return ( ampValue * 15 );
@@ -899,7 +763,6 @@ uint32_t OSCHF_DebugGetCrystalStartupTime( void )
 
    // Start operation in sync with the LF clock
    HWREG( AON_RTC_BASE + AON_RTC_O_SYNCLF );
-
    OSCHF_TurnOnXosc();
    while ( ! OSCHF_AttemptToSwitchToXosc() ) {
       HWREG( AON_RTC_BASE + AON_RTC_O_SYNCLF );

@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_ccfg_h
-*  Revised:        $Date$
-*  Revision:       $Revision$
+*  Revised:        2019-04-01 09:23:38 +0200 (Mon, 01 Apr 2019)
+*  Revision:       55513
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -116,7 +116,7 @@
 //*****************************************************************************
 // Field: [31:24] DIO
 //
-// Unsigned integer, selecting the DIO to supply external 32 kHz clock as
+// Unsigned integer, selecting the DIO to supply external 32kHz clock as
 // SCLK_LF when MODE_CONF.SCLK_LF_OPTION is set to EXTERNAL. The selected DIO
 // will be marked as reserved by the pin driver (TI-RTOS environment) and hence
 // not selectable for other usage.
@@ -243,32 +243,14 @@
 #define CCFG_SIZE_AND_DIS_FLAGS_SIZE_OF_CCFG_M                      0xFFFF0000
 #define CCFG_SIZE_AND_DIS_FLAGS_SIZE_OF_CCFG_S                              16
 
-// Field:  [15:5] DISABLE_FLAGS
+// Field:  [15:4] DISABLE_FLAGS
 //
 // Reserved for future use. Software should not rely on the value of a
 // reserved. Writing any other value than the reset/default value may result in
 // undefined behavior.
-#define CCFG_SIZE_AND_DIS_FLAGS_DISABLE_FLAGS_W                             11
-#define CCFG_SIZE_AND_DIS_FLAGS_DISABLE_FLAGS_M                     0x0000FFE0
-#define CCFG_SIZE_AND_DIS_FLAGS_DISABLE_FLAGS_S                              5
-
-// Field:     [4] DIS_LINEAR_CAPARRAY_DELTA_WORKAROUND
-//
-// The default CAPARRAY setting is good as long as no CAPARRAY_DELTA adjustment
-// is added but the CAPARRAY setting will give an un-linear behavior if the
-// workaround is not enabled. The workaround is disabled by default to avoid
-// unexpected changes upon software updates.
-//
-// 0: The CAPARRAY_DELTA workaround is enabled.
-// 1: The CAPARRAY_DELTA workaround is disabled.
-#define CCFG_SIZE_AND_DIS_FLAGS_DIS_LINEAR_CAPARRAY_DELTA_WORKAROUND \
-                                                                    0x00000010
-#define CCFG_SIZE_AND_DIS_FLAGS_DIS_LINEAR_CAPARRAY_DELTA_WORKAROUND_BITN \
-                                                                             4
-#define CCFG_SIZE_AND_DIS_FLAGS_DIS_LINEAR_CAPARRAY_DELTA_WORKAROUND_M \
-                                                                    0x00000010
-#define CCFG_SIZE_AND_DIS_FLAGS_DIS_LINEAR_CAPARRAY_DELTA_WORKAROUND_S \
-                                                                             4
+#define CCFG_SIZE_AND_DIS_FLAGS_DISABLE_FLAGS_W                             12
+#define CCFG_SIZE_AND_DIS_FLAGS_DISABLE_FLAGS_M                     0x0000FFF0
+#define CCFG_SIZE_AND_DIS_FLAGS_DISABLE_FLAGS_S                              4
 
 // Field:     [3] DIS_TCXO
 //
@@ -399,7 +381,7 @@
 // Select source for SCLK_LF.
 // ENUMs:
 // RCOSC_LF                 Low frequency RCOSC (default)
-// XOSC_LF                  32.768 kHz low frequency XOSC
+// XOSC_LF                  32.768kHz low frequency XOSC
 // EXTERNAL_LF              External low frequency clock on DIO defined by
 //                          EXT_LF_CLK.DIO. The RTC tick speed
 //                          AON_RTC:SUBSECINC is updated to
@@ -407,9 +389,9 @@
 //                          SetupTrimDevice() driverlib boot function).
 //                          External clock must always be running when the
 //                          chip is in standby for VDDR recharge timing.
-// XOSC_HF_DLF              31.25 kHz clock derived from 48 MHz XOSC or HPOSC.
+// XOSC_HF_DLF              31.25kHz clock derived from 48MHz XOSC or HPOSC.
 //                          The RTC tick speed AON_RTC:SUBSECINC is updated
-//                          to 0x8637BD, corresponding to a 31.25 kHz clock
+//                          to 0x8637BD, corresponding to a 31.25kHz clock
 //                          (done in the SetupTrimDevice() driverlib boot
 //                          function). The device must be blocked from
 //                          entering Standby mode when using this clock
@@ -456,7 +438,7 @@
 // 24M                      24 MHz XOSC_HF. Not supported.
 // 48M                      48 MHz XOSC_HF
 // HPOSC                    Internal high precision oscillator.
-// TCXO                     External 48 MHz TCXO.
+// TCXO                     External 48Mhz TCXO.
 //                          Refer to
 //                          MODE_CONF_1.TCXO_MAX_START and
 //                          MODE_CONF_1.TCXO_TYPE bit fields for additional

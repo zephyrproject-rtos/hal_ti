@@ -42,15 +42,14 @@
 extern "C" {
 #endif
 
-typedef struct
-{
+typedef struct {
     uint8_t *buffer;
-    size_t length;
-    size_t count;
-    size_t head;
-    size_t tail;
-    size_t maxCount;
-    size_t structSize;
+    size_t   length;
+    size_t   count;
+    size_t   head;
+    size_t   tail;
+    size_t   maxCount;
+    size_t   structSize;
 } StructRingBuf_Object, *StructRingBuf_Handle;
 
 /*!
@@ -66,7 +65,8 @@ typedef struct
  *
  *  @param  structSize The size of a member structure in bytes
  */
-void StructRingBuf_construct(StructRingBuf_Handle object, void *bufPtr, size_t bufSize, size_t structSize);
+void StructRingBuf_construct(StructRingBuf_Handle object, void *bufPtr,
+    size_t bufSize, size_t structSize);
 
 /*!
  *  @brief  Get an unsigned char from the end of the circular buffer and remove

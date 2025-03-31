@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       aon_rtc.c
+*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
+*  Revision:       56760
 *
 *  Description:    Driver for the AON RTC.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -36,7 +38,6 @@
 
 #include "aon_rtc.h"
 #include "cpu.h"
-#include "../inc/hw_memmap_common.h"
 
 //*****************************************************************************
 //
@@ -48,6 +49,7 @@
     #undef  AONRTCCurrent64BitValueGet
     #define AONRTCCurrent64BitValueGet      NOROM_AONRTCCurrent64BitValueGet
 #endif
+
 
 //*****************************************************************************
 //
@@ -66,9 +68,9 @@ AONRTCCurrent64BitValueGet( void )
     // Reading SEC both before and after SUBSEC in order to detect if SEC incremented while reading SUBSEC
     // If SEC incremented, we can't be sure which SEC the SUBSEC belongs to, so repeating the sequence then.
     do {
-        currentRtc.secAndSubSec[ 1 ] = HWREG( AON_RTC_BASE + NONSECURE_OFFSET + AON_RTC_O_SEC    );
-        currentRtc.secAndSubSec[ 0 ] = HWREG( AON_RTC_BASE + NONSECURE_OFFSET + AON_RTC_O_SUBSEC );
-        ui32SecondSecRead            = HWREG( AON_RTC_BASE + NONSECURE_OFFSET + AON_RTC_O_SEC    );
+        currentRtc.secAndSubSec[ 1 ] = HWREG( AON_RTC_BASE + AON_RTC_O_SEC    );
+        currentRtc.secAndSubSec[ 0 ] = HWREG( AON_RTC_BASE + AON_RTC_O_SUBSEC );
+        ui32SecondSecRead            = HWREG( AON_RTC_BASE + AON_RTC_O_SEC    );
     } while ( currentRtc.secAndSubSec[ 1 ] != ui32SecondSecRead );
 
     return ( currentRtc.returnValue );

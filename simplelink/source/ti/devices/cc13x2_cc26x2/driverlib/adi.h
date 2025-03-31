@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       adi.h
+*  Revised:        2016-11-17 16:39:28 +0100 (Thu, 17 Nov 2016)
+*  Revision:       47706
 *
 *  Description:    Defines and prototypes for the ADI master interface.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

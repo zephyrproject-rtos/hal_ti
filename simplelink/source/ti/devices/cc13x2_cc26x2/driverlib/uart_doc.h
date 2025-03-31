@@ -1,7 +1,9 @@
 /******************************************************************************
 *  Filename:       uart_doc.h
+*  Revised:        2018-02-09 15:45:36 +0100 (fr, 09 feb 2018)
+*  Revision:       51470
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

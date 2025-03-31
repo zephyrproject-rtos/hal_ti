@@ -1,7 +1,9 @@
 /******************************************************************************
 *  Filename:       group_analog_doc.h
+*  Revised:        2016-08-30 14:34:13 +0200 (Tue, 30 Aug 2016)
+*  Revision:       47080
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without

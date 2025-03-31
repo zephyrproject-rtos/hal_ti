@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_cpu_tpiu_h
-*  Revised:        $Date$
-*  Revision:       $Revision$
+*  Revised:        2018-05-14 12:24:52 +0200 (Mon, 14 May 2018)
+*  Revision:       51990
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -269,7 +269,7 @@
 // separately):
 //
 // 0: This claim tag bit is not implemented
-// 1: This claim tag bit is implemented
+// 1: This claim tag bit is not implemented
 //
 // The behavior when writing to this register is described in CLAIMSET.
 #define CPU_TPIU_CLAIMMASK_CLAIMMASK_W                                      32
