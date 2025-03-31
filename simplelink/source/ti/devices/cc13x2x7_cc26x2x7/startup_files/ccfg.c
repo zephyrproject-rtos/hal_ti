@@ -506,6 +506,8 @@ __root const ccfg_t __ccfg @ ".ccfg" =
 #pragma DATA_SECTION(__ccfg, ".ccfg")
 #pragma RETAIN(__ccfg)
 const ccfg_t __ccfg =
+#elif defined(__llvm__)
+const ccfg_t __ccfg __attribute__((section(".ccfg"), retain)) =
 #else
 /* Modified for Zephyr to use __ti_ccfg_section */
 const ccfg_t __ti_ccfg_section __ccfg =

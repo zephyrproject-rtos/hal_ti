@@ -1,7 +1,9 @@
 /******************************************************************************
 *  Filename:       interrupt_doc.h
+*  Revised:        2017-11-14 15:26:03 +0100 (Tue, 14 Nov 2017)
+*  Revision:       50272
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -149,7 +151,8 @@
 //! sequentially.
 //!
 //! The dynamic vector table, \ref g_pfnRAMVectors, is placed in SRAM in the section called
-//! \c .ramVecs which is a section defined in the linker file.
+//! \c vtable_ram which is a section defined in the linker file. By default the linker file
+//! places this section at the start of the SRAM but this is configurable by the user.
 //!
 //! \warning Runtime configuration of interrupt handlers requires that the interrupt
 //! handler table is placed on a 256-byte boundary in SRAM (typically, this is

@@ -118,8 +118,8 @@ IntDefaultHandler(void)
 //
 //! \brief Global pointer to the (dynamic) interrupt vector table when placed in SRAM.
 //!
-//! Interrupt vector table is placed at ".ramVecs" defined in the linker file
-//! provided by Texas Instruments.
+//! Interrupt vector table is placed at "vtable_ram" defined in the linker file
+//! provided by Texas Instruments. By default, this is at the beginning of SRAM.
 //!
 //! \note See \ti_code{interrupt.c} for compiler specific implementation!
 //
@@ -129,17 +129,17 @@ IntDefaultHandler(void)
 void (*g_pfnRAMVectors[NUM_INTERRUPTS])(void);
 #elif defined(__IAR_SYSTEMS_ICC__)
 #pragma data_alignment=256
-static __no_init void (*g_pfnRAMVectors[NUM_INTERRUPTS])(void) @ ".ramVecs";
+static __no_init void (*g_pfnRAMVectors[NUM_INTERRUPTS])(void) @ ".vtable_ram";
 #elif defined(__TI_COMPILER_VERSION__)
 #pragma DATA_ALIGN(g_pfnRAMVectors, 256)
-#pragma DATA_SECTION(g_pfnRAMVectors, ".ramVecs")
+#pragma DATA_SECTION(g_pfnRAMVectors, ".vtable_ram")
 void (*g_pfnRAMVectors[NUM_INTERRUPTS])(void);
 #elif defined (__CC_ARM)
-static __attribute__((section(".ramVecs"), aligned(256)))
-void (*g_pfnRAMVectors[NUM_INTERRUPTS])(void);
+static __attribute__((section("vtable_ram")))
+void (*g_pfnRAMVectors[NUM_INTERRUPTS])(void) __attribute__((aligned(256)));
 #else
-static __attribute__((section(".ramVecs"), aligned(256)))
-void (*g_pfnRAMVectors[NUM_INTERRUPTS])(void);
+static __attribute__((section("vtable_ram")))
+void (*g_pfnRAMVectors[NUM_INTERRUPTS])(void) __attribute__((aligned(256)));
 #endif
 
 //*****************************************************************************

@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       adi.c
+*  Revised:        2016-11-17 16:39:28 +0100 (Thu, 17 Nov 2016)
+*  Revision:       47706
 *
 *  Description:    Driver for the ADI interface
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -34,4 +36,8 @@
 *
 ******************************************************************************/
 
+#include "../inc/hw_types.h"
+#include "../inc/hw_memmap.h"
+#include "../inc/hw_aux_smph.h"
 #include "adi.h"
+#include "cpu.h"

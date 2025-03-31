@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       rom.h
+*  Revised:        2020-09-17 15:26:49 +0200 (Thu, 17 Sep 2020)
+*  Revision:       58682
 *
 *  Description:    Prototypes for the ROM utility functions.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -898,6 +900,10 @@ typedef struct
 #define ROM_AESWriteCCMInitializationVector \
     ((void (*)(const uint8_t *nonce, uint32_t nonceLength)) \
     ROM_API_AES_TABLE[7])
+
+#define ROM_AESWriteToKeyStore \
+    ((uint32_t (*)(const uint8_t *aesKey, uint32_t aesKeyLength, uint32_t keyStoreArea)) \
+    ROM_API_AES_TABLE[8])
 
 
 // PKA FUNCTIONS

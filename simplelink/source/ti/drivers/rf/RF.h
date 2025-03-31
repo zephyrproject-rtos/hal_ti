@@ -48,9 +48,7 @@ is linked in and include this header file as follows:
 
 #include <ti/devices/DeviceFamily.h>
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2 || \
-     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X1_CC26X1 || \
-     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
     #include <ti/drivers/rf/RFCC26X2.h>
 #else
 #error "An incompatible device is defined in the project. \

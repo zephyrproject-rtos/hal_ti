@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2023, Texas Instruments Incorporated
+ * Copyright (c) 2015-2020, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,25 +85,34 @@
  *  @anchor ti_drivers_GPIO_Example_callback
  *  **Creating an input callback**: The following example demonstrates how
  *  to configure a GPIO pin to generate an interrupt and how to toggle an
- *  an LED on and off within the registered interrupt callback function. Pin
- *  configuration is handled within Sysconfig for this example.
+ *  an LED on and off within the registered interrupt callback function.
  *  @code
  *  // Driver header file
  *  #include <ti/drivers/GPIO.h>
  *
  *  // TI Drivers Configuration
  *  #include "ti_drivers_config.h"
+ *  // Board file
+ *  #include <ti/drivers/Board.h>
  *
  *  // GPIO button call back function
  *  void gpioButton0Fxn(uint_least8_t index);
  *
  *  main()
  *  {
+ *      // One-time Board initialization
+ *      Board_init();
+ *
+ *      // One-time init of GPIO driver
+ *      GPIO_init();
+ *
  *      // Turn on user LED
  *      GPIO_write(CONFIG_GPIO_LED0, CONFIG_GPIO_LED_ON);
  *
- *      // install Button callback and enable interrupts
+ *      // install Button callback
  *      GPIO_setCallback(CONFIG_GPIO_BUTTON0, gpioButton0Fxn);
+ *
+ *      // Enable interrupts
  *      GPIO_enableInt(CONFIG_GPIO_BUTTON0);
  *  }
  *
@@ -130,20 +139,19 @@
  *  // TI Driver configuration
  *  #include "ti_drivers_config.h"
  *
+ *  #define LED    CONFIG_GPIO_LED0
+ *  #define BUTTON CONFIG_GPIO_BUTTON0
+ *
  *  void main()
  *  {
  *      // One-time init of GPIO driver
  *      GPIO_init();
  *
- *      // Configure a button pin as input and configure its interrupt
- *      // Passing INT_ENABLE means you do not need to also call GPIO_enableInt()
- *      GPIO_setConfig(
- *          CONFIG_GPIO_BUTTON0,
- *          GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING | GPIO_CFG_INT_ENABLE
- *      );
+ *      // Configure a button input pin
+ *      GPIO_setConfig(BUTTON, GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING);
  *
  *      // Configure an LED output pin
- *      GPIO_setConfig(CONFIG_GPIO_LED0, GPIO_CFG_OUT_STD | GPIO_CFG_OUT_LOW);
+ *      GPIO_setConfig(LED, GPIO_CFG_OUT_STD | GPIO_CFG_OUT_LOW);
  *  }
  *  @endcode
  *
@@ -152,34 +160,42 @@
  *  In order to use the GPIO APIs, the application is required
  *  to provide 3 structures in the ti_drivers_config.c file:
  *  1.  An array of @ref GPIO_PinConfig elements that defines the
- *  initial configuration of each pin on the device. A pin is then
- *  referenced in the application by its corresponding index in this
+ *  initial configuration of each pin used by the application. A
+ *  pin is referenced in the application by its corresponding index in this
  *  array. The pin type (that is, INPUT/OUTPUT), its initial state (that is
  *  OUTPUT_HIGH or LOW), interrupt behavior (RISING/FALLING edge, etc.), and
  *  device specific pin identification are configured in each element
  *  of this array (see @ref GPIO_PinConfigSettings).
- *  Below is a device specific example of the GPIO_PinConfig array:
+ *  Below is an MSP432 device specific example of the GPIO_PinConfig array:
  *  @code
  *  //
  *  // Array of Pin configurations
  *  //
- * GPIO_PinConfig gpioPinConfigs[31] = {
- *     GPIO_CFG_INPUT, // DIO_0
- *     GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_NONE, // CONFIG_GPIO_LP19
- *     GPIO_CFG_INPUT, // DIO_2
- *     GPIO_CFG_INPUT, // DIO_3
- *     ...
- * };
+ *  GPIO_PinConfig gpioPinConfigs[] = {
+ *      // Input pins
+ *      // MSP_EXP432P401R_GPIO_S1
+ *      GPIOMSP432_P1_1 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
+ *      // MSP_EXP432P401R_GPIO_S2
+ *      GPIOMSP432_P1_4 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
+ *
+ *      // Output pins
+ *      // MSP_EXP432P401R_GPIO_LED1
+ *      GPIOMSP432_P1_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+ *      // MSP_EXP432P401R_GPIO_LED_RED
+ *      GPIOMSP432_P2_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+ *  };
  *  @endcode
  *
  *  2.  An array of @ref GPIO_CallbackFxn elements that is used to store
- *  callback function pointers for GPIO pins. The indexes for these array
- *  elements correspond to the pins defined in the GPIO_pinConfig array.
- *  These function pointers can be defined statically by referencing the
- *  callback function name in the array element, or dynamically, by setting
- *  the array element to NULL and using GPIO_setCallback() at runtime to
- *  plug the callback entry. The callback function syntax should match the
- *  following:
+ *  callback function pointers for GPIO pins configured with interrupts.
+ *  The indexes for these array elements correspond to the pins defined
+ *  in the GPIO_pinConfig array. These function pointers can be defined
+ *  statically by referencing the callback function name in the array
+ *  element, or dynamically, by setting the array element to NULL and using
+ *  GPIO_setCallback() at runtime to plug the callback entry.
+ *  Pins not used for interrupts can be omitted from the callback array to
+ *  reduce memory usage (if they are placed at the end of GPIO_pinConfig
+ *  array). The callback function syntax should match the following:
  *  @code
  *  void (*GPIO_CallbackFxn)(uint_least8_t index);
  *  @endcode
@@ -194,21 +210,20 @@
  *  (interrupt enabled) pins on a port will be read, cleared, and the
  *  respective callbacks will be executed. Callbacks will be called in order
  *  from least significant bit to most significant bit.
- *  Below is a device specific example of the GPIO_CallbackFxn array:
+ *  Below is an MSP432 device specific example of the GPIO_CallbackFxn array:
  *  @code
  *  //
  *  // Array of callback function pointers
  *  //
- *  GPIO_CallbackFxn gpioCallbackFunctions[31] = {
- *      NULL, // DIO_0
- *      NULL, // DIO_1
- *      myGpioCallback, // CONFIG_GPIO_LP19
- *      NULL, // DIO_3
- *      ...
+ *  GPIO_CallbackFxn gpioCallbackFunctions[] = {
+ *      // MSP_EXP432P401R_GPIO_S1
+ *      NULL,
+ *      // MSP_EXP432P401R_GPIO_S2
+ *      NULL
  *  };
  *  @endcode
  *
- *  3.  A device specific GPIO_Config structure that tells the GPIO
+ *  3.  A device specific GPIOxxx_Config structure that tells the GPIO
  *  driver where the two aforementioned arrays are and the number of elements
  *  in each. The interrupt priority of all pins configured to generate
  *  interrupts is also specified here. Values for the interrupt priority are
@@ -216,16 +231,19 @@
  *  controller used in your device before setting this parameter to a
  *  non-default value. The sentinel value of (~0) (the default value) is
  *  used to indicate that the lowest possible priority should be used.
- *  Below is a device specific example of a GPIO_Config structure:
+ *  Below is an MSP432 device specific example of a GPIOxxx_Config
+ *  structure:
  *  @code
  *  //
- *  // ======== GPIO_config ========
+ *  // MSP432 specific GPIOxxx_Config structure
  *  //
- * const GPIO_Config GPIO_config = {
- *     .configs = (GPIO_PinConfig *)gpioPinConfigs,
- *     .callbacks = (GPIO_CallbackFxn *)gpioCallbackFunctions,
- *     .intPriority = (~0)
- * };
+ *  const GPIOMSP432_Config GPIOMSP432_config = {
+ *      .pinConfigs = (GPIO_PinConfig *)gpioPinConfigs,
+ *      .callbacks = (GPIO_CallbackFxn *)gpioCallbackFunctions,
+ *      .numberOfPinConfigs = sizeof(gpioPinConfigs)/sizeof(GPIO_PinConfig),
+ *      .numberOfCallbacks = sizeof(gpioCallbackFunctions)/sizeof(GPIO_CallbackFxn),
+ *      .intPriority = (~0)
+ *  };
  *  @endcode
  *
  *  ### Initializing the GPIO Driver #
@@ -236,16 +254,17 @@
  *  a pin dynamically after GPIO_init() is called by using the
  *  GPIO_setConfig(), and GPIO_setCallback() APIs.
  *
- *  GPIO_init() is called from Board_init() by default. Calling GPIO_init()
- *  multiple times is safe.
- *
  *  # Implementation #
  *
- *  Unlike most other TI-RTOS drivers, there is no notion of an instance
- *  'handle' with the GPIO driver. This allows lightweight pin control with
- *  minimal runtime and memory overhead.
+ *  Unlike most other TI-RTOS drivers, the GPIO driver has no generic function
+ *  table with pointers to device-specific API implementations. All the generic
+ *  GPIO APIs are implemented by the device-specific GPIO driver module.
+ *  Additionally, there is no notion of an instance 'handle' with the GPIO
+ *  driver.
  *
- *  GPIO pins are always referenced by device DIO index.
+ *  GPIO pins are referenced by their numeric index in the GPIO_PinConfig
+ *  array.  This design approach was used to enhance runtime and memory
+ *  efficiency.
  *
  ******************************************************************************
  */
@@ -254,43 +273,6 @@
 #define ti_drivers_GPIO__include
 
 #include <stdint.h>
-
-#include <ti/devices/DeviceFamily.h>
-
-/* The device-specific header is used to map GPIO_CFG_X_INTERNAL definitions
- * directly to device-specific configuration values, allowing efficient runtime
- * reconfiguration without the need for bit twiddling.
- */
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X0_CC26X0 || \
-     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X1_CC26X1 || \
-     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2 || \
-     DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4)
-    #include <ti/drivers/gpio/GPIOCC26XX.h>
-#elif (DeviceFamily_ID == DeviceFamily_ID_CC3220 || DeviceFamily_ID == DeviceFamily_ID_CC3200)
-    #include <ti/drivers/gpio/GPIOCC32XX.h>
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X0 || DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
-    #include <ti/drivers/gpio/GPIOLPF3.h>
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-    #include <ti/drivers/gpio/GPIOWFF3.h>
-#endif
-
-/* Generic functions for converting pin indexes to and from masks. Internal use
- * only. CLZ is an ARM instruction for `count leading zeroes`, so if multiple
- * bits in the pinmask are set MASK_TO_PIN will only return the highest set
- * bit. PIN_TO_MASK is used for setting registers.
- */
-#if defined(__IAR_SYSTEMS_ICC__)
-    #include <intrinsics.h>
-    #define GPIO_MASK_TO_PIN(pinmask) (31 - __CLZ(pinmask))
-#elif defined(__TI_COMPILER_VERSION__)
-    #include <arm_acle.h>
-    #define GPIO_MASK_TO_PIN(pinmask) (31 - __clz(pinmask))
-#elif defined(__GNUC__) && !defined(__TI_COMPILER_VERSION__)
-    #include <arm_acle.h>
-    #define GPIO_MASK_TO_PIN(pinmask) (31 - __builtin_clz(pinmask))
-#endif
-
-#define GPIO_PIN_TO_MASK(pin) (1 << (pin))
 
 #ifdef __cplusplus
 extern "C" {
@@ -302,42 +284,64 @@ extern "C" {
  */
 
 /*!
- * @brief   Successful status code returned by GPIO_setConfig().
+ * @brief   Common GPIO status code reservation offset.
+ *
+ * GPIO driver implementations should offset status codes with
+ * GPIO_STATUS_RESERVED growing negatively.
+ *
+ * Example implementation specific status codes:
+ * @code
+ * #define GPIOTXYZ_STATUS_ERROR1    GPIO_STATUS_RESERVED - 1
+ * #define GPIOTXYZ_STATUS_ERROR0    GPIO_STATUS_RESERVED - 0
+ * #define GPIOTXYZ_STATUS_ERROR2    GPIO_STATUS_RESERVED - 2
+ * @endcode
+ */
+#define GPIO_STATUS_RESERVED        (-32)
+
+/*!
+ * @brief   Successful status code returned by GPI_setConfig().
  *
  * GPI_setConfig() returns GPIO_STATUS_SUCCESS if the API was executed
  * successfully.
  */
-#define GPIO_STATUS_SUCCESS (0)
+#define GPIO_STATUS_SUCCESS         (0)
 
 /*!
- * @brief   Generic error status code returned by GPIO_setConfig().
+ * @brief   Generic error status code returned by GPI_setConfig().
  *
  * GPI_setConfig() returns GPIO_STATUS_ERROR if the API was not executed
  * successfully.
  */
-#define GPIO_STATUS_ERROR (-1)
+#define GPIO_STATUS_ERROR           (-1)
 /** @}*/
 
 /*!
  *  @brief  GPIO pin configuration settings
  *
- *  The meaning of the bits within PinConfig are entirely device-specific
- *  and are typically one-to-one with the hardware register controlling pin
- *  configuration.
+ *  The upper 16 bits of the 32 bit PinConfig is reserved
+ *  for pin configuration settings.
  *
- *  Only create and manipulate these values using GPIO_CFG_* defines.
+ *  The lower 16 bits are reserved for device-specific
+ *  port/pin identifications
  */
 typedef uint32_t GPIO_PinConfig;
 
 /*!
- * @brief Dummy value for "this pin is not assigned to a GPIO".
- *
- * Not for use in customer software. Some drivers use this value to manage the
- * behaviour of optional pins (e.g. UART flow control, SPI chip select). If you
- * pass this value to any GPIO methods, it will return immediately and no
- * register writes will be performed.
+ *  @cond NODOC
+ *  Internally used configuration bit access macros.
  */
-#define GPIO_INVALID_INDEX 0xFF
+#define GPIO_CFG_IO_MASK           0x00ff0000
+#define GPIO_CFG_IO_LSB            16
+#define GPIO_CFG_OUT_TYPE_MASK     0x00060000
+#define GPIO_CFG_OUT_TYPE_LSB      17
+#define GPIO_CFG_IN_TYPE_MASK      0x00060000
+#define GPIO_CFG_IN_TYPE_LSB       17
+#define GPIO_CFG_OUT_STRENGTH_MASK 0x00f00000
+#define GPIO_CFG_OUT_STRENGTH_LSB  20
+#define GPIO_CFG_INT_MASK          0x07000000
+#define GPIO_CFG_INT_LSB           24
+#define GPIO_CFG_OUT_BIT           19
+/*! @endcond */
 
 /*!
  *  \defgroup GPIO_PinConfigSettings Macros used to configure GPIO pins
@@ -346,130 +350,64 @@ typedef uint32_t GPIO_PinConfig;
 /** @name GPIO_PinConfig output pin configuration macros
  *  @{
  */
-/*! @hideinitializer Pin is an output. Equivalent to OUT_STD. */
-#define GPIO_CFG_OUTPUT        GPIO_CFG_OUTPUT_INTERNAL | GPIO_CFG_PULL_NONE_INTERNAL
-/*! @hideinitializer Output pin is actively driven high and low */
-#define GPIO_CFG_OUT_STD       GPIO_CFG_OUTPUT_INTERNAL | GPIO_CFG_PULL_NONE_INTERNAL
-/*! @hideinitializer Output pin is Open Drain */
-#define GPIO_CFG_OUT_OD_NOPULL GPIO_CFG_OUTPUT_OPEN_DRAIN_INTERNAL | GPIO_CFG_PULL_NONE_INTERNAL
-/*! @hideinitializer Output pin is Open Drain w/ pull up */
-#define GPIO_CFG_OUT_OD_PU     GPIO_CFG_OUTPUT_OPEN_DRAIN_INTERNAL | GPIO_CFG_PULL_UP_INTERNAL
-/*! @hideinitializer Output pin is Open Drain w/ pull dn */
-#define GPIO_CFG_OUT_OD_PD     GPIO_CFG_OUTPUT_OPEN_DRAIN_INTERNAL | GPIO_CFG_PULL_DOWN_INTERNAL
+#define GPIO_CFG_OUTPUT            (((uint32_t) 0) << GPIO_CFG_IO_LSB) /*!< @hideinitializer Pin is an output. */
+#define GPIO_CFG_OUT_STD           (((uint32_t) 0) << GPIO_CFG_IO_LSB) /*!< @hideinitializer Output pin is actively driven high and low */
+#define GPIO_CFG_OUT_OD_NOPULL     (((uint32_t) 2) << GPIO_CFG_IO_LSB) /*!< @hideinitializer Output pin is Open Drain */
+#define GPIO_CFG_OUT_OD_PU         (((uint32_t) 4) << GPIO_CFG_IO_LSB) /*!< @hideinitializer Output pin is Open Drain w/ pull up */
+#define GPIO_CFG_OUT_OD_PD         (((uint32_t) 6) << GPIO_CFG_IO_LSB) /*!< @hideinitializer Output pin is Open Drain w/ pull dn */
 
-/*! @hideinitializer Set output pin strength to low */
-#define GPIO_CFG_OUT_STR_LOW  GPIO_CFG_DRVSTR_LOW_INTERNAL
-/*! @hideinitializer Set output pin strength to medium */
-#define GPIO_CFG_OUT_STR_MED  GPIO_CFG_DRVSTR_MED_INTERNAL
-/*! @hideinitializer Set output pin strength to high */
-#define GPIO_CFG_OUT_STR_HIGH GPIO_CFG_DRVSTR_HIGH_INTERNAL
+#define GPIO_CFG_OUT_STR_LOW       (((uint32_t) 0) << GPIO_CFG_OUT_STRENGTH_LSB) /*!< @hideinitializer Set output pin strength to low */
+#define GPIO_CFG_OUT_STR_MED       (((uint32_t) 1) << GPIO_CFG_OUT_STRENGTH_LSB) /*!< @hideinitializer Set output pin strength to medium */
+#define GPIO_CFG_OUT_STR_HIGH      (((uint32_t) 2) << GPIO_CFG_OUT_STRENGTH_LSB) /*!< @hideinitializer Set output pin strength to high */
 
-/*! @hideinitializer Set pin's output to 1. */
-#define GPIO_CFG_OUT_HIGH GPIO_CFG_OUTPUT_DEFAULT_HIGH_INTERNAL
-/*! @hideinitializer Set pin's output to 0. */
-#define GPIO_CFG_OUT_LOW  GPIO_CFG_OUTPUT_DEFAULT_LOW_INTERNAL
+#define GPIO_CFG_OUT_HIGH          (((uint32_t) 1) << GPIO_CFG_OUT_BIT) /*!< @hideinitializer Set pin's output to 1. */
+#define GPIO_CFG_OUT_LOW           (((uint32_t) 0) << GPIO_CFG_OUT_BIT) /*!< @hideinitializer Set pin's output to 0. */
 /** @} */
 
 /** @name GPIO_PinConfig input pin configuration macros
  *  @{
  */
-/*! @hideinitializer Pin is an input. */
-#define GPIO_CFG_INPUT     GPIO_CFG_INPUT_INTERNAL | GPIO_CFG_PULL_NONE_INTERNAL
-/*! @hideinitializer Input pin with no internal PU/PD */
-#define GPIO_CFG_IN_NOPULL GPIO_CFG_INPUT_INTERNAL | GPIO_CFG_PULL_NONE_INTERNAL
-/*! @hideinitializer Input pin with internal PU */
-#define GPIO_CFG_IN_PU     GPIO_CFG_INPUT_INTERNAL | GPIO_CFG_PULL_UP_INTERNAL
-/*! @hideinitializer Input pin with internal PD */
-#define GPIO_CFG_IN_PD     GPIO_CFG_INPUT_INTERNAL | GPIO_CFG_PULL_DOWN_INTERNAL
-/** @} */
-
-/** @name GPIO_PinConfig nondirectional pin configuration macros
- *  @{
- */
-/*! @hideinitializer Input and output are both disabled. Primarily useful for disabling muxed pins.  */
-#define GPIO_CFG_NO_DIR GPIO_CFG_NO_DIR_INTERNAL | GPIO_CFG_PULL_NONE_INTERNAL
-/** @} */
-
-/** @name GPIO_PinConfig pin inversion configuration macros
- *  @{
- */
-/*! @hideinitializer Input/output values are normal (default) */
-#define GPIO_CFG_INVERT_OFF GPIO_CFG_INVERT_OFF_INTERNAL
-/*! @hideinitializer Input/output values are inverted */
-#define GPIO_CFG_INVERT_ON  GPIO_CFG_INVERT_ON_INTERNAL
-/** @} */
-
-/** @name GPIO_PinConfig pin hysteresis configuration macros
- *  @{
- */
-/*! @hideinitializer Input hysteresis is disabled (default) */
-#define GPIO_CFG_HYSTERESIS_OFF GPIO_CFG_HYSTERESIS_OFF_INTERNAL
-/*! @hideinitializer Input hysteresis is enabled */
-#define GPIO_CFG_HYSTERESIS_ON  GPIO_CFG_HYSTERESIS_ON_INTERNAL
-/** @} */
-
-/** @name GPIO_PinConfig slew rate configuration macros
- *  @{
- */
-/*! @hideinitializer Output slew rate is unchanged (default) */
-#define GPIO_CFG_SLEW_NORMAL  GPIO_CFG_SLEW_NORMAL_INTERNAL
-/*! @hideinitializer Output slew rate is reduced */
-#define GPIO_CFG_SLEW_REDUCED GPIO_CFG_SLEW_REDUCED_INTERNAL
+#define GPIO_CFG_INPUT             (((uint32_t) 1) << GPIO_CFG_IO_LSB) /*!< @hideinitializer Pin is an input. */
+#define GPIO_CFG_IN_NOPULL         (((uint32_t) 1) << GPIO_CFG_IO_LSB) /*!< @hideinitializer Input pin with no internal PU/PD */
+#define GPIO_CFG_IN_PU             (((uint32_t) 3) << GPIO_CFG_IO_LSB) /*!< @hideinitializer Input pin with internal PU */
+#define GPIO_CFG_IN_PD             (((uint32_t) 5) << GPIO_CFG_IO_LSB) /*!< @hideinitializer Input pin with internal PD */
 /** @} */
 
 /** @name GPIO_PinConfig interrupt configuration macros
  *  @{
  */
-/*! @hideinitializer No Interrupt (default) */
-#define GPIO_CFG_IN_INT_NONE       GPIO_CFG_INT_NONE_INTERNAL
-/*! @hideinitializer Interrupt on falling edge */
-#define GPIO_CFG_IN_INT_FALLING    GPIO_CFG_INT_FALLING_INTERNAL
-/*! @hideinitializer Interrupt on rising edge */
-#define GPIO_CFG_IN_INT_RISING     GPIO_CFG_INT_RISING_INTERNAL
-/*! @hideinitializer Interrupt on both edges */
-#define GPIO_CFG_IN_INT_BOTH_EDGES GPIO_CFG_INT_BOTH_EDGES_INTERNAL
-/*! @hideinitializer Interrupt on low level */
-#define GPIO_CFG_IN_INT_LOW        GPIO_CFG_INT_LOW_INTERNAL
-/*! @hideinitializer Interrupt on high level */
-#define GPIO_CFG_IN_INT_HIGH       GPIO_CFG_INT_HIGH_INTERNAL
-
-/*! @hideinitializer Interrupt disabled (default) */
-#define GPIO_CFG_INT_DISABLE GPIO_CFG_INT_DISABLE_INTERNAL
-/*! @hideinitializer Interrupt enabled */
-#define GPIO_CFG_INT_ENABLE  GPIO_CFG_INT_ENABLE_INTERNAL
+#define GPIO_CFG_IN_INT_NONE       (((uint32_t) 0) << GPIO_CFG_INT_LSB)    /*!< @hideinitializer No Interrupt */
+#define GPIO_CFG_IN_INT_FALLING    (((uint32_t) 1) << GPIO_CFG_INT_LSB)    /*!< @hideinitializer Interrupt on falling edge */
+#define GPIO_CFG_IN_INT_RISING     (((uint32_t) 2) << GPIO_CFG_INT_LSB)    /*!< @hideinitializer Interrupt on rising edge */
+#define GPIO_CFG_IN_INT_BOTH_EDGES (((uint32_t) 3) << GPIO_CFG_INT_LSB)    /*!< @hideinitializer Interrupt on both edges */
+#define GPIO_CFG_IN_INT_LOW        (((uint32_t) 4) << GPIO_CFG_INT_LSB)    /*!< @hideinitializer Interrupt on low level */
+#define GPIO_CFG_IN_INT_HIGH       (((uint32_t) 5) << GPIO_CFG_INT_LSB)    /*!< @hideinitializer Interrupt on high level */
 /** @} */
 
-/** @name GPIO_PinConfig power mode configuration macros
- *  @brief For devices that support low power modes, standard GPIO interrupts
- *  may be disabled in some modes. These defines allow configuring individual
- *  pins as wake-up sources. The GPIO module's wake up configuration is always
- *  enabled if it exists, so there is no module-level configuration.
- *  See the device-specific header files for details.
+/** @name Special GPIO_PinConfig configuration macros
  *  @{
  */
-/*! @hideinitializer This pin will not wake the device up */
-#define GPIO_CFG_SHUTDOWN_WAKE_OFF  GPIO_CFG_SHUTDOWN_WAKE_OFF_INTERNAL
-/*! @hideinitializer A high value will wake the device from shutdown */
-#define GPIO_CFG_SHUTDOWN_WAKE_HIGH GPIO_CFG_SHUTDOWN_WAKE_HIGH_INTERNAL
-/*! @hideinitializer A low value will wake the device from shutdown */
-#define GPIO_CFG_SHUTDOWN_WAKE_LOW  GPIO_CFG_SHUTDOWN_WAKE_LOW_INTERNAL
-/** @} */
 
-/** @name GPIO_Mux configuration macros
- *  @brief For additional muxing options, see the directions in the
- *  device-specific GPIO driver.
- *  @{
+/*!
+ *  @brief 'Or' in this @ref GPIO_PinConfig definition to inform GPIO_setConfig()
+ *  to only configure the interrupt attributes of a GPIO input pin.
  */
-/*! @hideinitializer Set this pin to be a GPIO (the default) */
-#define GPIO_MUX_GPIO GPIO_MUX_GPIO_INTERNAL
+#define GPIO_CFG_IN_INT_ONLY       (((uint32_t) 1) << 27)                  /*!< @hideinitializer configure interrupt only */
+
+/*!
+ *  @brief Use this @ref GPIO_PinConfig definition to inform GPIO_init()
+ *  NOT to configure the corresponding pin
+ */
+#define GPIO_DO_NOT_CONFIG         0x40000000                              /*!< @hideinitializer Do not configure this Pin */
+
 /** @} */
 /** @} end of GPIO_PinConfigSettings group */
 
 /*!
  *  @brief  GPIO callback function type
  *
- *  @param      index       GPIO index. This is the same index that
- *                          was passed to GPIO_setCallback(). This allows
+ *  @param      index       GPIO index.  This is the same index that
+ *                          was passed to GPIO_setCallback().  This allows
  *                          you to use the same callback function for multiple
  *                          GPIO interrupts, by using the index to identify
  *                          the GPIO that caused the interrupt.
@@ -477,32 +415,12 @@ typedef uint32_t GPIO_PinConfig;
 typedef void (*GPIO_CallbackFxn)(uint_least8_t index);
 
 /*!
- *  @brief  GPIO driver configuration structure
- *
- *  The GPIO_Config struct contains the defaults for pin configuration.
- *
- *  The interrupt priority of all pins configured to generate interrupts
- *  is also specified here. Values for the interrupt priority are
- *  device-specific. You should be well-acquainted with the interrupt
- *  controller used in your device before setting this parameter to a
- *  non-default value. The sentinel value of (~0) (the default value) is
- *  used to indicate that the lowest possible priority should be used.
- */
-typedef struct
-{
-    GPIO_PinConfig *configs;
-    GPIO_CallbackFxn *callbacks;
-    void **userArgs;
-    uint32_t intPriority;
-} GPIO_Config;
-
-/*!
  *  @brief      Clear a GPIO pin interrupt flag
  *
  *  Clears the GPIO interrupt for the specified index.
  *
- *  Note: It is not necessary to call this API within a callback assigned
- *  to a pin. The driver clears interrupt flags before dispatching callbacks.
+ *  Note: It is not necessary to call this API within a
+ *  callback assigned to a pin.
  *
  *  @param      index       GPIO index
  */
@@ -533,16 +451,29 @@ extern void GPIO_disableInt(uint_least8_t index);
 extern void GPIO_enableInt(uint_least8_t index);
 
 /*!
+ *  @brief      Get the current configuration for a gpio pin
+ *
+ *  The pin configuration is provided in the static GPIO_PinConfig array,
+ *  but can be changed with GPIO_setConfig().  GPIO_getConfig() gets the
+ *  current pin configuration.
+ *
+ *  @param      index       GPIO index
+ *  @param      pinConfig   Location to store device specific pin
+ *                          configuration settings
+ */
+extern void GPIO_getConfig(uint_least8_t index, GPIO_PinConfig *pinConfig);
+
+/*!
  *  @brief  Initializes the GPIO module
  *
- *  The pins defined in the application-provided *GPIO_config* structure
+ *  The pins defined in the application-provided *GPIOXXX_config* structure
  *  are initialized accordingly.
  *
  *  @pre    The GPIO_config structure must exist and be persistent before this
  *          function can be called. This function must also be called before
  *          any other GPIO driver APIs.
  */
-extern void GPIO_init(void);
+extern void GPIO_init();
 
 /*!
  *  @brief      Reads the value of a GPIO pin
@@ -555,6 +486,45 @@ extern void GPIO_init(void);
  *  @return     0 or 1, depending on the state of the pin.
  */
 extern uint_fast8_t GPIO_read(uint_least8_t index);
+
+/*!
+ *  @brief      Bind a callback function to a GPIO pin interrupt
+ *
+ *  Associate a callback function with a particular GPIO pin interrupt.
+ *
+ *  Callbacks can be changed at any time, making it easy to switch between
+ *  efficient, state-specific interrupt handlers.
+ *
+ *  Note: The callback function is called within the context of an interrupt
+ *  handler.
+ *
+ *  Note: This API does not enable the GPIO pin interrupt.
+ *  Use GPIO_enableInt() and GPIO_disableInt() to enable
+ *  and disable the pin interrupt as necessary.
+ *
+ *  Note: it is not necessary to call GPIO_clearInt() within a callback.
+ *  That operation is performed internally before the callback is invoked.
+ *
+ *  @param      index       GPIO index
+ *  @param      callback    address of the callback function
+ */
+extern void GPIO_setCallback(uint_least8_t index, GPIO_CallbackFxn callback);
+
+/*!
+ *  @brief      Configure the gpio pin
+ *
+ *  Dynamically configure a gpio pin to a device specific setting.
+ *  For many applications, the pin configurations provided in the static
+ *  GPIO_PinConfig array is sufficient.
+ *
+ *  For input pins with interrupt configurations, a corresponding interrupt
+ *  object will be created as needed.
+ *
+ *  @param      index       GPIO index
+ *  @param      pinConfig   device specific pin configuration settings
+ */
+extern int_fast16_t GPIO_setConfig(uint_least8_t index,
+    GPIO_PinConfig pinConfig);
 
 /*!
  *  @brief      Toggles the current state of a GPIO
@@ -570,150 +540,6 @@ extern void GPIO_toggle(uint_least8_t index);
  *  @param      value    must be either 0 or 1
  */
 extern void GPIO_write(uint_least8_t index, unsigned int value);
-
-/*!
- *  @brief      Bind a callback function to a GPIO pin interrupt
- *
- *  Associate a callback function with a particular GPIO pin interrupt.
- *
- *  Callbacks can be changed at any time, making it easy to switch between
- *  efficient, state-specific interrupt handlers.
- *
- *  Note: The callback function is called within the context of an interrupt
- *  handler.
- *
- *  Note: This API does not enable the GPIO pin interrupt.
- *  Use GPIO_enableInt() and GPIO_disableInt() to enable and disable the pin
- *  interrupt as necessary, or use GPIO_CFG_INT_ENABLE when calling setConfig.
- *
- *  Note: it is not necessary to call GPIO_clearInt() within a callback.
- *  That operation is performed internally before the callback is invoked.
- *
- *  @param      index       GPIO index
- *  @param      callback    address of the callback function
- */
-extern void GPIO_setCallback(uint_least8_t index, GPIO_CallbackFxn callback);
-
-/*!
- *  @brief      Gets the callback associated with a GPIO pin.
- *
- *  @param      index  GPIO index
- *
- *  @return     The callback function for the pin or NULL.
- */
-extern GPIO_CallbackFxn GPIO_getCallback(uint_least8_t index);
-
-/*!
- *  @brief      Configure the gpio pin
- *
- *  Dynamically configure a gpio pin to a device specific setting.
- *  For many applications, the pin configurations provided in the static
- *  GPIO_PinConfig array is sufficient.
- *
- *  For input pins with interrupt configurations, a corresponding interrupt
- *  object will be created as needed.
- *
- *  @param      index       GPIO index
- *  @param      pinConfig   device specific pin configuration settings
- *
- *  @return     GPIO_STATUS_SUCCESS or an error if the pin cannot be configured
- */
-extern int_fast16_t GPIO_setConfig(uint_least8_t index, GPIO_PinConfig pinConfig);
-
-/*!
- *  @brief      Configure the gpio pin
- *
- *  Dynamically configure a gpio pin to a device specific setting.
- *  This variant only allows configuring the interrupt settings (rising edge,
- *  falling edge, etc.) and enabling or disabling interrupts.
- *
- *  Only GPIO_CFG_IN_INT_XXX macros and GPIO_CFG_INT_ENABLE/DISABLE may be
- *  passed to the config parameter for this function. If you do not pass
- *  GPIO_CFG_INT_ENABLE, this function will disable interrupts.
- *
- *  @param      index     GPIO index
- *  @param      config    pin configuration settings
- */
-extern void GPIO_setInterruptConfig(uint_least8_t index, GPIO_PinConfig config);
-
-/*!
- *  @brief      Get the current configuration for a gpio pin
- *
- *  GPIO_getConfig() gets the current pin configuration.
- *
- *  This value may not be identical to the value used in setConfig, as some
- *  configuration options are applied directly to hardware on some devices and
- *  not saved in order to save memory.
- *
- *  @param      index       GPIO index
- *  @param      pinConfig   Location to store device specific pin
- *                          configuration settings
- */
-extern void GPIO_getConfig(uint_least8_t index, GPIO_PinConfig *pinConfig);
-
-/*!
- *  @brief      Resets the configuration for a gpio pin to the default value
- *
- *  The default pin configuration is provided in the static GPIO_PinConfig
- *  array, defined by sysconfig or the board file at compile time. Also clears
- *  the callback and user argument.
- *
- *  This function is not supported on CC32XX devices.
- *
- *  @param      index       GPIO index
- */
-extern void GPIO_resetConfig(uint_least8_t index);
-
-/*!
- *  @brief      Get the current mux for a gpio pin
- *
- *  For details and valid mux options, see the device-specific header file.
- *
- *  @param      index       GPIO index
- *
- *  @return     A device-specific mux value or GPIO_MUX_GPIO.
- */
-extern uint32_t GPIO_getMux(uint_least8_t index);
-
-/*!
- *  @brief      Configure the gpio pin's config and mux in a single write
- *
- *  Dynamically configure a gpio pin to a device specific setting.
- *  For many applications, the pin configurations provided in the static
- *  GPIO_PinConfig array is sufficient.
- *
- *  For some devices, configuring the pin and then muxing it can create a small
- *  drop on the line, which is enough to trigger some communication protocols.
- *  This helper function sets the pin configuration and the mux in a single access.
- *
- *  @param      index       GPIO index
- *  @param      pinConfig   device specific pin configuration settings
- *  @param      mux         Device-specific mux value to use a special mode,
- *                          or GPIO_MUX_GPIO to reset the pin to standard IO.
- *
- *  @return     GPIO_STATUS_SUCCESS or an error if the pin cannot be configured
- */
-extern int_fast16_t GPIO_setConfigAndMux(uint_least8_t index, GPIO_PinConfig pinConfig, uint32_t mux);
-
-/*!
- *  @brief      Set the user argument for a gpio pin
- *
- *  This can be retrieved using GPIO_getUserArg() and can be helpful to share
- *  callback logic across different pins.
- *
- *  @param      index       GPIO index
- *  @param      arg         Pointer to a user object
- */
-void GPIO_setUserArg(uint_least8_t index, void *arg);
-
-/*!
- *  @brief      Get the user argument for a gpio pin
- *
- *  @param      index       GPIO index
- *
- *  @return     Pointer to a user object set by GPIO_setUserArg()
- */
-void *GPIO_getUserArg(uint_least8_t index);
 
 #ifdef __cplusplus
 }

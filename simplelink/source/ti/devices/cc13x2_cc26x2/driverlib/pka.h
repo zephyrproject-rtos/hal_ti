@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       pka.h
+*  Revised:        2020-09-14 11:11:23 +0200 (Mon, 14 Sep 2020)
+*  Revision:       58613
 *
 *  Description:    PKA header file.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -94,8 +96,6 @@ extern "C"
     #define PKABigNumCmpGetResult           NOROM_PKABigNumCmpGetResult
     #define PKABigNumInvModStart            NOROM_PKABigNumInvModStart
     #define PKABigNumInvModGetResult        NOROM_PKABigNumInvModGetResult
-    #define PKABigNumExpModStart            NOROM_PKABigNumExpModStart
-    #define PKABigNumExpModGetResult        NOROM_PKABigNumExpModGetResult
     #define PKABigNumMultiplyStart          NOROM_PKABigNumMultiplyStart
     #define PKABigNumMultGetResult          NOROM_PKABigNumMultGetResult
     #define PKABigNumAddStart               NOROM_PKABigNumAddStart
@@ -276,7 +276,7 @@ extern const PKA_EccParam224 NISTP224_prime;
 //*****************************************************************************
 //
 //! \brief a constant of the NISTP224 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam224 NISTP224_a;
@@ -285,7 +285,7 @@ extern const PKA_EccParam224 NISTP224_a;
 //*****************************************************************************
 //
 //! \brief b constant of the NISTP224 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam224 NISTP224_b;
@@ -319,7 +319,7 @@ extern const PKA_EccParam256 NISTP256_prime;
 //*****************************************************************************
 //
 //! \brief a constant of the NISTP256 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam256 NISTP256_a;
@@ -328,7 +328,7 @@ extern const PKA_EccParam256 NISTP256_a;
 //*****************************************************************************
 //
 //! \brief b constant of the NISTP256 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam256 NISTP256_b;
@@ -363,7 +363,7 @@ extern const PKA_EccParam384 NISTP384_prime;
 //*****************************************************************************
 //
 //! \brief a constant of the NISTP384 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam384 NISTP384_a;
@@ -372,7 +372,7 @@ extern const PKA_EccParam384 NISTP384_a;
 //*****************************************************************************
 //
 //! \brief b constant of the NISTP384 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam384 NISTP384_b;
@@ -406,7 +406,7 @@ extern const PKA_EccParam521 NISTP521_prime;
 //*****************************************************************************
 //
 //! \brief a constant of the NISTP521 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam521 NISTP521_a;
@@ -415,7 +415,7 @@ extern const PKA_EccParam521 NISTP521_a;
 //*****************************************************************************
 //
 //! \brief b constant of the NISTP521 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam521 NISTP521_b;
@@ -449,7 +449,7 @@ extern const PKA_EccParam256 BrainpoolP256R1_prime;
 //*****************************************************************************
 //
 //! \brief a constant of the BrainpoolP256R1 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam256 BrainpoolP256R1_a;
@@ -458,7 +458,7 @@ extern const PKA_EccParam256 BrainpoolP256R1_a;
 //*****************************************************************************
 //
 //! \brief b constant of the BrainpoolP256R1 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam256 BrainpoolP256R1_b;
@@ -492,7 +492,7 @@ extern const PKA_EccParam384 BrainpoolP384R1_prime;
 //*****************************************************************************
 //
 //! \brief a constant of the BrainpoolP384R1 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam384 BrainpoolP384R1_a;
@@ -501,7 +501,7 @@ extern const PKA_EccParam384 BrainpoolP384R1_a;
 //*****************************************************************************
 //
 //! \brief b constant of the BrainpoolP384R1 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam384 BrainpoolP384R1_b;
@@ -534,7 +534,7 @@ extern const PKA_EccParam512 BrainpoolP512R1_prime;
 //*****************************************************************************
 //
 //! \brief a constant of the BrainpoolP512R1 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam512 BrainpoolP512R1_a;
@@ -543,7 +543,7 @@ extern const PKA_EccParam512 BrainpoolP512R1_a;
 //*****************************************************************************
 //
 //! \brief b constant of the BrainpoolP512R1 curve when expressed in short
-//! Weierstrass form (y^2 = x^3 + a*x + b).
+//! Weierstrass form (y^3 = x^2 + a*x + b).
 //
 //*****************************************************************************
 extern const PKA_EccParam512 BrainpoolP512R1_b;
@@ -910,70 +910,6 @@ extern uint32_t  PKABigNumInvModStart(const uint8_t *bigNum, uint32_t bigNumLeng
 //*****************************************************************************
 extern uint32_t  PKABigNumInvModGetResult(uint8_t *resultBuf, uint32_t length, uint32_t resultPKAMemAddr);
 
-//*****************************************************************************
-//
-//! \brief Starts a big number modular exponentiation operation.
-//!
-//! This function starts the exponentiation operation on \c base with
-//! \c exponent and modulo \c modulus.
-//!
-//! \param [in] base is the pointer to the buffer containing the big number
-//!             to exponentiate.
-//!
-//! \param [in] baseLength is the size of the \c base in bytes.
-//!
-//! \param [in] exponent is the pointer to the buffer containing the big number
-//!             that exponentiates.
-//!
-//! \param [in] exponentLength is the size of the \c exponent in bytes.
-
-//! \param [in] modulus is the pointer to the buffer containing the divisor.
-//!
-//! \param [in] modulusLength is the size of the divisor in bytes.
-//!
-//! \param [out] resultPKAMemAddr is the pointer to the result vector location
-//!        which will be set by this function.
-//!
-//!
-//!\return Returns a status code.
-//! - \ref PKA_STATUS_SUCCESS if successful in starting the operation.
-//! - \ref PKA_STATUS_OPERATION_BUSY if the PKA module is busy doing
-//!        some other operation.
-//!
-//! \sa PKABigNumExpModGetResult()
-//
-//*****************************************************************************
-extern uint32_t PKABigNumExpModStart(const uint8_t *base, uint32_t baseLength, const uint8_t *exponent, uint32_t exponentLength, const uint8_t *modulus, uint32_t modulusLength, uint32_t *resultPKAMemAddr);
-
-//*****************************************************************************
-//
-//! \brief Gets the result of the big number modular exponentiation operation.
-//!
-//! This function gets the result of the big number modular exponentiation
-//! operation previously started using the function PKABigNumExpModStart().
-//! The function will zero-out \c resultBuf prior to copying in the result of
-//! the modular exponentiation operation.
-//!
-//! \param [out] resultBuf is the pointer to buffer where the result needs to be
-//!        stored.
-//!
-//! \param [in] length is the size of the provided buffer in bytes.
-//!
-//! \param [in] resultPKAMemAddr is the address of the result location which
-//!        was provided by the start function PKABigNumExpModStart().
-//!
-//! \return Returns a status code.
-//! - \ref PKA_STATUS_SUCCESS if the operation is successful.
-//! - \ref PKA_STATUS_OPERATION_BUSY if the PKA module is busy performing
-//!        the operation.
-//! - \ref PKA_STATUS_RESULT_0 if the result is all zeros.
-//! - \ref PKA_STATUS_BUF_UNDERFLOW if the length of the provided buffer is less
-//!        than the result.
-//!
-//! \sa PKABigNumExpModStart()
-//
-//*****************************************************************************
-extern uint32_t  PKABigNumExpModGetResult(uint8_t *resultBuf, uint32_t length, uint32_t resultPKAMemAddr);
 
 //*****************************************************************************
 //
@@ -1001,6 +937,7 @@ extern uint32_t  PKABigNumExpModGetResult(uint8_t *resultBuf, uint32_t length, u
 //
 //*****************************************************************************
 extern uint32_t  PKABigNumMultiplyStart(const uint8_t *multiplicand, uint32_t multiplicandLength, const uint8_t *multiplier, uint32_t multiplierLength, uint32_t *resultPKAMemAddr);
+
 
 //*****************************************************************************
 //
@@ -1447,14 +1384,6 @@ extern uint32_t PKAEccVerifyPublicKeyWeierstrassStart(const uint8_t *curvePointX
     #ifdef ROM_PKABigNumInvModGetResult
         #undef  PKABigNumInvModGetResult
         #define PKABigNumInvModGetResult        ROM_PKABigNumInvModGetResult
-    #endif
-    #ifdef ROM_PKABigNumExpModStart
-        #undef  PKABigNumExpModStart
-        #define PKABigNumExpModStart            ROM_PKABigNumExpModStart
-    #endif
-    #ifdef ROM_PKABigNumExpModGetResult
-        #undef  PKABigNumExpModGetResult
-        #define PKABigNumExpModGetResult        ROM_PKABigNumExpModGetResult
     #endif
     #ifdef ROM_PKABigNumMultiplyStart
         #undef  PKABigNumMultiplyStart

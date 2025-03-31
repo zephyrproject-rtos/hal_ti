@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       watchdog.h
+*  Revised:        2020-09-07 16:11:55 +0200 (Mon, 07 Sep 2020)
+*  Revision:       58511
 *
 *  Description:    Defines and prototypes for the Watchdog Timer.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -43,8 +45,8 @@
 //
 //*****************************************************************************
 
-#ifndef __WATCHDOG_H__
-#define __WATCHDOG_H__
+#ifndef __WDT_H__
+#define __WDT_H__
 
 //*****************************************************************************
 //
@@ -507,7 +509,7 @@ WatchdogStallDisable(void)
 }
 #endif
 
-#endif // __WATCHDOG_H__
+#endif // __WDT_H__
 
 //*****************************************************************************
 //

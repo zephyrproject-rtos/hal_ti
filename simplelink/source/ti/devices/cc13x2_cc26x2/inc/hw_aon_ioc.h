@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_aon_ioc_h
-*  Revised:        $Date$
-*  Revision:       $Revision$
+*  Revised:        2020-02-27 14:31:42 +0100 (Thu, 27 Feb 2020)
+*  Revision:       56881
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.

@@ -1,10 +1,12 @@
 /******************************************************************************
 *  Filename:       rom_crypto.h
+*  Revised:        2020-09-17 15:26:49 +0200 (Thu, 17 Sep 2020)
+*  Revision:       58682
 *
 *  Description:    This header file is the API to the crypto functions
 *                  built into ROM on the CC13xx/CC26xx.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -258,6 +260,7 @@ extern uint8_t ECC_ECDH_computeSharedSecret(uint32_t *privateKey,
                                             uint32_t *publicKey_y,
                                             uint32_t *sharedSecret_x,
                                             uint32_t *sharedSecret_y);
+
 
 #ifdef __cplusplus
 }

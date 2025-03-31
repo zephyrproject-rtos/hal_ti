@@ -1,7 +1,9 @@
 /******************************************************************************
 *  Filename:       gpio_doc.h
+*  Revised:        2016-03-30 13:03:59 +0200 (Wed, 30 Mar 2016)
+*  Revision:       45971
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -54,22 +56,31 @@
 //!
 //! Set and get direction of DIO (output enable):
 //! - \ref GPIO_setOutputEnableDio()
+//! - \ref GPIO_setOutputEnableMultiDio()
 //! - \ref GPIO_getOutputEnableDio()
+//! - \ref GPIO_getOutputEnableMultiDio()
 //!
 //! Write DIO (requires IOC to be configured for GPIO usage):
 //! - \ref GPIO_writeDio()
+//! - \ref GPIO_writeMultiDio()
 //!
 //! Set, clear, or toggle DIO (requires IOC to be configured for GPIO usage):
 //! - \ref GPIO_setDio()
+//! - \ref GPIO_setMultiDio()
 //! - \ref GPIO_clearDio()
+//! - \ref GPIO_clearMultiDio()
 //! - \ref GPIO_toggleDio()
+//! - \ref GPIO_toggleMultiDio()
 //!
 //! Read DIO (even if IOC is NOT configured for GPIO usage; however, the DIO must be configured for input enable in IOC):
 //! - \ref GPIO_readDio()
+//! - \ref GPIO_readMultiDio()
 //!
 //! Read or clear events (even if IOC is NOT configured for GPIO usage; however, the DIO must be configured for input enable in IOC):
 //! - \ref GPIO_getEventDio()
+//! - \ref GPIO_getEventMultiDio()
 //! - \ref GPIO_clearEventDio()
+//! - \ref GPIO_clearEventMultiDio()
 //!
 //! The [IOC API](\ref ioc_api) provides two functions for easy configuration of DIOs as GPIO enabled using
 //! typical settings. They also serve as examples on how to configure the IOC and GPIO modules for GPIO usage:

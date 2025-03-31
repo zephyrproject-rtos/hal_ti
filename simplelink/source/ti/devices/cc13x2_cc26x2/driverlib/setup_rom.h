@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       setup_rom.h
+*  Revised:        2020-09-17 15:26:49 +0200 (Thu, 17 Sep 2020)
+*  Revision:       58682
 *
 *  Description:    Prototypes and defines for the setup API.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -342,7 +344,6 @@ extern void SetupSetCacheModeAccordingToCcfgSetting( void );
 //
 //*****************************************************************************
 extern void SetupSetAonRtcSubSecInc( uint32_t subSecInc );
-
 
 //*****************************************************************************
 //

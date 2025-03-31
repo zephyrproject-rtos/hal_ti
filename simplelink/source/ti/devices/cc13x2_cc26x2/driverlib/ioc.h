@@ -1,9 +1,11 @@
 /******************************************************************************
 *  Filename:       ioc.h
+*  Revised:        2020-07-16 14:41:29 +0200 (Thu, 16 Jul 2020)
+*  Revision:       58010
 *
 *  Description:    Defines and prototypes for the IO Controller.
 *
-*  Copyright (c) 2015 - 2022, Texas Instruments Incorporated
+*  Copyright (c) 2015 - 2020, Texas Instruments Incorporated
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -106,7 +108,7 @@ extern "C"
 
 //*****************************************************************************
 //
-// Number of IOs (max. total of 32 for 26x2, 48 for 26x4)
+// Number of IOs (max. total of 32)
 //
 //*****************************************************************************
 #define NUM_IO_MAX 32
@@ -272,6 +274,7 @@ extern "C"
 #define IOC_IOPULL_UP           0x00004000  // Pull up
 #define IOC_IOPULL_DOWN         0x00002000  // Pull down
 #define IOC_IOPULL_M            0x00006000  // Pull config mask
+#define IOC_IOPULL_M            0x00006000
 
 //*****************************************************************************
 //
@@ -873,7 +876,7 @@ __STATIC_INLINE void
 IOCIntClear(uint32_t ui32IOId)
 {
     // Check the arguments.
-    ASSERT(ui32IOId < NUM_IO_MAX);
+    ASSERT(ui32IOId <= IOID_31);
 
     // Clear the requested interrupt source by clearing the event.
     GPIO_clearEventDio(ui32IOId);
@@ -895,7 +898,7 @@ __STATIC_INLINE uint32_t
 IOCIntStatus(uint32_t ui32IOId)
 {
     // Check the arguments.
-    ASSERT(ui32IOId < NUM_IO_MAX);
+    ASSERT(ui32IOId <= IOID_31);
 
     // Get the event status.
     return (GPIO_getEventDio(ui32IOId));
@@ -1084,6 +1087,7 @@ extern void IOCPinTypeSsiSlave(uint32_t ui32Base, uint32_t ui32Rx,
 //*****************************************************************************
 extern void IOCPinTypeI2c(uint32_t ui32Base, uint32_t ui32Data,
                           uint32_t ui32Clk);
+
 
 //*****************************************************************************
 //
