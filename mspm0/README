@@ -1,0 +1,20 @@
+The MSPM0 SDK provides peripheral drivers and hardware register access 
+header files for the Texas Instruments MSPM0 SoCs.
+
+The current version supported in Zephyr is 2.04.00.06
+
+  https://www.ti.com/tool/MSPM0-SDK
+
+The source files are directly copied from the /source/ti/driverlib/ and /source/ti/devices directories.
+
+Drivers and applications that need functions from the MSPM0 DriverLib C-files
+will need to add the appropriate select entries in their Kconfig files.
+For example when functions from ``dl_uart.c`` are used, the following
+entry should apear in driver's Kconfig file.
+
+.. code-block:: none
+
+	select CONFIG_USE_MSPM0_DL_UART
+
+should be added to the Kconfig file.
+
