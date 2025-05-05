@@ -1,0 +1,23 @@
+The MSPM0 SDK provide peripheral driver library, device hardware register
+access header files for the Texas Instruments MSPM0 SoCs.
+
+The current version supported in Zephyr is the MSPM0 SDK 2.04.00.06
+downloaded from:
+
+  https://github.com/TexasInstruments/mspm0-sdk.git
+
+The driver library source is copied from the SDK, as follows:
+
+  git clone https://github.com/TexasInstruments/mspm0-sdk.git
+  cd ~/mspm0-sdk/source/ti
+  rm -r !(driverlib|devices)
+  cd ~/mspm0-sdk/source/
+  find . -name third_party -type d -exec rm -r "{}" \;
+  find . -name linker_files -type d -exec rm -r "{}" \;
+  find . -name startup_system_files -type d -exec rm -r "{}" \;
+  find . -name ".meta" -type d -exec rm -r "{}" \;
+  find . -name lib -type d -exec rm -r "{}" \;
+  cp -r ~/mspm0-sdk/source modules/hal/ti/mspm0/
+
+Afterwards, search through the `git diff` for the 'Zephyr' word in comments and
+reapply specific patches.
