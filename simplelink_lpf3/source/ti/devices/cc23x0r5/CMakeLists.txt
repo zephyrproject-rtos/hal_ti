@@ -45,7 +45,6 @@ zephyr_library_sources(
   driverlib/setup.c
   driverlib/uart.c
   driverlib/spi.c
-  driverlib/vims.c
   driverlib/adc.c
   driverlib/cpu.c
   driverlib/i2c.c
