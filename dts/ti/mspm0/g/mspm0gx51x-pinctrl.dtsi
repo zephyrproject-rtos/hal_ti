@@ -1,0 +1,135 @@
+#include <dt-bindings/pinctrl/mspm0-pinctrl.h>
+
+&pinctrl {
+
+	/omit-if-no-ref/ i2c0_sda_pa0: i2c0_sda_pa0 {
+		pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_3)>;
+		input-enable;
+		drive-open-drain;
+	};
+
+	/omit-if-no-ref/ i2c0_scl_pa1: i2c0_scl_pa1 {
+		pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_3)>;
+		input-enable;
+		drive-open-drain;
+	};
+
+	/omit-if-no-ref/ i2c1_sda_pa16: i2c1_sda_pa16 {
+		pinmux = <MSP_PINMUX(38, MSPM0_PIN_FUNCTION_4)>;
+		input-enable;
+		drive-open-drain;
+	};
+
+	/omit-if-no-ref/ i2c1_scl_pb2: i2c1_scl_pb2 {
+		pinmux = <MSP_PINMUX(15, MSPM0_PIN_FUNCTION_4)>;
+		input-enable;
+		drive-open-drain;
+	};
+
+	/omit-if-no-ref/ uart0_tx_pa10: uart0_tx_pa10 {
+		pinmux = <MSP_PINMUX(21, MSPM0_PIN_FUNCTION_2)>;
+		drive-strength = <20>;
+	};
+
+	/omit-if-no-ref/ uart0_rx_pa11: uart0_rx_pa11 {
+		pinmux = <MSP_PINMUX(22, MSPM0_PIN_FUNCTION_2)>;
+		drive-strength = <20>;
+		input-enable;
+	};
+
+	/omit-if-no-ref/ uart1_tx_pb4: uart1_tx_pb4 {
+		pinmux = <MSP_PINMUX(21, MSPM0_PIN_FUNCTION_2)>;
+		drive-strength = <20>;
+	};
+
+	/omit-if-no-ref/ uart1_rx_pb5: uart1_rx_pb5 {
+		pinmux = <MSP_PINMUX(22, MSPM0_PIN_FUNCTION_2)>;
+		drive-strength = <20>;
+		input-enable;
+	};
+
+	/omit-if-no-ref/ uart1_rts_pa22: uart1_rts_pa22 {
+		pinmux = <MSP_PINMUX(47, MSPM0_PIN_FUNCTION_4)>;
+	};
+
+	/omit-if-no-ref/ uart1_cts_pa21: uart1_cts_pa21 {
+		pinmux = <MSP_PINMUX(46, MSPM0_PIN_FUNCTION_4)>;
+		input-enable;
+	};
+
+	/omit-if-no-ref/ spi0_sclk_pa12: spi0_sclk_pa12 {
+		pinmux = <MSP_PINMUX(34, MSPM0_PIN_FUNCTION_3)>;
+	};
+
+	/omit-if-no-ref/ spi0_pico_pa9: spi0_pico_pa9 {
+		pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_3)>;
+	};
+
+	/omit-if-no-ref/ spi0_poci_pa13: spi0_poci_pa13 {
+		pinmux = <MSP_PINMUX(35, MSPM0_PIN_FUNCTION_3)>;
+		input-enable;
+	};
+
+	/omit-if-no-ref/ can0_tx_pa12: can0_tx_pa12 {
+		pinmux = <MSP_PINMUX(34, MSPM0_PIN_FUNCTION_12)>;
+	};
+
+    /omit-if-no-ref/ can0_rx_pa13: can0_rx_pa13 {
+		pinmux = <MSP_PINMUX(35, MSPM0_PIN_FUNCTION_12)>;
+		input-enable;
+	};
+
+	/omit-if-no-ref/ spi0_cs0_pa8: spi0_cs0_pa8 {
+		pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_3)>;
+	};
+
+	/omit-if-no-ref/ spi0_cs1_pb24: spi0_cs1_pb24 {
+		pinmux = <MSP_PINMUX(52, MSPM0_PIN_FUNCTION_3)>;
+	};
+
+	/omit-if-no-ref/ spi1_sclk_pa17: spi1_sclk_pa17 {
+		pinmux = <MSP_PINMUX(39, MSPM0_PIN_FUNCTION_3)>;
+	};
+
+	/omit-if-no-ref/ spi1_pico_pb15: spi1_pico_pb15 {
+		pinmux = <MSP_PINMUX(32, MSPM0_PIN_FUNCTION_3)>;
+	};
+
+	/omit-if-no-ref/ spi1_poci_pb21: spi1_poci_pb21 {
+		pinmux = <MSP_PINMUX(49, MSPM0_PIN_FUNCTION_3)>;
+		input-enable;
+	};
+
+	/omit-if-no-ref/ spi1_cs0_pb20: spi1_cs0_pb20 {
+		pinmux = <MSP_PINMUX(48, MSPM0_PIN_FUNCTION_3)>;
+	};
+
+	/omit-if-no-ref/ spi1_cs1_pc3: spi1_cs1_pc3 {
+		pinmux = <MSP_PINMUX(77, MSPM0_PIN_FUNCTION_3)>;
+	};
+
+	/omit-if-no-ref/ adc0_pa27: adc0_pa27 {
+		pinmux = <MSP_PINMUX(60, MSPM0_PIN_FUNCTION_ANALOG)>;
+	};
+
+	/omit-if-no-ref/ adc0_pa26: adc0_pa26 {
+		pinmux = <MSP_PINMUX(59, MSPM0_PIN_FUNCTION_ANALOG)>;
+	};
+
+	/omit-if-no-ref/ adc0_pa25: adc0_pa25 {
+		pinmux = <MSP_PINMUX(55, MSPM0_PIN_FUNCTION_ANALOG)>;
+	};
+
+	/omit-if-no-ref/ adc0_pb24: adc0_pb24 {
+		pinmux = <MSP_PINMUX(52, MSPM0_PIN_FUNCTION_ANALOG)>;
+	};
+
+	/omit-if-no-ref/ adc0_pb25: adc0_pb25 {
+		pinmux = <MSP_PINMUX(56, MSPM0_PIN_FUNCTION_ANALOG)>;
+	};
+
+	/omit-if-no-ref/ adc1_pb19: adc1_pb19 {
+		pinmux = <MSP_PINMUX(45, MSPM0_PIN_FUNCTION_ANALOG)>;
+	};
+
+};
