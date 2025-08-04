@@ -16,6 +16,7 @@ if(CONFIG_HAS_MSPM0_SDK)
   zephyr_library_compile_definitions(${COMPILER})
   zephyr_library_sources(${sysctl})
   zephyr_library_sources(source/ti/driverlib/dl_common.c)
+  zephyr_library_sources(source/ti/driverlib/m0p/dl_factoryregion.c)
 
   zephyr_library_sources_ifdef(CONFIG_USE_MSPM0_DL_ADC source/ti/driverlib/dl_adc12.c)
   zephyr_library_sources_ifdef(CONFIG_USE_MSPM0_DL_AES source/ti/driverlib/dl_aes.c)

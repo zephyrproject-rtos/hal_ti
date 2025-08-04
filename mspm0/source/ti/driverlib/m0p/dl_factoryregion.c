@@ -36,8 +36,6 @@
 
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_MSPM0GX51X)
 
-/* Creating a section for structure inside SRAM*/
-__attribute__((section(".TrimTable")))
 DL_FACTORYREGION_TrimValues DL_FACTORYREGION_TrimTable;
 /* Creating a pointer to the structure placed inside SRAM*/
 DL_FACTORYREGION_TrimValues *FACTORYVALUE = &DL_FACTORYREGION_TrimTable;
