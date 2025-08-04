@@ -11,6 +11,7 @@ The driver library source is copied from the SDK, as follows:
   git clone https://github.com/TexasInstruments/mspm0-sdk.git
   cd ~/mspm0-sdk/source/ti
   rm -r !(driverlib|devices)
+  sed -i 's/__attribute__((section(".TrimTable")))//g' driverlib/m0p/dl_factoryregion.c
   cd ~/mspm0-sdk/source/
   find . -name third_party -type d -exec rm -r "{}" \;
   find . -name linker_files -type d -exec rm -r "{}" \;
