@@ -62,7 +62,7 @@ extern "C" {
 #include "../inc/hw_types.h"
 
 #include "../cmsis/cc23x0r5.h"
-#include "../cmsis/core/core_cm0plus.h"
+#include <core_cm0plus.h>
 
 #include "cpu.h"
 

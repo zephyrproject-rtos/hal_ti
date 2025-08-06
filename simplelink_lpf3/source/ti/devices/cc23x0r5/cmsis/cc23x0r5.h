@@ -47,6 +47,6 @@ typedef enum IRQn
 #define __VTOR_PRESENT         0x0001U /* VTOR present */
 #define __NVIC_PRIO_BITS       0x0002U /* 2 NVIC priority bits */
 
-#include "core/core_cm0plus.h"
+#include <core_cm0plus.h>
 
 #endif // #ifndef __CC23X0R5_H__
