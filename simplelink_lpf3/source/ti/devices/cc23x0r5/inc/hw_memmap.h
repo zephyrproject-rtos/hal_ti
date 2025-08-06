@@ -95,9 +95,7 @@
 #define CCFG_BASE               0x4E020000 // CCFG
    #define CCFG_SIZE                       0x800
 #define BPU_BASE                0xE0002000 // BPU
-#define NVIC_BASE               0xE000E000 // NVIC
 #define SYSTICK_BASE            0xE000E010 // SYSTICK
-#define SCB_BASE                0xE000ED00 // SCB
 #define DCB_BASE                0xE000ED30 // DCB
 #define SCSCS_BASE              0xE000EFC0 // SCSCS
 #define CPU_ROM_TABLE_BASE      0xE00FF000 // CPU_ROM_TABLE

@@ -153,7 +153,7 @@ void IntSetPriority(uint32_t intNum, uint8_t priority)
     // Indexing starts at SHPR2 (8 <= intNum <= 11)
     if (intNum < 16)
     {
-        address          = SCB->SHP;
+        address          = SCB->SHPR;
         priorityRegIndex = intNum - 8;
     }
 
@@ -161,7 +161,7 @@ void IntSetPriority(uint32_t intNum, uint8_t priority)
     // Indexing starts at IPR0 (16 <= intNum <= 19)
     else
     {
-        address          = NVIC->IP;
+        address          = NVIC->IPR;
         priorityRegIndex = intNum - 16;
     }
 
@@ -203,14 +203,14 @@ int32_t IntGetPriority(uint32_t intNum)
         /* System exception priorities are set in the SHPR registers.
          * Indexing starts at SHPR2 (8 <= intNum <= 11)
          */
-        return ((SCB->SHP[index - 2] >> (8 * (intNum & 3))) & INT_PRIORITY_MASK);
+        return ((SCB->SHPR[index - 2] >> (8 * (intNum & 3))) & INT_PRIORITY_MASK);
     }
     else
     {
         /* User interrupt (id >= 16) priorities are set in the IPR registers
          * Indexing starts at IPR0 (16 <= intNum <= 19)
          */
-        return ((NVIC->IP[index - 4] >> (8 * (intNum & 3))) & INT_PRIORITY_MASK);
+        return ((NVIC->IPR[index - 4] >> (8 * (intNum & 3))) & INT_PRIORITY_MASK);
     }
 }
 

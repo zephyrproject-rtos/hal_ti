@@ -67,7 +67,6 @@
 #include DeviceFamily_constructPath(driverlib/gpio.h)
 #include DeviceFamily_constructPath(driverlib/lrfd.h)
 #include DeviceFamily_constructPath(driverlib/pmctl.h)
-#include DeviceFamily_constructPath(cmsis/core/cmsis_compiler.h)
 
 /* Forward declarations */
 int_fast16_t PowerCC23X0_notify(uint_fast16_t eventType);
