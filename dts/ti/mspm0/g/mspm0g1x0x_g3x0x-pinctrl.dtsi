@@ -17,6 +17,9 @@
 
 			/omit-if-no-ref/ i2c0_sda_pa0: i2c0_sda_pa0 {
 				pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp0_pa0: tima0_ccp0_pa0 {
@@ -51,6 +54,9 @@
 
 			/omit-if-no-ref/ i2c0_scl_pa1: i2c0_scl_pa1 {
 				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp1_pa1: tima0_ccp1_pa1 {
@@ -83,6 +89,9 @@
 
 			/omit-if-no-ref/ i2c0_sda_pa28: i2c0_sda_pa28 {
 				pinmux = <MSP_PINMUX(3, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/tima0_ccp3_pa28: tima0_ccp3_pa28 {
@@ -111,6 +120,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa29: i2c1_scl_pa29 {
 				pinmux = <MSP_PINMUX(4, MSPM0_PIN_FUNCTION_2)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ uart2_rts_pa29: uart2_rts_pa29 {
@@ -135,6 +147,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa30: i2c1_sda_pa30 {
 				pinmux = <MSP_PINMUX(5, MSPM0_PIN_FUNCTION_2)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ uart2_cts_pa30: uart2_cts_pa30 {
@@ -165,6 +180,9 @@
 
 			/omit-if-no-ref/ i2c0_scl_pa31: i2c0_scl_pa31 {
 				pinmux = <MSP_PINMUX(6, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_cmpl_pa31: tima0_ccp3_cmpl_pa31 {
@@ -251,6 +269,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa3: i2c1_sda_pa3 {
 				pinmux = <MSP_PINMUX(8, MSPM0_PIN_FUNCTION_9)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ analog_pa4: analog_pa4 {
@@ -293,6 +314,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa4: i2c1_scl_pa4 {
 				pinmux = <MSP_PINMUX(9, MSPM0_PIN_FUNCTION_9)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ analog_pa5: analog_pa5 {
@@ -471,6 +495,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pb2: i2c1_scl_pb2 {
 				pinmux = <MSP_PINMUX(15, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_pb2: tima0_ccp3_pb2 {
@@ -509,6 +536,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pb3: i2c1_sda_pb3 {
 				pinmux = <MSP_PINMUX(16, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_cmpl_pb3: tima0_ccp3_cmpl_pb3 {
@@ -674,6 +704,9 @@
 
 			/omit-if-no-ref/ i2c0_sda_pa10: i2c0_sda_pa10 {
 				pinmux = <MSP_PINMUX(21, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima1_ccp0_pa10: tima1_ccp0_pa10 {
@@ -690,6 +723,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa10: i2c1_sda_pa10 {
 				pinmux = <MSP_PINMUX(21, MSPM0_PIN_FUNCTION_8)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ sysctl_clk_out_pa10: sysctl_clk_out_pa10 {
@@ -715,6 +751,9 @@
 
 			/omit-if-no-ref/ i2c0_scl_pa11: i2c0_scl_pa11 {
 				pinmux = <MSP_PINMUX(22, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima1_ccp1_pa11: tima1_ccp1_pa11 {
@@ -731,6 +770,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa11: i2c1_scl_pa11 {
 				pinmux = <MSP_PINMUX(22, MSPM0_PIN_FUNCTION_8)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ analog_pb6: analog_pb6 {
@@ -1165,6 +1207,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa15: i2c1_scl_pa15 {
 				pinmux = <MSP_PINMUX(37, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima1_ccp0_pa15: tima1_ccp0_pa15 {
@@ -1202,6 +1247,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa16: i2c1_sda_pa16 {
 				pinmux = <MSP_PINMUX(38, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima1_ccp1_pa16: tima1_ccp1_pa16 {
@@ -1239,6 +1287,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa17: i2c1_scl_pa17 {
 				pinmux = <MSP_PINMUX(39, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_pa17: tima0_ccp3_pa17 {
@@ -1272,6 +1323,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa18: i2c1_sda_pa18 {
 				pinmux = <MSP_PINMUX(40, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_cmpl_pa18: tima0_ccp3_cmpl_pa18 {
