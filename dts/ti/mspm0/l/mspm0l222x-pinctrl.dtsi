@@ -17,6 +17,9 @@
 
 			/omit-if-no-ref/ i2c0_sda_pa0: i2c0_sda_pa0 {
 				pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp0_pa0: tima0_ccp0_pa0 {
@@ -57,6 +60,9 @@
 
 			/omit-if-no-ref/ i2c0_scl_pa01: i2c0_scl_pa01 {
 				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp1_pa01: tima0_ccp1_pa01 {
@@ -101,6 +107,9 @@
 
 			/omit-if-no-ref/ i2c0_sda_pa28: i2c0_sda_pa28 {
 				pinmux = <MSP_PINMUX(3, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_pa28: tima0_ccp3_pa28 {
@@ -129,6 +138,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa29: i2c1_scl_pa29 {
 				pinmux = <MSP_PINMUX(4, MSPM0_PIN_FUNCTION_2)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ uart2_rts_pa29: uart2_rts_pa29 {
@@ -145,6 +157,9 @@
 
 			/omit-if-no-ref/ i2c2_scl_pa29: i2c2_scl_pa29 {
 				pinmux = <MSP_PINMUX(4, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ uart0_cts_pa29: uart0_cts_pa29 {
@@ -165,6 +180,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa30: i2c1_sda_pa30 {
 				pinmux = <MSP_PINMUX(5, MSPM0_PIN_FUNCTION_2)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ uart2_cts_pa30: uart2_cts_pa30 {
@@ -181,6 +199,9 @@
 
 			/omit-if-no-ref/ i2c2_sda_pa30: i2c2_sda_pa30 {
 				pinmux = <MSP_PINMUX(5, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ uart0_rts_pa30: uart0_rts_pa30 {
@@ -205,6 +226,9 @@
 
 			/omit-if-no-ref/ i2c0_scl_pa31: i2c0_scl_pa31 {
 				pinmux = <MSP_PINMUX(6, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_cmpl_pa31: tima0_ccp3_cmpl_pa31 {
@@ -293,6 +317,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa03: i2c1_sda_pa03 {
 				pinmux = <MSP_PINMUX(8, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp1_pa03: tima0_ccp1_pa03 {
@@ -341,6 +368,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa04: i2c1_scl_pa04 {
 				pinmux = <MSP_PINMUX(9, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp1_cmpl_pa04: tima0_ccp1_cmpl_pa04 {
@@ -389,6 +419,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa05: i2c1_sda_pa05 {
 				pinmux = <MSP_PINMUX(10, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ timg0_ccp0_pa05: timg0_ccp0_pa05 {
@@ -437,6 +470,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa06: i2c1_scl_pa06 {
 				pinmux = <MSP_PINMUX(11, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ timg0_ccp1_pa06: timg0_ccp1_pa06 {
@@ -485,6 +521,9 @@
 
 			/omit-if-no-ref/ i2c0_scl_pb0: i2c0_scl_pb0 {
 				pinmux = <MSP_PINMUX(12, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp2_pb0: tima0_ccp2_pb0 {
@@ -517,6 +556,9 @@
 
 			/omit-if-no-ref/ i2c0_sda_pb01: i2c0_sda_pb01 {
 				pinmux = <MSP_PINMUX(13, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp2_cmpl_pb01: tima0_ccp2_cmpl_pb01 {
@@ -597,6 +639,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pb02: i2c1_scl_pb02 {
 				pinmux = <MSP_PINMUX(15, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_pb02: tima0_ccp3_pb02 {
@@ -645,6 +690,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pb03: i2c1_sda_pb03 {
 				pinmux = <MSP_PINMUX(16, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_cmpl_pb03: tima0_ccp3_cmpl_pb03 {
@@ -757,6 +805,9 @@
 
 			/omit-if-no-ref/ i2c0_sda_pa08: i2c0_sda_pa08 {
 				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp0_pa08: tima0_ccp0_pa08 {
@@ -805,6 +856,9 @@
 
 			/omit-if-no-ref/ i2c0_scl_pa09: i2c0_scl_pa09 {
 				pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp0_cmpl_pa09: tima0_ccp0_cmpl_pa09 {
@@ -845,6 +899,9 @@
 
 			/omit-if-no-ref/ i2c2_scl_pb28: i2c2_scl_pb28 {
 				pinmux = <MSP_PINMUX(21, MSPM0_PIN_FUNCTION_2)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ spi1_cs0_pb28: spi1_cs0_pb28 {
@@ -873,6 +930,9 @@
 
 			/omit-if-no-ref/ i2c2_sda_pb29: i2c2_sda_pb29 {
 				pinmux = <MSP_PINMUX(22, MSPM0_PIN_FUNCTION_2)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ spi1_poci_pb29: spi1_poci_pb29 {
@@ -965,6 +1025,9 @@
 
 			/omit-if-no-ref/ i2c0_sda_pa10: i2c0_sda_pa10 {
 				pinmux = <MSP_PINMUX(25, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp2_pa10: tima0_ccp2_pa10 {
@@ -981,6 +1044,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa10: i2c1_sda_pa10 {
 				pinmux = <MSP_PINMUX(25, MSPM0_PIN_FUNCTION_8)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ timg12_ccp0_pa10: timg12_ccp0_pa10 {
@@ -1009,6 +1075,9 @@
 
 			/omit-if-no-ref/ i2c0_scl_pa11: i2c0_scl_pa11 {
 				pinmux = <MSP_PINMUX(26, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp2_cmpl_pa11: tima0_ccp2_cmpl_pa11 {
@@ -1025,6 +1094,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa11: i2c1_scl_pa11 {
 				pinmux = <MSP_PINMUX(26, MSPM0_PIN_FUNCTION_8)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ timg12_ccp1_pa11: timg12_ccp1_pa11 {
@@ -1053,6 +1125,9 @@
 
 			/omit-if-no-ref/ i2c2_scl_pb06: i2c2_scl_pb06 {
 				pinmux = <MSP_PINMUX(27, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ timg8_ccp0_pb06: timg8_ccp0_pb06 {
@@ -1097,6 +1172,9 @@
 
 			/omit-if-no-ref/ i2c2_sda_pb07: i2c2_sda_pb07 {
 				pinmux = <MSP_PINMUX(28, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ timg8_ccp1_pb07: timg8_ccp1_pb07 {
@@ -1141,6 +1219,9 @@
 
 			/omit-if-no-ref/ i2c2_scl_pb08: i2c2_scl_pb08 {
 				pinmux = <MSP_PINMUX(29, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp0_pb08: tima0_ccp0_pb08 {
@@ -1177,6 +1258,9 @@
 
 			/omit-if-no-ref/ i2c2_sda_pb09: i2c2_sda_pb09 {
 				pinmux = <MSP_PINMUX(30, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp0_cmpl_pb09: tima0_ccp0_cmpl_pb09 {
@@ -1385,6 +1469,9 @@
 
 			/omit-if-no-ref/ i2c2_scl_pb15: i2c2_scl_pb15 {
 				pinmux = <MSP_PINMUX(36, MSPM0_PIN_FUNCTION_7)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ analog_pb16: analog_pb16 {
@@ -1417,6 +1504,9 @@
 
 			/omit-if-no-ref/ i2c2_sda_pb16: i2c2_sda_pb16 {
 				pinmux = <MSP_PINMUX(37, MSPM0_PIN_FUNCTION_7)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ analog_pa12: analog_pa12 {
@@ -1577,6 +1667,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa15: i2c1_scl_pa15 {
 				pinmux = <MSP_PINMUX(41, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp2_pa15: tima0_ccp2_pa15 {
@@ -1585,6 +1678,9 @@
 
 			/omit-if-no-ref/ i2c2_scl_pa15: i2c2_scl_pa15 {
 				pinmux = <MSP_PINMUX(41, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ timg8_idx_pa15: timg8_idx_pa15 {
@@ -1621,6 +1717,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa16: i2c1_sda_pa16 {
 				pinmux = <MSP_PINMUX(42, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp2_cmpl_pa16: tima0_ccp2_cmpl_pa16 {
@@ -1629,6 +1728,9 @@
 
 			/omit-if-no-ref/ i2c2_sda_pa16: i2c2_sda_pa16 {
 				pinmux = <MSP_PINMUX(42, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ sysctl_fcc_in_pa16: sysctl_fcc_in_pa16 {
@@ -1705,6 +1807,9 @@
 
 			/omit-if-no-ref/ i2c2_scl_pc02: i2c2_scl_pc02 {
 				pinmux = <MSP_PINMUX(45, MSPM0_PIN_FUNCTION_2)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ spi1_cs0_pc02: spi1_cs0_pc02 {
@@ -1733,6 +1838,9 @@
 
 			/omit-if-no-ref/ i2c2_sda_pc03: i2c2_sda_pc03 {
 				pinmux = <MSP_PINMUX(46, MSPM0_PIN_FUNCTION_2)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ spi1_cs1_poci1_pc03: spi1_cs1_poci1_pc03 {
@@ -1825,6 +1933,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa17: i2c1_scl_pa17 {
 				pinmux = <MSP_PINMUX(49, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_pa17: tima0_ccp3_pa17 {
@@ -1869,6 +1980,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa18: i2c1_sda_pa18 {
 				pinmux = <MSP_PINMUX(50, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_cmpl_pa18: tima0_ccp3_cmpl_pa18 {
@@ -1913,6 +2027,9 @@
 
 			/omit-if-no-ref/ i2c1_sda_pa19: i2c1_sda_pa19 {
 				pinmux = <MSP_PINMUX(51, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp2_pa19: tima0_ccp2_pa19 {
@@ -1941,6 +2058,9 @@
 
 			/omit-if-no-ref/ i2c1_scl_pa20: i2c1_scl_pa20 {
 				pinmux = <MSP_PINMUX(52, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp2_cmpl_pa20: tima0_ccp2_cmpl_pa20 {
@@ -1969,6 +2089,9 @@
 
 			/omit-if-no-ref/ i2c0_scl_pb17: i2c0_scl_pb17 {
 				pinmux = <MSP_PINMUX(53, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp2_pb17: tima0_ccp2_pb17 {
@@ -2013,6 +2136,9 @@
 
 			/omit-if-no-ref/ i2c0_sda_pb18: i2c0_sda_pb18 {
 				pinmux = <MSP_PINMUX(54, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp2_cmpl_pb18: tima0_ccp2_cmpl_pb18 {
@@ -2165,6 +2291,9 @@
 
 			/omit-if-no-ref/ i2c0_scl_pa22: i2c0_scl_pa22 {
 				pinmux = <MSP_PINMUX(57, MSPM0_PIN_FUNCTION_9)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ timg8_ccp1_pa22: timg8_ccp1_pa22 {
@@ -2305,6 +2434,9 @@
 
 			/omit-if-no-ref/ i2c0_sda_pb20: i2c0_sda_pb20 {
 				pinmux = <MSP_PINMUX(62, MSPM0_PIN_FUNCTION_9)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ analog_pb21: analog_pb21 {
@@ -2325,6 +2457,9 @@
 
 			/omit-if-no-ref/ i2c0_scl_pb21: i2c0_scl_pb21 {
 				pinmux = <MSP_PINMUX(63, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ timg8_ccp0_pb21: timg8_ccp0_pb21 {
@@ -2353,6 +2488,9 @@
 
 			/omit-if-no-ref/ i2c0_sda_pb22: i2c0_sda_pb22 {
 				pinmux = <MSP_PINMUX(64, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ timg8_ccp1_pb22: timg8_ccp1_pb22 {
@@ -2441,6 +2579,9 @@
 
 			/omit-if-no-ref/ i2c2_scl_pa23: i2c2_scl_pa23 {
 				pinmux = <MSP_PINMUX(67, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_pa23: tima0_ccp3_pa23 {
@@ -2485,6 +2626,9 @@
 
 			/omit-if-no-ref/ i2c2_sda_pa24: i2c2_sda_pa24 {
 				pinmux = <MSP_PINMUX(68, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_cmpl_pa24: tima0_ccp3_cmpl_pa24 {
