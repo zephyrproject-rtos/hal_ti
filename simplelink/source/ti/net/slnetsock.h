@@ -191,15 +191,6 @@ interface.  Some are mandatory, others are optional (but recommended).
 #define __SL_NET_SOCK_H__
 
 #include <stdint.h>
-/*
- * Commented out to prevent zsock_timeval from being redefined
- * Can remove this if support for CONFIG_NET_SOCKETS_POSIX_NAMES
- * is dropped someday
- */
-#if !(defined(CONFIG_NET_SOCKETS_POSIX_NAMES) || defined(CONFIG_POSIX_CLOCK) \
-    || defined(CONFIG_POSIX_API))
-#include <sys/time.h>
-#endif
 
 #ifdef    __cplusplus
 extern "C" {
@@ -646,7 +637,10 @@ typedef struct SlNetSock_linger_t
                 to be equivalent to the POSIX-defined <tt>struct
                 timeval</tt> data type.
 */
-typedef struct timeval SlNetSock_Timeval_t;
+typedef struct {
+    long tv_sec;
+    long tv_usec;
+} SlNetSock_Timeval_t;
 
 /*!
     \brief The SlNetSocklen_t is used for declaring the socket length parameter
