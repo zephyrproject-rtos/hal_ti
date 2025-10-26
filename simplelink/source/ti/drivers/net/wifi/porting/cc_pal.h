@@ -49,11 +49,10 @@ extern "C" {
 
 #include <ti/drivers/dpl/ClockP.h>
 #if defined(SL_PLATFORM_MULTI_THREADED)
-/* Use Zephyr posix headers */
 #include <time.h>
-#include <zephyr/posix/pthread.h>
-#include <zephyr/posix/semaphore.h>
-#include <zephyr/posix/unistd.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
 #else //SL_PLATFORM_MULTI_THREADED
 #include <ti/drivers/dpl/SemaphoreP.h>
 #include <ti/drivers/dpl/MutexP.h>

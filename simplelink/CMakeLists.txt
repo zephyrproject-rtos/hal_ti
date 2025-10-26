@@ -16,7 +16,11 @@ endif()
 if(CONFIG_HAS_CC3220SDK)
   if(CONFIG_SIMPLELINK_HOST_DRIVER)
     zephyr_library()
-    zephyr_library_compile_definitions(${COMPILER})
+    zephyr_library_compile_definitions(
+      ${COMPILER}
+      # TI's driver portability layer relies on POSIX for multi-threading and timers
+      _POSIX_C_SOURCE=200809L
+    )
     zephyr_library_sources(
       source/ti/drivers/SPI.c
       source/ti/drivers/spi/SPICC32XXDMA.c
