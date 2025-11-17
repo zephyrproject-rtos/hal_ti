@@ -1,3 +1,4 @@
 add_subdirectory(simplelink)
+add_subdirectory(simplelink_lpf2)
 add_subdirectory(simplelink_lpf3)
 add_subdirectory(mspm0)
