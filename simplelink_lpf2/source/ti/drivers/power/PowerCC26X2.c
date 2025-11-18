@@ -74,6 +74,8 @@
 #include DeviceFamily_constructPath(driverlib/setup_rom.h)
 #include DeviceFamily_constructPath(driverlib/ccfgread.h)
 
+#include <zephyr/pm/policy.h>
+
 static unsigned int configureXOSCHF(unsigned int action);
 static unsigned int nopResourceHandler(unsigned int action);
 static unsigned int configureRFCoreClocks(unsigned int action);
@@ -494,6 +496,18 @@ int_fast16_t Power_releaseConstraint(uint_fast16_t constraintId)
     /* assert constraintId is valid */
     DebugP_assert(constraintId < PowerCC26X2_NUMCONSTRAINTS);
 
+    /* forward constraint release to Zephyr */
+    switch (constraintId) {
+    case PowerCC26XX_DISALLOW_STANDBY:
+        pm_policy_state_lock_put(PM_STATE_STANDBY, PM_ALL_SUBSTATES);
+        break;
+    case PowerCC26XX_DISALLOW_IDLE:
+        pm_policy_state_lock_put(PM_STATE_RUNTIME_IDLE, PM_ALL_SUBSTATES);
+        break;
+    default:
+        break;
+    }
+
     key = HwiP_disable();
 
     /* get the count of the constraint */
@@ -621,6 +635,18 @@ int_fast16_t Power_setConstraint(uint_fast16_t constraintId)
 
     /* assert constraint id is valid */
     DebugP_assert(constraintId < PowerCC26X2_NUMCONSTRAINTS);
+
+    /* forward constraint set to Zephyr */
+    switch (constraintId) {
+    case PowerCC26XX_DISALLOW_STANDBY:
+        pm_policy_state_lock_get(PM_STATE_STANDBY, PM_ALL_SUBSTATES);
+        break;
+    case PowerCC26XX_DISALLOW_IDLE:
+        pm_policy_state_lock_get(PM_STATE_RUNTIME_IDLE, PM_ALL_SUBSTATES);
+        break;
+    default:
+        break;
+    }
 
     /* disable interrupts */
     key = HwiP_disable();
@@ -1001,7 +1027,11 @@ int_fast16_t Power_sleep(uint_fast16_t sleepState)
             }
 
             /* 16. Re-enable interrupts */
-            CPUcpsie();
+            /* For Zephyr, post suspend hooks need to run with interrupts
+             * disabled after Power_sleep returns. So we need to leave
+             * interrupts disabled.
+             */ 
+            /* CPUcpsie(); */
 
             /*
              * 17. Signal all clients registered for late post-sleep
