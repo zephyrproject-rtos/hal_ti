@@ -1153,6 +1153,7 @@
 
 			/omit-if-no-ref/ canfd0_canrx_pa13: canfd0_canrx_pa13 {
 				pinmux = <MSP_PINMUX(35, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
 			};
 
 			/omit-if-no-ref/ tima0_ccp3_cmpl_pa13: tima0_ccp3_cmpl_pa13 {
@@ -1887,6 +1888,7 @@
 
 			/omit-if-no-ref/ canfd0_canrx_pa27: canfd0_canrx_pa27 {
 				pinmux = <MSP_PINMUX(60, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
 			};
 
 			/omit-if-no-ref/ timg7_ccp1_pa27: timg7_ccp1_pa27 {
