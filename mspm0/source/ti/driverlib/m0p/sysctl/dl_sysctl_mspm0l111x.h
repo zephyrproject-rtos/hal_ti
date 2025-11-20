@@ -114,15 +114,26 @@ extern "C" {
 #define DL_SYSCTL_INTERRUPT_LFOSC_GOOD           (SYSCTL_IMASK_LFOSCGOOD_ENABLE)
 /*! @brief  Analog clocking consistency error */
 #define DL_SYSCTL_INTERRUPT_ANALOG_CLOCK_ERROR   (SYSCTL_IMASK_ANACLKERR_ENABLE)
+/*! @brief  Flash Single Error Correct */
+#define DL_SYSCTL_INTERRUPT_FLASH_SEC             (SYSCTL_IMASK_FLASHSEC_ENABLE)
+/*! @brief  Low Frequency Crystal is stabilized and ready to use */
+#define DL_SYSCTL_INTERRUPT_LFXT_GOOD             (SYSCTL_IMASK_LFXTGOOD_ENABLE)
 
 /** @}*/
 
 /*! @enum DL_SYSCTL_IIDX */
 typedef enum {
+    /*! @brief Interrupt index if no interrupt is pending */
+    DL_SYSCTL_IIDX_NO_INT = SYSCTL_IIDX_STAT_NO_INTR,
     /*! @brief  Low Frequency Oscillator is stabilized and ready to use */
     DL_SYSCTL_IIDX_LFOSC_GOOD = SYSCTL_IIDX_STAT_LFOSCGOOD,
     /*! @brief  Analog clocking consistency error */
     DL_SYSCTL_IIDX_ANALOG_CLOCK_ERROR = SYSCTL_IIDX_STAT_ANACLKERR,
+    /*! @brief  Flash Single Error Correct */
+    DL_SYSCTL_IIDX_FLASH_SEC = SYSCTL_IIDX_STAT_FLASHSEC,
+    /*! @brief  Low Frequency Crystal is stabilized and ready to use */
+    DL_SYSCTL_IIDX_LFXT_GOOD = SYSCTL_IIDX_STAT_LFXTGOOD,
+
 } DL_SYSCTL_IIDX;
 
 
@@ -2028,7 +2039,8 @@ __STATIC_INLINE void DL_SYSCTL_enableSYSOSCFCL(void)
 __STATIC_INLINE void DL_SYSCTL_enableSYSOSCFCLExternalResistor(void)
 {
     SYSCTL->SOCLOCK.SYSOSCFCLCTL =
-        (SYSCTL_SYSOSCFCLCTL_KEY_VALUE | SYSCTL_SYSOSCFCLCTL_SETUSEFCL_TRUE);
+        (SYSCTL_SYSOSCFCLCTL_KEY_VALUE | SYSCTL_SYSOSCFCLCTL_SETUSEFCL_TRUE |
+            SYSCTL_SYSOSCFCLCTL_SETUSEEXRES_TRUE);
 }
 
 /**
@@ -2407,7 +2419,7 @@ __STATIC_INLINE uint32_t DL_SYSCTL_getIPProtectFirewallAddrStart(void)
  */
 __STATIC_INLINE void DL_SYSCTL_setIPProtectFirewallAddrEnd(uint32_t endAddr)
 {
-    SYSCTL->SECCFG.FIPPROTMAINSTART =
+    SYSCTL->SECCFG.FIPPROTMAINEND =
         (endAddr & SYSCTL_FIPPROTMAINEND_ADDR_MASK);
 }
 
@@ -2418,7 +2430,7 @@ __STATIC_INLINE void DL_SYSCTL_setIPProtectFirewallAddrEnd(uint32_t endAddr)
  */
 __STATIC_INLINE uint32_t DL_SYSCTL_getIPProtectFirewallAddrEnd(void)
 {
-    return (SYSCTL->SECCFG.FIPPROTMAINSTART);
+    return (SYSCTL->SECCFG.FIPPROTMAINEND);
 }
 
 /**
