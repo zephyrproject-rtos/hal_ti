@@ -73,7 +73,9 @@ extern "C" {
 #include <drivers/hw_include/cslr_soc.h>
 #include <drivers/hw_include/tistdtypes.h>
 #include <kernel/dpl/SystemP.h>
+#ifdef DPL
 #include <kernel/dpl/HwiP.h>
+#endif /* DPL */
 
 /* ========================================================================== */
 /*                                 Macros                                     */
@@ -529,17 +531,17 @@ typedef struct
     /**< Enable error interrupt */
 } EDMA_Params;
 
+#ifdef DPL
 /**
  * \brief EDMA interrupt handle returned from #EDMA_registerIntr() function.
  */
-typedef struct Edma_IntrObject_t   *Edma_IntrHandle;
-
+ typedef struct Edma_IntrObject_t   *Edma_IntrHandle;
 /**
  * \brief EDMA interrupt callback function prototype
  */
 typedef void (*Edma_EventCallback)(Edma_IntrHandle intrHandle,
                                    void *appData);
-
+#endif /* DPL */
 /**
  * \brief EDMA error interrupt callback function prototype
  */
@@ -553,6 +555,7 @@ typedef void (*Edma_ErrorCallback)(EDMA_ErrorInfo *errorInfo,
  *        application should not modify this object in between.
  *
  */
+#ifdef DPL
 typedef struct Edma_IntrObject_t
 {
     /* \brief TCC number for which the callback to be reistered. */
@@ -572,6 +575,7 @@ typedef struct Edma_IntrObject_t
      */
     Edma_IntrHandle  prevIntr;
 } Edma_IntrObject;
+#endif /* DPL */
 
 /** \brief A handle that is returned from a #EDMA_open() call */
 typedef void *EDMA_Handle;
@@ -594,19 +598,23 @@ typedef struct
     /**< Object to hold the allocated resources */
     void                   *hwiHandle;
     /**< Interrupt handle for master ISR */
+#ifdef DPL
     HwiP_Object             hwiObj;
     /**< Interrupt object */
     void                   *errHwiHandle;
     /**< Interrupt handle for error ISR */
     HwiP_Object             errHwiObj;
     /**< Error Interrupt object */
+#endif /* DPL */
     Edma_ErrorCallback      errCallback;
     /**< Error Interrupt Callback */
     void*                   errCallbackArgs;
     /**< User arguments for Error Interrupt Callback */
     EDMA_ErrorInfo          errorInfo;
+#ifdef DPL
     /**< Error Information passed to application */
     Edma_IntrHandle  firstIntr;
+#endif /* DPL */
 } EDMA_Object;
 
 /** \brief EDMA instance attributes - used during init time */
@@ -1835,8 +1843,9 @@ uint32_t EDMA_isInterruptEnabled(EDMA_Handle handle);
  *
  *  \sa     #EDMA_open()
  */
+#ifdef DPL
 int32_t EDMA_registerIntr(EDMA_Handle handle, Edma_IntrObject *intrObj);
-
+#endif /* DPL */
 /**
  *  \brief  Function to unregister callback function for a TCC
  *
@@ -1852,7 +1861,9 @@ int32_t EDMA_registerIntr(EDMA_Handle handle, Edma_IntrObject *intrObj);
  *  \sa     #EDMA_open()
  *  \sa     #EDMA_registerIntr()
  */
+#ifdef DPL
 int32_t EDMA_unregisterIntr(EDMA_Handle handle, Edma_IntrObject *intrObj);
+#endif /* DPL */
 
 /**
  *  \brief  Function to get the edma base address
