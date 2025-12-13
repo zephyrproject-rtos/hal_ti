@@ -52,8 +52,10 @@
 /* ========================================================================== */
 static int32_t EDMA_initialize (uint32_t baseAddr, const EDMA_InitParams *initParam);
 static int32_t EDMA_deinitialize (uint32_t baseAddr, const EDMA_InitParams *initParam);
+#ifdef DPL
 static void    EDMA_transferCompletionMasterIsrFxn(void *args);
 static void    EDMA_errorIsrFxn(void *args);
+#endif /* DPL */
 static int32_t Alloc_resource(const EDMA_Attrs *attrs, EDMA_Object *object, uint32_t *resId, uint32_t resType);
 static uint32_t EDMA_isDmaChannelAllocated(EDMA_Handle handle, const uint32_t *dmaCh);
 static uint32_t EDMA_isTccAllocated(EDMA_Handle handle, const uint32_t *tcc);
@@ -1286,7 +1288,9 @@ void EDMA_init(void)
     {
         /* initialize object varibles */
         object = gEdmaConfig[cnt].object;
+#if defined (NON_DPL)
         DebugP_assert(NULL != object);
+#endif
         (void) memset(object, 0, sizeof(EDMA_Object));
         /* Get the edma base address. */
         baseAddr = gEdmaConfig[cnt].attrs->baseAddr;
@@ -1327,8 +1331,10 @@ EDMA_Handle EDMA_open(uint32_t index, const EDMA_Params *prms)
     EDMA_Config        *config = NULL;
     EDMA_Object        *object    = NULL;
     const EDMA_Attrs   *attrs;
+#ifdef DPL
     HwiP_Params         hwiPrms, errHwiPrms;
     uint32_t            tc0BaseAddr, tc1BaseAddr;
+#endif
 
     /* Check index */
     if(index >= gEdmaConfigNum)
@@ -1367,7 +1373,7 @@ EDMA_Handle EDMA_open(uint32_t index, const EDMA_Params *prms)
         {
             /* Store the open params in driver object. */
             (void) memcpy(&object->openPrms, prms, sizeof(EDMA_Params));
-
+#ifdef DPL
             if (prms->intrEnable == TRUE)
             {
                 /* Register the master ISR. */
@@ -1417,8 +1423,8 @@ EDMA_Handle EDMA_open(uint32_t index, const EDMA_Params *prms)
                 HW_WR_FIELD32(tc1BaseAddr, EDMA_TC_ERREN_TRERR, EDMA_TPTC_ERROR_ENABLE);
                 HW_WR_FIELD32(tc1BaseAddr, EDMA_TC_ERREN_MMRAERR, EDMA_TPTC_ERROR_ENABLE);
             }
-
             object->firstIntr = NULL;
+#endif /* DPL */
             object->isOpen = TRUE;
             handle = (EDMA_Handle) config;
         }
@@ -1442,7 +1448,7 @@ void EDMA_close(EDMA_Handle handle)
 
         DebugP_assert(NULL != object);
         DebugP_assert(NULL != attrs);
-
+#ifdef DPL
         if(NULL != object->hwiHandle)
         {
             HwiP_destruct(&object->hwiObj);
@@ -1454,7 +1460,7 @@ void EDMA_close(EDMA_Handle handle)
             HwiP_destruct(&object->errHwiObj);
             object->errHwiHandle = NULL;
         }
-
+#endif /* DPL */
         object->isOpen = FALSE;
     }
 }
@@ -1484,7 +1490,7 @@ uint32_t EDMA_isInterruptEnabled(EDMA_Handle handle)
     EDMA_Params    *openParams = &(object->openPrms);
     return (openParams->intrEnable);
 }
-
+#ifdef DPL
 static int32_t EDMA_validateIntrObject(Edma_IntrObject *intrObj)
 {
     int32_t             status = SystemP_SUCCESS;
@@ -1631,6 +1637,7 @@ int32_t EDMA_unregisterIntr(EDMA_Handle handle, Edma_IntrObject *intrObj)
     }
     return status;
 }
+#endif
 
 int32_t EDMA_registerErrorCallback(EDMA_Handle handle, Edma_ErrorCallback errorCallback, void* args)
 {
@@ -1887,7 +1894,9 @@ static int32_t Alloc_resource(const EDMA_Attrs *attrs, EDMA_Object *object, uint
         /* set the status to failure.
            If allocation is successful status will be updated. */
         status = SystemP_FAILURE;
+#ifdef DPL
         intrState = HwiP_disable();
+#endif
         if (*resId == EDMA_RESOURCE_ALLOC_ANY)
         {
             /* Find available resource. */
@@ -1938,7 +1947,9 @@ static int32_t Alloc_resource(const EDMA_Attrs *attrs, EDMA_Object *object, uint
                 status = SystemP_SUCCESS;
             }
         }
+#ifdef DPL
         HwiP_restore(intrState);
+#endif /* DPL */
     }
     return status;
 }
@@ -2050,9 +2061,13 @@ int32_t EDMA_freeDmaChannel(EDMA_Handle handle, uint32_t *dmaCh)
             attrs = config->attrs;
             DebugP_assert(NULL != object);
             DebugP_assert(NULL != attrs);
+#ifdef DPL
             intrState = HwiP_disable();
+#endif /* DPL */
             object->allocResource.dmaCh[*dmaCh/32U] &= ~(1U << (*dmaCh%32U));
+#ifdef DPL
             HwiP_restore(intrState);
+#endif /* DPL */
         }
     }
     return status;
@@ -2088,9 +2103,13 @@ int32_t EDMA_freeQdmaChannel(EDMA_Handle handle, uint32_t *qdmaCh)
             attrs = config->attrs;
             DebugP_assert(NULL != object);
             DebugP_assert(NULL != attrs);
+#ifdef DPL
             intrState = HwiP_disable();
+#endif /* DPL */
             object->allocResource.qdmaCh &= ~(1U << (*qdmaCh%32U));
+#ifdef DPL
             HwiP_restore(intrState);
+#endif /* DPL */
         }
     }
     return status;
@@ -2126,9 +2145,13 @@ int32_t EDMA_freeTcc(EDMA_Handle handle, uint32_t *tcc)
             attrs = config->attrs;
             DebugP_assert(NULL != object);
             DebugP_assert(NULL != attrs);
+#ifdef DPL
             intrState = HwiP_disable();
+#endif /* DPL */
             object->allocResource.tcc[*tcc/32U] &= ~(1U << (*tcc%32U));
+#ifdef DPL
             HwiP_restore(intrState);
+#endif /* DPL */
         }
     }
     return status;
@@ -2164,15 +2187,20 @@ int32_t EDMA_freeParam(EDMA_Handle handle, uint32_t *param)
             attrs = config->attrs;
             DebugP_assert(NULL != object);
             DebugP_assert(NULL != attrs);
+#ifdef DPL
             intrState = HwiP_disable();
+#endif /* DPL */
             object->allocResource.paramSet[*param/32U] &= ~(1U << (*param%32U));
+#ifdef DPL
             HwiP_restore(intrState);
+#endif /* DPL */
         }
     }
     return status;
 }
 
-static void EDMA_transferCompletionMasterIsrFxn(void *args)
+#ifdef DPL
+void EDMA_transferCompletionMasterIsrFxn(void *args)
 {
 
     EDMA_Handle         handle = (EDMA_Handle) args;
@@ -2222,6 +2250,7 @@ static void EDMA_transferCompletionMasterIsrFxn(void *args)
     /* re evaluate the edma interrupt. */
     HW_WR_FIELD32(baseAddr + EDMA_TPCC_IEVAL_RN(regionId), EDMA_TPCC_IEVAL_RN_EVAL, 1);
 }
+#endif /* DPL */
 
 static void EDMA_getCcErrorInfo(uint32_t baseAddr, EDMA_CcErrorInfo *ccErrorInfo)
 {
@@ -2315,7 +2344,7 @@ static void EDMA_clearTcErrors(uint32_t baseAddr, EDMA_TcErrorInfo *tcErrorInfo)
         HW_WR_REG32(baseAddr + EDMA_TC_ERRCLR, errClrRegVal);
     }
 }
-
+#ifdef DPL
 static void EDMA_errorIsrFxn(void *args)
 {
     EDMA_Handle        handle = (EDMA_Handle) args;
@@ -2405,3 +2434,4 @@ static void EDMA_errorIsrFxn(void *args)
         }
     } while(isErrorRetriggered == TRUE);
 }
+#endif /* DPL */
