@@ -1,0 +1,526 @@
+#include <dt-bindings/pinctrl/mspm0-pinctrl.h>
+
+/* This contains the common pin definitions for MSPM0L111x and MSPM0L222x. */
+
+/{
+	soc {
+		pinctrl: pin-controller@400a0000 {
+			/* PA0 */
+			/omit-if-no-ref/ analog_pa0: analog_pa0 {
+				pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpioa_00_pa0: gpioa_00_pa0 {
+				pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ uart0_tx_pa0: uart0_tx_pa0 {
+				pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_2)>;
+			};
+
+			/omit-if-no-ref/ i2c0_sda_pa0: i2c0_sda_pa0 {
+				pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
+			};
+
+			/omit-if-no-ref/ tima0_ccp0_pa0: tima0_ccp0_pa0 {
+				pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_4)>;
+			};
+
+			/omit-if-no-ref/ tima_fault1_pa0: tima_fault1_pa0 {
+				pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_5)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ sysctl_fcc_in_pa0: sysctl_fcc_in_pa0 {
+				pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ timg8_ccp1_pa0: timg8_ccp1_pa0 {
+				pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_7)>;
+			};
+
+			/omit-if-no-ref/ timg0_ccp0_pa0: timg0_ccp0_pa0 {
+				pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_9)>;
+			};
+
+			/* PA1 */
+			/omit-if-no-ref/ analog_pa01: analog_pa1 {
+				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpioa_01_pa01: gpioa_01_pa01 {
+				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ uart0_rx_pa01: uart0_rx_pa01 {
+				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_2)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ i2c0_scl_pa01: i2c0_scl_pa01 {
+				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
+			};
+
+			/omit-if-no-ref/ tima0_ccp1_pa01: tima0_ccp1_pa01 {
+				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_4)>;
+			};
+
+			/omit-if-no-ref/ tima_fault2_pa01: tima_fault2_pa01 {
+				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_5)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ timg8_idx_pa01: timg8_idx_pa01 {
+				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ timg8_ccp0_pa01: timg8_ccp0_pa01 {
+				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_7)>;
+			};
+
+			/omit-if-no-ref/ timg0_ccp1_pa01: timg0_ccp1_pa01 {
+				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_9)>;
+			};
+
+			/omit-if-no-ref/ spi0_cs3_pa01: spi0_cs3_pa01 {
+				pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_10)>;
+			};
+
+			/* PA28 */
+			/omit-if-no-ref/ analog_pa28: analog_pa28 {
+				pinmux = <MSP_PINMUX(3, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpioa_28_pa28: gpioa_28_pa28 {
+				pinmux = <MSP_PINMUX(3, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ uart0_tx_pa28: uart0_tx_pa28 {
+				pinmux = <MSP_PINMUX(3, MSPM0_PIN_FUNCTION_2)>;
+			};
+
+			/omit-if-no-ref/ i2c0_sda_pa28: i2c0_sda_pa28 {
+				pinmux = <MSP_PINMUX(3, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
+			};
+
+			/omit-if-no-ref/ tima0_cpp3_pa28: tima0_cpp3_pa28 {
+				pinmux = <MSP_PINMUX(3, MSPM0_PIN_FUNCTION_4)>;
+			};
+
+			/omit-if-no-ref/ tima_fault0_pa28: tima_fault0_pa28 {
+				pinmux = <MSP_PINMUX(3, MSPM0_PIN_FUNCTION_5)>;
+				input-enable;
+			};
+
+			/* PA2 */
+			/omit-if-no-ref/ analog_pa02: analog_pa02 {
+				pinmux = <MSP_PINMUX(7, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpioa_02_pa02: gpioa_02_pa02 {
+				pinmux = <MSP_PINMUX(7, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ timg8_ccp1_pa02: timg8_ccp1_pa02 {
+				pinmux = <MSP_PINMUX(7, MSPM0_PIN_FUNCTION_2)>;
+			};
+
+			/omit-if-no-ref/ spi0_cs0_pa02: spi0_cs0_pa02 {
+				pinmux = <MSP_PINMUX(7, MSPM0_PIN_FUNCTION_3)>;
+			};
+
+			/omit-if-no-ref/ tima0_ccp3_cmpl_pa02: tima0_ccp3_cmpl_pa02 {
+				pinmux = <MSP_PINMUX(7, MSPM0_PIN_FUNCTION_6)>;
+			};
+
+			/omit-if-no-ref/ tima0_ccp2_cmpl_pa02: tima0_ccp2_cmpl_pa02 {
+				pinmux = <MSP_PINMUX(7, MSPM0_PIN_FUNCTION_7)>;
+			};
+
+			/omit-if-no-ref/ tima_fault0_pa02: tima_fault0_pa02 {
+				pinmux = <MSP_PINMUX(7, MSPM0_PIN_FUNCTION_8)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ tima_fault1_pa02: tima_fault1_pa02 {
+				pinmux = <MSP_PINMUX(7, MSPM0_PIN_FUNCTION_9)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ tima0_ccp0_pa02: tima0_ccp0_pa02 {
+				pinmux = <MSP_PINMUX(7, MSPM0_PIN_FUNCTION_11)>;
+			};
+
+			/* PA3 */
+			/omit-if-no-ref/ analog_pa03: analog_pa03 {
+				pinmux = <MSP_PINMUX(8, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpioa_03_pa03: gpioa_03_pa03 {
+				pinmux = <MSP_PINMUX(8, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ timg8_ccp0_pa03: timg8_ccp0_pa03 {
+				pinmux = <MSP_PINMUX(8, MSPM0_PIN_FUNCTION_2)>;
+			};
+
+			/omit-if-no-ref/ spi0_cs1_pa03: spi0_cs1_pa03 {
+				pinmux = <MSP_PINMUX(8, MSPM0_PIN_FUNCTION_3)>;
+			};
+
+			/omit-if-no-ref/ tima0_ccp1_pa03: tima0_ccp1_pa03 {
+				pinmux = <MSP_PINMUX(8, MSPM0_PIN_FUNCTION_5)>;
+			};
+
+			/omit-if-no-ref/ tima0_ccp2_pa03: tima0_ccp2_pa03 {
+				pinmux = <MSP_PINMUX(8, MSPM0_PIN_FUNCTION_8)>;
+			};
+
+			/omit-if-no-ref/ urat1_tx_pa03: urat1_tx_pa03 {
+				pinmux = <MSP_PINMUX(8, MSPM0_PIN_FUNCTION_10)>;
+			};
+
+			/omit-if-no-ref/ spi0_cs3_pa03: spi0_cs3_pa03 {
+				pinmux = <MSP_PINMUX(8, MSPM0_PIN_FUNCTION_11)>;
+			};
+
+			/* PA4 */
+			/omit-if-no-ref/ analog_pa04: analog_pa04 {
+				pinmux = <MSP_PINMUX(9, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpioa_04_pa04: gpioa_04_pa04 {
+				pinmux = <MSP_PINMUX(9, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ timg8_ccp1_pa04: timg8_ccp1_pa04 {
+				pinmux = <MSP_PINMUX(9, MSPM0_PIN_FUNCTION_2)>;
+			};
+
+			/omit-if-no-ref/ spi0_poci_pa04: spi0_poci_pa04 {
+				pinmux = <MSP_PINMUX(9, MSPM0_PIN_FUNCTION_3)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ tima0_ccp1_cmpl_pa04: tima0_ccp1_cmpl_pa04 {
+				pinmux = <MSP_PINMUX(9, MSPM0_PIN_FUNCTION_5)>;
+			};
+
+			/omit-if-no-ref/ sysctl_lfclkin_pa04: sysctl_lfclkin_pa04 {
+				pinmux = <MSP_PINMUX(9, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ tima0_ccp3_pa04: tima0_ccp3_pa04 {
+				pinmux = <MSP_PINMUX(9, MSPM0_PIN_FUNCTION_8)>;
+			};
+
+			/omit-if-no-ref/ uart1_rx_pa04: uart1_rx_pa04 {
+				pinmux = <MSP_PINMUX(9, MSPM0_PIN_FUNCTION_10)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ spi0_cs0_pa04: spi0_cs0_pa04 {
+				pinmux = <MSP_PINMUX(9, MSPM0_PIN_FUNCTION_11)>;
+			};
+
+			/* PA5 */
+			/omit-if-no-ref/ analog_pa05: analog_pa05 {
+				pinmux = <MSP_PINMUX(10, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpioa_05_pa05: gpioa_05_pa05 {
+				pinmux = <MSP_PINMUX(10, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ timg8_ccp0_pa05: timg8_ccp0_pa05 {
+				pinmux = <MSP_PINMUX(10, MSPM0_PIN_FUNCTION_2)>;
+			};
+
+			/omit-if-no-ref/ spi0_pico_pa05: spi0_pico_pa05 {
+				pinmux = <MSP_PINMUX(10, MSPM0_PIN_FUNCTION_3)>;
+			};
+
+			/omit-if-no-ref/ timg0_ccp0_pa05: timg0_ccp0_pa05 {
+				pinmux = <MSP_PINMUX(10, MSPM0_PIN_FUNCTION_5)>;
+			};
+
+			/omit-if-no-ref/ sysctl_fcc_in_pa05: sysctl_fcc_in_pa05 {
+				pinmux = <MSP_PINMUX(10, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ tima_fault1_pa05: tima_fault1_pa05 {
+				pinmux = <MSP_PINMUX(10, MSPM0_PIN_FUNCTION_8)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ uart0_cts_pa05: uart0_cts_pa05 {
+				pinmux = <MSP_PINMUX(10, MSPM0_PIN_FUNCTION_9)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ uart1_tx_pa05: uart1_tx_pa05 {
+				pinmux = <MSP_PINMUX(10, MSPM0_PIN_FUNCTION_11)>;
+			};
+
+			/* PA6 */
+			/omit-if-no-ref/ analog_pa06: analog_pa06 {
+				pinmux = <MSP_PINMUX(11, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpioa_06_pa06: gpioa_06_pa06 {
+				pinmux = <MSP_PINMUX(11, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ timg8_ccp1_pa06: timg8_ccp1_pa06 {
+				pinmux = <MSP_PINMUX(11, MSPM0_PIN_FUNCTION_2)>;
+			};
+
+			/omit-if-no-ref/ spi0_sclk_pa06: spi0_sclk_pa06 {
+				pinmux = <MSP_PINMUX(11, MSPM0_PIN_FUNCTION_3)>;
+			};
+
+			/omit-if-no-ref/ timg0_ccp1_pa06: timg0_ccp1_pa06 {
+				pinmux = <MSP_PINMUX(11, MSPM0_PIN_FUNCTION_5)>;
+			};
+
+			/omit-if-no-ref/ sysctl_hfclkin_pa06: sysctl_hfclkin_pa06 {
+				pinmux = <MSP_PINMUX(11, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ tima_fault0_pa06: tima_fault0_pa06 {
+				pinmux = <MSP_PINMUX(11, MSPM0_PIN_FUNCTION_8)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ uart0_rts_pa06: uart0_rts_pa06 {
+				pinmux = <MSP_PINMUX(11, MSPM0_PIN_FUNCTION_9)>;
+			};
+
+			/omit-if-no-ref/ tima0_ccp2_cmpl_pa06: tima0_ccp2_cmpl_pa06 {
+				pinmux = <MSP_PINMUX(11, MSPM0_PIN_FUNCTION_10)>;
+			};
+
+			/omit-if-no-ref/ uart1_rx_pa06: uart1_rx_pa06 {
+				pinmux = <MSP_PINMUX(11, MSPM0_PIN_FUNCTION_11)>;
+				input-enable;
+			};
+
+			/* PA7 */
+			/omit-if-no-ref/ analog_pa07: analog_pa07 {
+				pinmux = <MSP_PINMUX(14, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpioa_07_pa07: gpioa_07_pa07 {
+				pinmux = <MSP_PINMUX(14, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ sysctl_clk_out_pa07: sysctl_clk_out_pa07 {
+				pinmux = <MSP_PINMUX(14, MSPM0_PIN_FUNCTION_3)>;
+			};
+
+			/omit-if-no-ref/ timg8_ccp0_pa07: timg8_ccp0_pa07 {
+				pinmux = <MSP_PINMUX(14, MSPM0_PIN_FUNCTION_4)>;
+			};
+
+			/omit-if-no-ref/ tima0_ccp2_pa07: tima0_ccp2_pa07 {
+				pinmux = <MSP_PINMUX(14, MSPM0_PIN_FUNCTION_5)>;
+			};
+
+			/omit-if-no-ref/ timg8_idx_pa07: timg8_idx_pa07 {
+				pinmux = <MSP_PINMUX(14, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ tima0_ccp1_pa07: tima0_ccp1_pa07 {
+				pinmux = <MSP_PINMUX(14, MSPM0_PIN_FUNCTION_8)>;
+			};
+
+			/omit-if-no-ref/ spi0_cs2_pa07: spi0_cs2_pa07 {
+				pinmux = <MSP_PINMUX(14, MSPM0_PIN_FUNCTION_9)>;
+			};
+
+			/omit-if-no-ref/ sysctl_fcc_in_pa07: sysctl_fcc_in_pa07 {
+				pinmux = <MSP_PINMUX(14, MSPM0_PIN_FUNCTION_10)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ spi0_poci_pa07: spi0_poci_pa07 {
+				pinmux = <MSP_PINMUX(14, MSPM0_PIN_FUNCTION_11)>;
+				input-enable;
+			};
+
+			/* PB2 */
+			/omit-if-no-ref/ analog_pb02: analog_pb02 {
+				pinmux = <MSP_PINMUX(15, MSPM0_PIN_FUNCTION_ANALOG)>;
+			};
+
+			/omit-if-no-ref/ gpiob_02_pb02: gpiob_02_pb02 {
+				pinmux = <MSP_PINMUX(15, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ tima0_ccp3_pb02: tima0_ccp3_pb02 {
+				pinmux = <MSP_PINMUX(15, MSPM0_PIN_FUNCTION_5)>;
+			};
+
+			/omit-if-no-ref/ uart1_cts_pb02: uart1_cts_pb02 {
+				pinmux = <MSP_PINMUX(15, MSPM0_PIN_FUNCTION_6)>;
+			};
+
+			/omit-if-no-ref/ sysctl_hfclkin_pb02: sysctl_hfclkin_pb02 {
+				pinmux = <MSP_PINMUX(15, MSPM0_PIN_FUNCTION_10)>;
+			};
+
+			/omit-if-no-ref/ spi0_pico_pb02: spi0_pico_pb02 {
+				pinmux = <MSP_PINMUX(15, MSPM0_PIN_FUNCTION_11)>;
+			};
+
+			/* PB3 */
+			/omit-if-no-ref/ analog_pb03: analog_pb03 {
+				pinmux = <MSP_PINMUX(16, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpiob_03_pb03: gpiob_03_pb03 {
+				pinmux = <MSP_PINMUX(16, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ tima0_ccp3_cmpl_pb03: tima0_ccp3_cmpl_pb03 {
+				pinmux = <MSP_PINMUX(16, MSPM0_PIN_FUNCTION_5)>;
+			};
+
+			/omit-if-no-ref/ uart1_rts_pb03: uart1_rts_pb03 {
+				pinmux = <MSP_PINMUX(16, MSPM0_PIN_FUNCTION_6)>;
+			};
+
+			/omit-if-no-ref/ tima0_ccp0_pb03: tima0_ccp0_pb03 {
+				pinmux = <MSP_PINMUX(16, MSPM0_PIN_FUNCTION_10)>;
+			};
+
+			/omit-if-no-ref/ spi0_sclk_pb03: spi0_sclk_pb03 {
+				pinmux = <MSP_PINMUX(16, MSPM0_PIN_FUNCTION_11)>;
+			};
+
+			/* PA8 */
+			/omit-if-no-ref/ analog_pa08: analog_pa08 {
+				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpioa_08_pa08: gpioa_08_pa08 {
+				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ uart1_tx_pa08: uart1_tx_pa08 {
+				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_2)>;
+			};
+
+			/omit-if-no-ref/ spi0_cs0_pa08: spi0_cs0_pa08 {
+				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_3)>;
+			};
+
+			/omit-if-no-ref/ i2c0_sda_pa08: i2c0_sda_pa08 {
+				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
+			};
+
+			/omit-if-no-ref/ tima0_ccp0_pa08: tima0_ccp0_pa08 {
+				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_5)>;
+			};
+
+			/omit-if-no-ref/ tima_fault2_pa08: tima_fault2_pa08 {
+				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_6)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ tima_fault0_pa08: tima_fault0_pa08 {
+				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_7)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ spi0_cs3_pa08: spi0_cs3_pa08 {
+				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_8)>;
+			};
+
+			/omit-if-no-ref/ sysctl_hfclkin_pa08: sysctl_hfclkin_pa08 {
+				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_10)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ uart0_rts_pa08: uart0_rts_pa08 {
+				pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_11)>;
+			};
+
+			/* PA9 */
+			/omit-if-no-ref/ analog_pa09: analog_pa09 {
+				pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_ANALOG)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ gpioa_09_pa09: gpioa_09_pa09 {
+				pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_GPIO)>;
+			};
+
+			/omit-if-no-ref/ uart1_rx_pa09: uart1_rx_pa09 {
+				pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_2)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ spi0_pico_pa09: spi0_pico_pa09 {
+				pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_3)>;
+			};
+
+			/omit-if-no-ref/ i2c0_scl_pa09: i2c0_scl_pa09 {
+				pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_4)>;
+				input-enable;
+				drive-open-drain;
+				bias-disable;
+			};
+
+			/omit-if-no-ref/ tima0_ccp0_cmpl_pa09: tima0_ccp0_cmpl_pa09 {
+				pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_5)>;
+			};
+
+			/omit-if-no-ref/ sysctl_clk_out_pa09: sysctl_clk_out_pa09 {
+				pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_6)>;
+			};
+
+			/omit-if-no-ref/ tima0_ccp1_pa09: tima0_ccp1_pa09 {
+				pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_7)>;
+			};
+
+			/omit-if-no-ref/ lfss_rtc_out_pa09: lfss_rtc_out_pa09 {
+				pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_8)>;
+			};
+
+			/omit-if-no-ref/ uart0_cts_pa09: uart0_cts_pa09 {
+				pinmux = <MSP_PINMUX(20, MSPM0_PIN_FUNCTION_11)>;
+				input-enable;
+			};
+		};
+	};
+};
