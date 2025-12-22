@@ -59,10 +59,12 @@ static void    EDMA_errorIsrFxn(void *args);
 static int32_t Alloc_resource(const EDMA_Attrs *attrs, EDMA_Object *object, uint32_t *resId, uint32_t resType);
 static uint32_t EDMA_isDmaChannelAllocated(EDMA_Handle handle, const uint32_t *dmaCh);
 static uint32_t EDMA_isTccAllocated(EDMA_Handle handle, const uint32_t *tcc);
+#ifdef DPL
 static void EDMA_clearTcErrors(uint32_t baseAddr, EDMA_TcErrorInfo *tcErrorInfo);
 static void EDMA_getTcErrorInfo(uint32_t baseAddr, EDMA_TcErrorInfo *tcErrorInfo);
 static void EDMA_clearCcErrors(uint32_t baseAddr, uint32_t regionId, EDMA_CcErrorInfo *ccErrorInfo);
 static void EDMA_getCcErrorInfo(uint32_t baseAddr, EDMA_CcErrorInfo *ccErrorInfo);
+#endif /* DPL */
 
 /* ========================================================================== */
 /*                          Function Definitions                              */
@@ -1851,7 +1853,9 @@ int32_t EDMA_allocParam(EDMA_Handle handle, uint32_t *param)
 static int32_t Alloc_resource(const EDMA_Attrs *attrs, EDMA_Object *object, uint32_t *resId, uint32_t resType)
 {
     uint32_t    i,j;
+#ifdef DPL
     uintptr_t   intrState;
+#endif
     int32_t     status = SystemP_SUCCESS;
     uint32_t    *allocPtr;
     const uint32_t *ownPtr, *reservedPtr;
@@ -2037,8 +2041,9 @@ int32_t EDMA_freeDmaChannel(EDMA_Handle handle, uint32_t *dmaCh)
     EDMA_Config        *config;
     EDMA_Object        *object;
     const EDMA_Attrs   *attrs;
+#ifdef DPL
     uintptr_t           intrState = 0;
-
+#endif
     if ((handle == NULL) || (dmaCh == NULL))
     {
         status = SystemP_FAILURE;
@@ -2079,8 +2084,9 @@ int32_t EDMA_freeQdmaChannel(EDMA_Handle handle, uint32_t *qdmaCh)
     EDMA_Config        *config;
     EDMA_Object        *object;
     const EDMA_Attrs   *attrs;
+#ifdef DPL
     uintptr_t           intrState = 0;
-
+#endif
     if ((handle == NULL) || (qdmaCh == NULL))
     {
         status = SystemP_FAILURE;
@@ -2121,8 +2127,9 @@ int32_t EDMA_freeTcc(EDMA_Handle handle, uint32_t *tcc)
     EDMA_Config        *config;
     EDMA_Object        *object;
     const EDMA_Attrs   *attrs;
+#ifdef DPL
     uintptr_t           intrState = 0;
-
+#endif
     if ((handle == NULL) || (tcc == NULL))
     {
         status = SystemP_FAILURE;
@@ -2163,8 +2170,9 @@ int32_t EDMA_freeParam(EDMA_Handle handle, uint32_t *param)
     EDMA_Config        *config;
     EDMA_Object        *object;
     const EDMA_Attrs   *attrs;
+#ifdef DPL
     uintptr_t           intrState = 0;
-
+#endif
     if ((handle == NULL) || (param == NULL))
     {
         status = SystemP_FAILURE;
@@ -2250,7 +2258,6 @@ void EDMA_transferCompletionMasterIsrFxn(void *args)
     /* re evaluate the edma interrupt. */
     HW_WR_FIELD32(baseAddr + EDMA_TPCC_IEVAL_RN(regionId), EDMA_TPCC_IEVAL_RN_EVAL, 1);
 }
-#endif /* DPL */
 
 static void EDMA_getCcErrorInfo(uint32_t baseAddr, EDMA_CcErrorInfo *ccErrorInfo)
 {
@@ -2344,7 +2351,7 @@ static void EDMA_clearTcErrors(uint32_t baseAddr, EDMA_TcErrorInfo *tcErrorInfo)
         HW_WR_REG32(baseAddr + EDMA_TC_ERRCLR, errClrRegVal);
     }
 }
-#ifdef DPL
+
 static void EDMA_errorIsrFxn(void *args)
 {
     EDMA_Handle        handle = (EDMA_Handle) args;
