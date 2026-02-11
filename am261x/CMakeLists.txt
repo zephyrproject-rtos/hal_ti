@@ -1,9 +1,9 @@
 set(AM261X_SOURCE_DIR ${ZEPHYR_HAL_TI_MODULE_DIR}/am261x/source)
 set(AM261X_SOURCE_KERNELS_DIR ${AM261X_SOURCE_DIR}/kernel)
 
-zephyr_library()
-
 if(CONFIG_SOC_SERIES_AM261X)
+  zephyr_library()
+
   zephyr_include_directories(
     ${AM261X_SOURCE_DIR}
     ${AM261X_SOURCE_DIR}/drivers
