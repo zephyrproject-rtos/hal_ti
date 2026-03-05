@@ -77,7 +77,7 @@ extern "C" {
 #if defined(__ti_version__) || defined(__TI_COMPILER_VERSION__)
 #define RAMFUNC __attribute__((section(".TI.ramfunc"))) __attribute__((noinline))
 #elif defined(__GNUC__)
-#define RAMFUNC __attribute__((section(".TI.ramfunc"))) __attribute__((noinline))
+#define RAMFUNC __attribute__((section(".ramfunc"))) __attribute__((noinline))
 #elif defined(__IAR_SYSTEMS_ICC__)
 #define RAMFUNC __ramfunc __attribute__((noinline))
 #else
