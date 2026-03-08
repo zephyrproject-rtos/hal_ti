@@ -29,19 +29,21 @@ This downstream repository of TI Zephyr is based on the current upstream and
 advance features concerning specific MSP MCUs.
 
 This release contains
-support for the `AM261x` devices.
+support for `AM261x` and `AM13E230x` devices.
 
 ### Devices
 
 Supported:
 
 - [AM261x](https://www.ti.com/product/AM2612)
+- [AM13E230x](https://www.ti.com/product/AM13E23019)
 
 ### Boards
 
 Supported:
 
 - [AM261x_LP](https://www.ti.com/tool/LP-AM261)
+- AM13E230x_LP
 
 ## Getting Started
 
