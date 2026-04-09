@@ -109,7 +109,7 @@ void DL_Timer_initTimerMode(
 void DL_Timer_initCaptureMode(
     GPTIMER_Regs *gptimer, const DL_Timer_CaptureConfig *config)
 {
-    Timer_Input_Chan_Config captConfig;
+    Timer_Input_Chan_Config captConfig = {0};
 
     DL_Timer_getInChanConfig(config->inputChan, &captConfig);
 
@@ -318,7 +318,7 @@ void DL_Timer_initCaptureCombinedMode(
 void DL_Timer_initCompareMode(
     GPTIMER_Regs *gptimer, const DL_Timer_CompareConfig *config)
 {
-    Timer_Input_Chan_Config inChanConfig;
+    Timer_Input_Chan_Config inChanConfig = {0};
 
     DL_Timer_getInChanConfig(config->inputChan, &inChanConfig);
 
