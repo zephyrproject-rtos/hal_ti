@@ -2635,7 +2635,7 @@ __STATIC_INLINE uint32_t DL_SYSCTL_getIPProtectFirewallAddrStart(void)
  */
 __STATIC_INLINE void DL_SYSCTL_setIPProtectFirewallAddrEnd(uint32_t endAddr)
 {
-    SYSCTL->SECCFG.FIPPROTMAINSTART =
+    SYSCTL->SECCFG.FIPPROTMAINEND =
         (endAddr & SYSCTL_FIPPROTMAINEND_ADDR_MASK);
 }
 
@@ -2646,7 +2646,7 @@ __STATIC_INLINE void DL_SYSCTL_setIPProtectFirewallAddrEnd(uint32_t endAddr)
  */
 __STATIC_INLINE uint32_t DL_SYSCTL_getIPProtectFirewallAddrEnd(void)
 {
-    return (SYSCTL->SECCFG.FIPPROTMAINSTART);
+    return (SYSCTL->SECCFG.FIPPROTMAINEND);
 }
 
 /**
@@ -2932,8 +2932,9 @@ __STATIC_INLINE void DL_SYSCTL_enableSuperCapacitor(void)
  */
 __STATIC_INLINE void DL_SYSCTL_disableSuperCapacitor(void)
 {
-    SYSCTL->SOCLOCK.SYSTEMCFG &=
-        (~(SYSCTL_SYSTEMCFG_SUPERCAPEN_TRUE) | SYSCTL_SYSTEMCFG_KEY_VALUE);
+    SYSCTL->SOCLOCK.SYSTEMCFG =
+        (SYSCTL->SOCLOCK.SYSTEMCFG & (~SYSCTL_SYSTEMCFG_SUPERCAPEN_TRUE)) |
+        SYSCTL_SYSTEMCFG_KEY_VALUE;
 }
 
 /**
