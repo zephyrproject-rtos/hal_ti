@@ -70,7 +70,7 @@ extern "C" {
 #define DeviceFamily_ID_MSP432E401Y            13
 #define DeviceFamily_ID_MSP432E411Y            14
 #define DeviceFamily_ID_MTL                    15
-
+#define DeviceFamily_ID_CC13X4                 16
 /*
  * DeviceFamily_PARENT_XYZ values.
  *
@@ -84,7 +84,7 @@ extern "C" {
 #define DeviceFamily_PARENT_MSP432P4111        4
 #define DeviceFamily_PARENT_MTL                5
 #define DeviceFamily_PARENT_MSP432E4X1Y        6
-
+#define DeviceFamily_PARENT_CC13X4_CC26X4      7
 /*
  * Lookup table that sets DeviceFamily_ID, DeviceFamily_DIRECTORY, and
  * DeviceFamily_PARENT based on the DeviceFamily_XYZ define.
@@ -125,6 +125,11 @@ extern "C" {
     #define DeviceFamily_ID             DeviceFamily_ID_CC26X2
     #define DeviceFamily_DIRECTORY      cc13x2x7_cc26x2x7
     #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X2_CC26X2
+
+#elif defined(DeviceFamily_CC13X4)
+    #define DeviceFamily_ID             DeviceFamily_ID_CC13X4
+    #define DeviceFamily_DIRECTORY      cc13x4_cc26x4
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_CC13X4_CC26X4
 
 #elif defined(DeviceFamily_CC3200)
     #define DeviceFamily_ID             DeviceFamily_ID_CC3200
@@ -189,15 +194,15 @@ extern "C" {
 #endif
 
 /* Ensure that only one DeviceFamily was specified */
-#if (defined(DeviceFamily_CC13X0) + defined(DeviceFamily_CC13X2)        \
-    + defined(DeviceFamily_CC26X0) + defined(DeviceFamily_CC26X0R2)     \
-    + defined(DeviceFamily_CC26X2)                                      \
+#if (defined(DeviceFamily_CC13X0) + defined(DeviceFamily_CC13X2)      \
+    + defined(DeviceFamily_CC26X0) + defined(DeviceFamily_CC26X0R2)   \
+    + defined(DeviceFamily_CC26X2) + defined(DeviceFamily_CC13X4)      \
     + defined(DeviceFamily_CC13X2X7) + defined(DeviceFamily_CC26X2X7)   \
     + defined(DeviceFamily_CC3200) + defined(DeviceFamily_CC3220)       \
     + defined(DeviceFamily_MSP432P401x) + defined(DeviceFamily_MSP432P4x1xI) \
     + defined(DeviceFamily_MSP432P4x1xT) + defined(DeviceFamily_MSP432E401Y) \
-    + defined(DeviceFamily_MSP432E411Y)                                      \
-    + defined(DeviceFamily_MTL)                                              \
+    + defined(DeviceFamily_MSP432E411Y)                                   \
+    + defined(DeviceFamily_MTL)                                            \
     ) > 1
     #error More then one DeviceFamily has been defined!
 #endif
