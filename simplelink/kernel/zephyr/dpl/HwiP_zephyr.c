@@ -30,7 +30,7 @@ struct sl_isr_args
 	uintptr_t arg;
 };
 
-static void sl_isr(const void *isr_arg)
+__attribute__((unused)) static void sl_isr(const void *isr_arg)
 {
 	HwiP_Fxn cb = ((struct sl_isr_args *)isr_arg)->cb;
 	uintptr_t arg =	 ((struct sl_isr_args *)isr_arg)->arg;
@@ -155,7 +155,7 @@ HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
 	uintptr_t arg = 0;
 	uint8_t priority = INT_PRI_LEVEL7; /* default to lowest priority */
 	bool enable = true;
-	
+
 	if (handle == NULL) {
 		return NULL;
 	}
@@ -202,7 +202,7 @@ HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
 		priority = INT_PRI_LEVEL7;
 	}
 
-	/* The priority for IRQ_CONNECT is encoded in the top 3 bits */ 
+	/* The priority for IRQ_CONNECT is encoded in the top 3 bits */
 	priority = (priority >> 5) - 1;
 
 	switch(interruptNum) {
@@ -255,7 +255,7 @@ HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
 	{
 		irq_enable(interruptNum - 16);
 	}
-	
+
 	obj->intNum = interruptNum;
 
 	return (HwiP_Handle)handle;
