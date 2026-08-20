@@ -1,3 +1,4 @@
+name: hal_ti
 build:
   cmake: .
   settings:
