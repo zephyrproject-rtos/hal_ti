@@ -9,8 +9,6 @@ from TI TivaWare C Series v2.2.0.295 for use as a Zephyr RTOS module.
 tivaware/
 ├── CMakeLists.txt          # Zephyr build integration
 ├── README.md               # This file
-├── zephyr/
-│   └── module.yml          # Zephyr module descriptor
 ├── inc/                    # Hardware register definitions
 │   ├── hw_memmap.h         #   Memory map (peripheral base addresses)
 │   ├── hw_types.h          #   Common type macros (HWREG, etc.)
