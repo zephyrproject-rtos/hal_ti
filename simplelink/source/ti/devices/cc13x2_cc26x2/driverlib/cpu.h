@@ -367,10 +367,8 @@ __STATIC_INLINE void __attribute__ ((naked))
 CPUbasepriSet(uint32_t ui32NewBasepri)
 {
     // Set the BASEPRI register.
-    __asm volatile ("    msr     BASEPRI, %0\n"
+    __asm volatile ("    msr     BASEPRI, r0\n"
                     "    bx      lr\n"
-                    : /* No output */
-                    : "r" (ui32NewBasepri)
                    );
 }
 #pragma GCC diagnostic pop
