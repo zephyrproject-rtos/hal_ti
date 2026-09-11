@@ -39,7 +39,9 @@ zephyr_library_sources_ifdef(CONFIG_IEEE802154_CC13XX_CC26XX_SUB_GHZ driverlib/r
 
 # Required for BLE support
 zephyr_library_sources_ifdef(CONFIG_BLE_CC13XX_CC26XX
-  rf_patches/rf_patch_cpe_multi_protocol.c)
+  rf_patches/rf_patch_cpe_bt5.c
+  rf_patches/rf_patch_cpe_multi_protocol.c
+  rf_patches/rf_patch_cpe_multi_bt5_coex.c)
 # Required for RFCDoorbellSendTo which is not in ROM
 zephyr_library_sources_ifdef(CONFIG_BLE_CC13XX_CC26XX driverlib/rfc.c)
 
