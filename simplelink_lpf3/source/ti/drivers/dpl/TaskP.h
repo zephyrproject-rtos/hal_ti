@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Texas Instruments Incorporated
+ * Copyright (c) 2022-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -67,15 +66,21 @@ extern "C" {
 /*!
  *  @brief    Number of bytes greater than or equal to the size of any RTOS Task object.
  *
+ *  BIOS 7.x: 88
+ *  FreeRTOS: 104(llvm)/340(gcc)
  *  Zephyr: 160
  */
-#define TaskP_STRUCT_SIZE (160)
+#if (defined(__ti_version__) && defined(__clang__)) || defined(__IAR_SYSTEMS_ICC__)
+    #define TaskP_STRUCT_SIZE (160)
+#elif defined(__GNUC__)
+    #define TaskP_STRUCT_SIZE (340)
+#endif
 
 /*!
  *  @brief    Number of bytes for the default stack size of any RTOS Task object.
  *
  */
-#define TaskP_DEFAULT_STACK_SIZE (CONFIG_DYNAMIC_THREAD_STACK_SIZE)
+#define TaskP_DEFAULT_STACK_SIZE (512)
 
 /*!
  *  @brief    TaskP structure.
@@ -164,6 +169,8 @@ extern TaskP_Handle TaskP_create(TaskP_Function fxn, const TaskP_Params *params)
  *
  * \note This API cannot be called from interrupt contexts.
  *
+ * For FreeRTOS, INCLUDE_vTaskDelete has to be set to 1 in FreeRTOSConfig.h.
+ * See 'Configuration with FreeRTOS' in the Core SDK User's Guide for how to do this.
  *
  */
 extern void TaskP_delete(TaskP_Handle task);
@@ -179,6 +186,8 @@ extern void TaskP_delete(TaskP_Handle task);
  *
  * \note This API cannot be called from interrupt contexts.
  *
+ * For FreeRTOS, configSUPPORT_STATIC_ALLOCATION has to be set to 1 in FreeRTOSConfig.h.
+ * See 'Configuration with FreeRTOS' in the Core SDK User's Guide for how to do this.
  *
  * @retval TaskP handle (NULL on failure)
  */
@@ -211,6 +220,8 @@ extern void TaskP_destruct(TaskP_Struct *obj);
  *   TaskP_State_INACTIVE  -  eSuspended  -  Task_Mode_INACTIVE
  *   TaskP_State_INVALID   -  eInvalid    -  N.A
  *
+ * For FreeRTOS, INCLUDE_eTaskGetState has to be set to 1 in FreeRTOSConfig.h.
+ * See 'Configuration with FreeRTOS' in the Core SDK User's Guide for how to do this.
  *
  * @retval Current state of the task pointed to by the task parameter
  */
@@ -221,6 +232,8 @@ extern TaskP_State TaskP_getState(TaskP_Handle task);
  *
  * \note Must be called from task context.
  *
+ * For FreeRTOS, INCLUDE_xTaskGetCurrentTaskHandle has to be set to 1 in FreeRTOSConfig.h.
+ * See 'Configuration with FreeRTOS' in the Core SDK User's Guide for how to do this.
  *
  * @retval The handle for the calling task
  */
@@ -241,6 +254,8 @@ extern TaskP_Handle TaskP_getCurrentTask(void);
  *
  * \note This API cannot be called from interrupt contexts.
  *
+ * For FreeRTOS the key value returned is always 0.
+ *
  * @return A key to pass to TaskP_restoreScheduler to re-enable the scheduler.
  */
 extern uintptr_t TaskP_disableScheduler(void);
@@ -249,6 +264,8 @@ extern uintptr_t TaskP_disableScheduler(void);
  * @brief  Function to re-enable task scheduling
  *
  * \note This API cannot be called from interrupt contexts.
+ *
+ * For FreeRTOS the key value is ignored.
  *
  * @param  key returned from TaskP_disableScheduler
  */

@@ -4,7 +4,7 @@
  *  Description:    Instruction wrappers for special CPU instructions needed by
  *                  the drivers.
  *
- *  Copyright (c) 2022-2023 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2025 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -57,34 +57,23 @@ void CPUDelay(uint32_t count)
     #pragma diag_suppress = Pe940
 }
     #pragma diag_default  = Pe940
-#elif defined(__clang__)
-void __attribute__((naked)) CPUDelay(uint32_t count)
+#elif (defined(__clang__) || defined(__GNUC__))
+void __attribute__((naked, no_profile_instrument_function)) CPUDelay(uint32_t count)
 {
-    // Loop the specified number of times.
     // The naked attribute tells the compiler that the function is effectively
     // hand-coded assembly implemented using inlined assembly without operands.
-    // As such, it assumes that the C calling conventions are obeyed, and we can
-    // assume count is in R0.
-    __asm volatile("CPUdel%=:\n"
-                   "    subs r0, #1\n"
-                   "    bne   CPUdel%=\n"
-                   "    bx    lr\n"
-                   :            /* No output */
-                   :            /* No input */
-                   : "r0", "cc" /* Clobbers. "cc" is the flags */
-    );
-}
-#elif defined(__GNUC__)
-void __attribute__((naked)) CPUDelay(uint32_t count)
-{
-    // Loop the specified number of times
+    // In naked functions, we can't use parameter references directly.
+    // For ARM calling convention, the first parameter (count) is in r0.
+    // no_profile_instrument_function disables code coverage instrumentation.
+    // which could break the above assumption that count is in r0.
     __asm volatile(".syntax unified\n"
-                   "CPUdel%=:\n"
-                   "    subs  %0, #1\n"
-                   "    bne   CPUdel%=\n"
-                   "    bx    lr\n"
-                   :            /* No output */
-                   : "r"(count) /* Input */
+                   "CPUDel%=:\n"           /* Label with unique suffix */
+                   "    subs r0, r0, #1\n" /* Subtract 1 from r0 (count) - Thumb16 compatible */
+                   "    bne CPUDel%=\n"    /* Branch to label if not zero */
+                   "    bx lr\n"           /* Return */
+                   :
+                   :
+                   : "r0", "cc" /* Clobbers. "cc" is the flags */
     );
 }
 #else

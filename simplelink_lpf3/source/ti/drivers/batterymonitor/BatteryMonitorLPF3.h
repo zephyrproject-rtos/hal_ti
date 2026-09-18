@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Texas Instruments Incorporated
+ * Copyright (c) 2022-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,6 +68,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*! @cond NODOC*/
+/*! The maximum voltage BATMON can represent. Only to be used internally by the
+ *  BatteryMonitor driver.
+ */
+#define BATMON_VOLTAGE_MAX (7996U)
+
+/*! The minimum voltage BATMON can represent. Only to be used internally by the
+ *  BatteryMonitor driver.
+ */
+#define BATMON_VOLTAGE_MIN (0U)
+
+/*! Used internally by the BatteryMonitor driver. */
+#define INVALID_VOLTAGE_MAX (BATMON_VOLTAGE_MAX)
+
+/*! Used internally by the BatteryMonitor driver. */
+#define INVALID_VOLTAGE_MIN (BATMON_VOLTAGE_MIN)
+/*! @endcond */
 
 #ifdef __cplusplus
 }

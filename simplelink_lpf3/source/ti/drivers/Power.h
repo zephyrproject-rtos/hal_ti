@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2024, Texas Instruments Incorporated
+ * Copyright (c) 2015-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -878,8 +878,8 @@ void Power_setPolicy(Power_PolicyFxn policy);
  *  @param[in]  shutdownState    the device-specific shutdown state
  *
  *  @param[in]  shutdownTime    the amount of time (in milliseconds) to keep
- *  the the device in the shutdown state; this parameter is not supported on
- *  all device families.
+ *  the device in the shutdown state; this parameter is not supported on all
+ *  device families.
  *
  *  @retval  #Power_ECHANGE_NOT_ALLOWED if a constraint is prohibiting
  *  shutdown.
@@ -943,10 +943,16 @@ void Power_unregisterNotify(Power_NotifyObj *pNotifyObj);
     #include <ti/drivers/power/PowerCC26XX.h>
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X0)
     #include <ti/drivers/power/PowerCC23X0.h>
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+    #include <ti/drivers/power/PowerCC23X1.h>
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
     #include <ti/drivers/power/PowerCC27XX.h>
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC283X)
+    #include <ti/drivers/power/PowerCC283X.h>
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     #include <ti/drivers/power/PowerWFF3.h>
+#else
+    #error The Power driver does not support the selected device family
 #endif
 
 #endif /* ti_drivers_Power__include */

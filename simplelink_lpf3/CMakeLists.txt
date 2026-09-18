@@ -1,4 +1,4 @@
-# Copyright (c) 2024, Texas Instruments Incorporated
+# Copyright (c) 2024-2026, Texas Instruments Incorporated
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,12 +30,27 @@
 
 # All targets in this file are for Cortex-M0P
 
-add_subdirectory(source/ti/devices)
-add_subdirectory(source/ti/boards)
-
 if(CONFIG_HAS_CC23X0_SDK)
 
+  add_subdirectory(source/ti/devices)
+  add_subdirectory(source/ti/boards)
+  add_subdirectory(source/ti/log)
+
+  include(${CMAKE_CURRENT_LIST_DIR}/CMakeSources.cmake)
+
   if(CONFIG_SOC_CC2340R5)
+    zephyr_compile_definitions(DeviceFamily_CC23X0R5 ${COMPILER})
+  endif()
+
+  if(CONFIG_SOC_CC2340R53)
+    zephyr_compile_definitions(DeviceFamily_CC23X0R5 ${COMPILER})
+  endif()
+
+  if(CONFIG_SOC_CC2340R5_WCSP)
+      zephyr_compile_definitions(DeviceFamily_CC23X0R5 ${COMPILER})
+  endif()
+
+  if(CONFIG_SOC_CC2340R5MODA)
     zephyr_compile_definitions(DeviceFamily_CC23X0R5 ${COMPILER})
   endif()
 
@@ -47,72 +62,36 @@ if(CONFIG_HAS_CC23X0_SDK)
   zephyr_library()
   zephyr_library_compile_definitions(${COMPILER})
   zephyr_library_sources(
-    # Default Simplelink configurations
-    source/ti/drivers/config_defaults.c
-
-    # Utils
-    source/ti/drivers/utils/List.c
-    source/ti/drivers/utils/Random.c
-
-    # Drivers
-    source/ti/drivers/AESCCM.c
-    source/ti/drivers/AESCMAC.c
-    source/ti/drivers/AESCTR.c
-    source/ti/drivers/AESCTRDRBG.c
-    source/ti/drivers/AESECB.c
-    source/ti/drivers/ECDH.c
-    source/ti/drivers/RNG.c
-    source/ti/drivers/aesccm/AESCCMLPF3.c
-    source/ti/drivers/aescmac/AESCMACLPF3.c
-    source/ti/drivers/aesctr/AESCTRLPF3.c
-    source/ti/drivers/aesctrdrbg/AESCTRDRBGXX.c
-    source/ti/drivers/aesecb/AESECBLPF3.c
-    source/ti/drivers/cryptoutils/aes/AESCommonLPF3.c
-    source/ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintext.c
-    source/ti/drivers/cryptoutils/sharedresources/CryptoResourceLPF3.c
-    source/ti/drivers/cryptoutils/utils/CryptoUtils.c
-    source/ti/drivers/dma/UDMALPF3.c
-    source/ti/drivers/rng/RNGLPF3RF.c
-
-    source/ti/drivers/Temperature.c
-    source/ti/drivers/power/PowerCC23X0.c
-    source/ti/drivers/temperature/TemperatureLPF3.c
-    source/ti/drivers/batterymonitor/BatMonSupportLPF3.c
-    source/ti/drivers/batterymonitor/BatteryMonitorLPF3.c
-
-    # DPL
-    kernel/zephyr/dpl/MutexP_zephyr.c
-    kernel/zephyr/dpl/SemaphoreP_zephyr.c
-    kernel/zephyr/dpl/ClockP_zephyr.c
-    kernel/zephyr/dpl/HwiP_zephyr.c
-    kernel/zephyr/dpl/SwiP_zephyr.c
-    kernel/zephyr/dpl/TaskP_zephyr.c
-    kernel/zephyr/dpl/MessageQueueP_zephyr.c
+    ${SOURCES_DRIVERS_LPF3}
+    ${SOURCES_DRIVERS_CC23X0}
+    ${SOURCES_KERNEL}
     )
-  if(CONFIG_EVENTS)
-    zephyr_library_sources(kernel/zephyr/dpl/EventP_zephyr.c)
-  endif()
   zephyr_linker_sources(RAM_SECTIONS
     ${CMAKE_CURRENT_SOURCE_DIR}/source/ti/drivers/dma/dma.ld
   )
 
   # Radio Control Layer (RCL) driver
-  if(CONFIG_SIMPLELINK_F3_RADIO_DRIVER)
+  if(CONFIG_RCL_DRIVER)
     zephyr_library_sources(
-      source/ti/drivers/rcl/LRF.c
-      source/ti/drivers/rcl/LRFCC23X0.c
-      source/ti/drivers/rcl/RCL_Buffer.c
-      source/ti/drivers/rcl/RCL_Debug.c
-      source/ti/drivers/rcl/RCL_Profiling.c
-      source/ti/drivers/rcl/RCL_Scheduler.c
-      source/ti/drivers/rcl/RCL_Tracer.c
-      source/ti/drivers/rcl/RCL.c
-      source/ti/drivers/rcl/handlers/adc_noise.c
-      source/ti/drivers/rcl/handlers/ble_cs.c
-      source/ti/drivers/rcl/handlers/ble5.c
-      source/ti/drivers/rcl/handlers/generic.c
-      source/ti/drivers/rcl/hal/cc23x0/hal_cc23x0.c
-      source/ti/drivers/rcl/wrappers/RCL_AdcNoise.c
+        ${SOURCES_RCL}
+        ${SOURCES_RCL_LPF3}
+      )
+    # GCC/Clang/ArmClang workaround:
+    # LRF.c and ble_cs.c contain inline ARM asm
+    # that explicitly clobbers r7. When using -O0 compilation level, these
+    # compilers use r7 as frame pointer, so it's unavailable for inline asm.
+    # Omitting the frame pointer for these files avoids r7 conflicts. IAR is
+    # intentionally excluded because it uses different flags and asm semantics.
+    set_property(SOURCE
+        source/ti/drivers/rcl/LRF.c
+        source/ti/drivers/rcl/handlers/ble_cs.c
+        PROPERTY COMPILE_OPTIONS
+        "$<$<COMPILE_LANG_AND_ID:C,GNU,Clang,ARMClang>:-fomit-frame-pointer>"
       )
   endif()
+
+  zephyr_compile_definitions(
+    -DCONFIG_ZEPHYR
+  )
+
 endif()

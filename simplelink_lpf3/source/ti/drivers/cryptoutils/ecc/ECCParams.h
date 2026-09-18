@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2024, Texas Instruments Incorporated
+ * Copyright (c) 2017-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,8 +46,8 @@
 #include <ti/drivers/cryptoutils/cryptokey/CryptoKey.h>
 #include <ti/devices/DeviceFamily.h>
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
-    #include <ti/drivers/cryptoutils/ecc/ECCParamsLPF3HSM.h>
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
+    #include <ti/drivers/cryptoutils/ecc/ECCParamsXXF3HSM.h>
 #endif
 
 #ifdef __cplusplus
@@ -113,7 +113,7 @@ typedef enum
 {
     /*
      * WARNING: Do not alter the order or contents of this enum without updating
-     * the corresponding curveParamTable array in ECCParamCC26X4_s.c
+     * the corresponding curveParamTable array in ECCParam<Device_Family>_s.c
      */
     ECCParams_SecureCurve_NISTP224 = 0,
     ECCParams_SecureCurve_NISTP256,
@@ -124,7 +124,9 @@ typedef enum
     ECCParams_SecureCurve_BrainpoolP512R1,
     ECCParams_SecureCurve_Curve25519,
     ECCParams_SecureCurve_Ed25519,
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4)
     ECCParams_SecureCurve_Wei25519,
+#endif
     ECCParams_SecureCurve_COUNT /* This element denotes the max enum value and is not a valid curve */
 } ECCParams_SecureCurve;
 
@@ -263,7 +265,8 @@ extern const ECCParams_CurveParams ECCParams_Ed25519;
  */
 #define ECC_LENGTH_PREFIX_BYTES 4
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X0) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X0) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || \
+    (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
 
     /*!
      *  @defgroup nistp256_params NIST P256 curve params to be used with ECC SW library
@@ -436,7 +439,7 @@ typedef union
 } ECC_Param;
 
 #endif /* (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X0) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) \
-        */
+          || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX) */
 
 /*!
  *  @brief Length of Curve25519 curve parameters in bytes

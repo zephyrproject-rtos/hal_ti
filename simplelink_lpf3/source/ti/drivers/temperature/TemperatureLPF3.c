@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Texas Instruments Incorporated
+ * Copyright (c) 2022-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,8 +45,6 @@
 
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(inc/hw_memmap.h)
-#include DeviceFamily_constructPath(inc/hw_evtsvt.h)
-#include DeviceFamily_constructPath(inc/hw_evtull.h)
 #include DeviceFamily_constructPath(inc/hw_ints.h)
 #include DeviceFamily_constructPath(inc/hw_pmud.h)
 #include DeviceFamily_constructPath(inc/hw_pmctl.h)
@@ -64,7 +62,7 @@
  * to trigger the HWI. The second is triggered by software within the HWI
  * function. If the first measurement is part of the long tail of the
  * distribution, it is highly probable that the second measurement will not
- * cross the threshold. This is effectively a spurrious interrupt that wastes
+ * cross the threshold. This is effectively a spurious interrupt that wastes
  * energy and CPU cycles.
  * If we program the actual hardware registers with an additional offset, we
  * effectively shift the distribution up or down such that the first measurement
@@ -84,47 +82,39 @@
  * to trigger. Given that temperature changes are usually not instantaneous,
  * this should be considered an acceptable risk.
  */
-#define DISTRIBUTION_OFFSET 2
-
-#define BATMON_TEMPERATURE_MAX (255)
-#define BATMON_TEMPERATURE_MIN (-256)
-
-#define INVALID_TEMPERATURE_MAX BATMON_TEMPERATURE_MAX
-#define INVALID_TEMPERATURE_MIN BATMON_TEMPERATURE_MIN
+#define DISTRIBUTION_OFFSET (2)
 
 /* Forward declarations */
-static void walkNotifyList(void);
-static void setNextThresholds(void);
-static void temperatureEventCb(uint32_t eventMask);
-static void updateThresholds(int16_t thresholdHigh, int16_t thresholdLow);
-static uint32_t degreesToCode(int32_t temperatureDegreesC);
-static void setTempLowerLimit(int16_t thresholdLow);
-static void setTempUpperLimit(int16_t thresholdHigh);
-static void enableTempLowerLimit(void);
-static void enableTempUpperLimit(void);
-static void disableTempLowerLimit(void);
-static void disableTempUpperLimit(void);
-static void clearEventFlags(void);
-static void thermalShutdownCallback(int16_t currentTemperature,
-                                    int16_t thresholdTemperature,
-                                    uintptr_t clientArg,
-                                    Temperature_NotifyObj *notifyObject);
+static void TemperatureLPF3_walkNotifyList(void);
+static void TemperatureLPF3_setNextThresholds(void);
+static void TemperatureLPF3_temperatureEventCb(uint32_t eventMask);
+static void TemperatureLPF3_updateThresholds(int16_t thresholdHigh, int16_t thresholdLow);
+static uint32_t TemperatureLPF3_degreesToCode(int32_t temperatureDegreesC);
+static void TemperatureLPF3_setTempLowerLimit(int16_t thresholdLow);
+static void TemperatureLPF3_setTempUpperLimit(int16_t thresholdHigh);
+static void TemperatureLPF3_enableTempLowerLimit(void);
+static void TemperatureLPF3_enableTempUpperLimit(void);
+static void TemperatureLPF3_disableTempLowerLimit(void);
+static void TemperatureLPF3_disableTempUpperLimit(void);
+static void TemperatureLPF3_clearEventFlags(void);
+static void TemperatureLPF3_thermalShutdownCallback(int16_t currentTemperature,
+                                                    int16_t thresholdTemperature,
+                                                    uintptr_t clientArg,
+                                                    Temperature_NotifyObj *notifyObject);
 static int16_t TemperatureLPF3_scaleToRealTemperature(int32_t temperature);
 static int16_t TemperatureLPF3_scaleFromRealTemperature(int32_t temperature);
 
 /* Globals */
 
 /* Global list that stores all registered notifications */
-static List_List notificationList;
+volatile static List_List TemperatureLPF3_notificationList;
 
 /* Current threshold values. These should always reflect the state of the
  * batmon registers without the need to read them out, shift down, and sign
  * extend the values.
  */
-static volatile int16_t currentThresholdHigh = INVALID_TEMPERATURE_MAX;
-static volatile int16_t currentThresholdLow  = INVALID_TEMPERATURE_MIN;
-
-static bool isInitialized = false;
+static volatile int16_t TemperatureLPF3_currentThresholdHigh = INVALID_TEMPERATURE_MAX;
+static volatile int16_t TemperatureLPF3_currentThresholdLow  = INVALID_TEMPERATURE_MIN;
 
 /*
  *  This object is used to monitor the temperature and trigger thermal shutdown once the threshold is reached.
@@ -132,219 +122,157 @@ static bool isInitialized = false;
 static Temperature_NotifyObj thermalShutdown;
 
 /*
- *  ======== degreesToCode ========
+ *  ======== TemperatureLPF3_degreesToCode ========
+ * This function takes in a temperature in millivolts (with no fractional bits)
+ * and converts it to a code that can be written directly to the BATMON
+ * hardware, when configuring thresholds.
  */
-static uint32_t degreesToCode(int32_t temperatureDegreesC)
+static uint32_t TemperatureLPF3_degreesToCode(int32_t temperatureDegreesC)
 {
-    /* Adjust for BATMON temperature offset */
-    temperatureDegreesC = TemperatureLPF3_scaleFromRealTemperature(temperatureDegreesC);
+    /* Adjust for BATMON temperature offset. Result will be a signed integer,
+     * with no fractional bits
+     */
+    int32_t batmonTemperature = TemperatureLPF3_scaleFromRealTemperature(temperatureDegreesC);
 
-    uint32_t temperatureCode = (temperatureDegreesC << PMUD_TEMP_INT_S) & PMUD_TEMP_INT_M;
+    uint32_t temperatureCode = ((uint32_t)batmonTemperature << PMUD_TEMP_INT_S) & PMUD_TEMP_INT_M;
 
     return temperatureCode;
 }
 
 /*
- *  ======== setTempLowerLimit ========
+ *  ======== TemperatureLPF3_setTempLowerLimit ========
  */
-static void setTempLowerLimit(int16_t thresholdLow)
+static void TemperatureLPF3_setTempLowerLimit(int16_t thresholdLow)
 {
-    uint32_t temperatureCode = degreesToCode(thresholdLow - DISTRIBUTION_OFFSET);
+    uintptr_t key;
+    uint32_t temperatureCode = TemperatureLPF3_degreesToCode((int32_t)thresholdLow - DISTRIBUTION_OFFSET);
 
+    key                              = HwiP_disable();
     HWREG(PMUD_BASE + PMUD_O_TEMPLL) = temperatureCode;
 
-    currentThresholdLow = thresholdLow;
+    TemperatureLPF3_currentThresholdLow = thresholdLow;
+    HwiP_restore(key);
 }
 
 /*
- *  ======== setTempUpperLimit ========
+ *  ======== TemperatureLPF3_setTempUpperLimit ========
  */
-static void setTempUpperLimit(int16_t thresholdHigh)
+static void TemperatureLPF3_setTempUpperLimit(int16_t thresholdHigh)
 {
-    uint32_t temperatureCode = degreesToCode(thresholdHigh + DISTRIBUTION_OFFSET);
+    uintptr_t key;
+    uint32_t temperatureCode = TemperatureLPF3_degreesToCode((int32_t)thresholdHigh + DISTRIBUTION_OFFSET);
 
+    key                              = HwiP_disable();
     HWREG(PMUD_BASE + PMUD_O_TEMPUL) = temperatureCode;
 
-    currentThresholdHigh = thresholdHigh;
+    TemperatureLPF3_currentThresholdHigh = thresholdHigh;
+    HwiP_restore(key);
 }
 
 /*
- *  ======== enableTempLowerLimit ========
+ *  ======== TemperatureLPF3_enableTempLowerLimit ========
  */
-static void enableTempLowerLimit(void)
+static void TemperatureLPF3_enableTempLowerLimit(void)
 {
     HWREG(PMUD_BASE + PMUD_O_EVENTMASK) |= PMUD_EVENTMASK_TEMP_BELOW_LL_MASK;
 }
 
 /*
- *  ======== enableTempUpperLimit ========
+ *  ======== TemperatureLPF3_enableTempUpperLimit ========
  */
-static void enableTempUpperLimit(void)
+static void TemperatureLPF3_enableTempUpperLimit(void)
 {
     HWREG(PMUD_BASE + PMUD_O_EVENTMASK) |= PMUD_EVENTMASK_TEMP_OVER_UL_MASK;
 }
 
 /*
- *  ======== disableTempLowerLimit ========
+ *  ======== TemperatureLPF3_disableTempLowerLimit ========
  */
-static void disableTempLowerLimit(void)
+static void TemperatureLPF3_disableTempLowerLimit(void)
 {
-    HWREG(PMUD_BASE + PMUD_O_EVENTMASK) &= ~PMUD_EVENTMASK_TEMP_BELOW_LL_MASK;
+    HWREG(PMUD_BASE + PMUD_O_EVENTMASK) &= ~(uint32_t)PMUD_EVENTMASK_TEMP_BELOW_LL_MASK;
 }
 
 /*
- *  ======== disableTempUpperLimit ========
+ *  ======== TemperatureLPF3_disableTempUpperLimit ========
  */
-static void disableTempUpperLimit(void)
+static void TemperatureLPF3_disableTempUpperLimit(void)
 {
-    HWREG(PMUD_BASE + PMUD_O_EVENTMASK) &= ~PMUD_EVENTMASK_TEMP_OVER_UL_MASK;
+    HWREG(PMUD_BASE + PMUD_O_EVENTMASK) &= ~(uint32_t)PMUD_EVENTMASK_TEMP_OVER_UL_MASK;
 }
 
 /*
- *  ======== clearEventFlags ========
+ *  ======== TemperatureLPF3_clearEventFlags ========
  */
-static void clearEventFlags(void)
+static void TemperatureLPF3_clearEventFlags(void)
 {
     HWREG(PMUD_BASE + PMUD_O_EVENT) &= PMUD_EVENT_TEMP_BELOW_LL | PMUD_EVENT_TEMP_OVER_UL;
 }
 
 /*
- *  ======== setNextThresholds ========
+ *  ======== TemperatureLPF3_updateThresholds ========
  */
-static void setNextThresholds(void)
+static void TemperatureLPF3_updateThresholds(int16_t thresholdHigh, int16_t thresholdLow)
 {
-    List_Elem *notifyLink;
-    int16_t nextThresholdHigh = INVALID_TEMPERATURE_MAX;
-    int16_t nextThresholdLow  = INVALID_TEMPERATURE_MIN;
-    uint32_t key;
-
-    key = HwiP_disable();
-
-    /* Starting with the head of the list, keep track of the smallest high
-     * threshold and largest low threshold.
-     */
-    notifyLink = List_head(&notificationList);
-
-    while (notifyLink != NULL)
+    if (thresholdHigh < TemperatureLPF3_currentThresholdHigh)
     {
-        Temperature_NotifyObj *notifyObject = (Temperature_NotifyObj *)notifyLink;
-
-        nextThresholdHigh = Math_MIN(nextThresholdHigh, notifyObject->thresholdHigh);
-        nextThresholdLow  = Math_MAX(nextThresholdLow, notifyObject->thresholdLow);
-
-        notifyLink = List_next(notifyLink);
+        TemperatureLPF3_setTempUpperLimit(thresholdHigh);
+        TemperatureLPF3_enableTempUpperLimit();
     }
 
-    /* Now that we have found the next upper and lower thresholds, set them.
-     * These could be INVALID_TEMPERATURE_MAX and/or INVALID_TEMPERATURE_MIN
-     * if the list is empty or only high/low notifications were registered.
-     */
-    updateThresholds(nextThresholdHigh, nextThresholdLow);
-
-    HwiP_restore(key);
-}
-
-/*
- *  ======== walkNotifyList ========
- */
-static void walkNotifyList(void)
-{
-    List_Elem *notifyLink      = List_head(&notificationList);
-    int16_t currentTemperature = Temperature_getTemperature();
-
-    /* If the notification list is empty, the head pointer will be
-     * NULL and the while loop will never execute the statement.
-     */
-    while (notifyLink != NULL)
+    if (thresholdLow > TemperatureLPF3_currentThresholdLow)
     {
-        Temperature_NotifyObj *notifyObject = (Temperature_NotifyObj *)notifyLink;
-
-        /* Buffer the next link in case the notification triggers.
-         * Without buffering, we might skip list entries if the
-         * notifyObject is freed or reregistered and the notifyObject->link.next
-         * pointer is altered.
-         */
-        List_Elem *notifyLinkNext = List_next(notifyLink);
-
-        /* If the current temperature is below this notification's low
-         * threshold or above its high threshold, remove it from the list and
-         * call the callback fxn
-         */
-        if (currentTemperature <= notifyObject->thresholdLow || currentTemperature >= notifyObject->thresholdHigh)
-        {
-
-            /* Choose the threshold to provide to the notifyFxn based on the
-             * thresholds and the current temperature.
-             */
-            int16_t threshold = (currentTemperature <= notifyObject->thresholdLow) ? notifyObject->thresholdLow
-                                                                                   : notifyObject->thresholdHigh;
-
-            List_remove(&notificationList, notifyLink);
-            notifyObject->isRegistered = false;
-
-            notifyObject->notifyFxn(currentTemperature, threshold, notifyObject->clientArg, notifyObject);
-        }
-
-        notifyLink = notifyLinkNext;
+        TemperatureLPF3_setTempLowerLimit(thresholdLow);
+        TemperatureLPF3_enableTempLowerLimit();
     }
 }
 
 /*
- *  ======== updateThresholds ========
- */
-static void updateThresholds(int16_t thresholdHigh, int16_t thresholdLow)
-{
-    if (thresholdHigh < currentThresholdHigh)
-    {
-        setTempUpperLimit(thresholdHigh);
-        enableTempUpperLimit();
-    }
-
-    if (thresholdLow > currentThresholdLow)
-    {
-        setTempLowerLimit(thresholdLow);
-        enableTempLowerLimit();
-    }
-}
-
-/*
- *  ======== temperatureEventCb ========
+ *  ======== TemperatureLPF3_temperatureEventCb ========
  *
  *  Batmon interrupt triggered on high or low temperature event
  */
-static void temperatureEventCb(uint32_t eventMask)
+static void TemperatureLPF3_temperatureEventCb(uint32_t eventMask)
 {
+    /* Unused parameter */
+    (void)eventMask;
 
-    setTempUpperLimit(INVALID_TEMPERATURE_MAX);
-    disableTempUpperLimit();
+    TemperatureLPF3_setTempUpperLimit(INVALID_TEMPERATURE_MAX);
+    TemperatureLPF3_disableTempUpperLimit();
 
-    setTempLowerLimit(INVALID_TEMPERATURE_MIN);
-    disableTempLowerLimit();
+    TemperatureLPF3_setTempLowerLimit(INVALID_TEMPERATURE_MIN);
+    TemperatureLPF3_disableTempLowerLimit();
 
     /* Walk the notification list and issue any callbacks that have triggered
      * at the current temperature.
      */
-    walkNotifyList();
+    TemperatureLPF3_walkNotifyList();
 
     /* Walk the queue another time to find and set the next set of thresholds.
      * This is faster than making even one extra access to AON_BATMON.
      */
-    setNextThresholds();
+    TemperatureLPF3_setNextThresholds();
 
     /* Clear event flags. They may not immediately clear properly. */
-    clearEventFlags();
+    TemperatureLPF3_clearEventFlags();
 }
 
 /*
- *  ======== thermalShutdownCallback ========
+ *  ======== TemperatureLPF3_thermalShutdownCallback ========
  *
  *  Callback function for thermal shutdown notify object
  */
-static void thermalShutdownCallback(int16_t currentTemperature,
-                                    int16_t thresholdTemperature,
-                                    uintptr_t clientArg,
-                                    Temperature_NotifyObj *notifyObject)
+static void TemperatureLPF3_thermalShutdownCallback(int16_t currentTemperature,
+                                                    int16_t thresholdTemperature,
+                                                    uintptr_t clientArg,
+                                                    Temperature_NotifyObj *notifyObject)
 {
+    /* Unused parameters */
+    (void)currentTemperature;
+    (void)thresholdTemperature;
+    (void)clientArg;
+    (void)notifyObject;
+
     /* Immediately bring the device into reset, and enable the thermal shutdown comparator. */
     TemperatureLPF3_triggerThermalShutdown();
 }
@@ -354,14 +282,18 @@ static void thermalShutdownCallback(int16_t currentTemperature,
  */
 void Temperature_init(void)
 {
-    uint32_t key;
+    /* Static variable to track if the driver has been initialized */
+    static bool isInitialized = false;
+
+    uintptr_t key;
 
     key = HwiP_disable();
 
     if (isInitialized == false)
     {
         BatMonSupportLPF3_init();
-        BatMonSupportLPF3_registerTemperatureCb(PMUD_EVENT_TEMP_BELOW_LL | PMUD_EVENT_TEMP_OVER_UL, temperatureEventCb);
+        BatMonSupportLPF3_registerTemperatureCb(PMUD_EVENT_TEMP_BELOW_LL | PMUD_EVENT_TEMP_OVER_UL,
+                                                TemperatureLPF3_temperatureEventCb);
 
         /* Wait first measurement is ready to prevent Temperature_getTemperature
          * returning an invalid value
@@ -385,19 +317,140 @@ int16_t Temperature_getTemperature(void)
      * used in the correction-calculation below.
      */
 
-    int32_t temperature = HWREG(PMUD_BASE + PMUD_O_TEMP);
+    uint32_t temperatureCode = HWREG(PMUD_BASE + PMUD_O_TEMP);
+    int32_t batmonTemperature; /* Signed temperature with fractional bits */
+    int16_t realTemperature;   /* Signed real temperature with no fractional bits */
 
     /* Mask and shift the integer and fractional parts of the temperature */
-    temperature = (temperature & (PMUD_TEMP_INT_M | PMUD_TEMP_FRAC_M)) >> PMUD_TEMP_FRAC_S;
+    temperatureCode = (temperatureCode & (PMUD_TEMP_INT_M | PMUD_TEMP_FRAC_M)) >> PMUD_TEMP_FRAC_S;
 
-    /* Perform sign extension */
-    temperature = (temperature << (32 - (PMUD_TEMP_INT_W + PMUD_TEMP_FRAC_W))) >>
-                  (32 - (PMUD_TEMP_INT_W + PMUD_TEMP_FRAC_W));
+    /* Perform sign extension if the sign bit of the temperature is set. */
+    if ((temperatureCode & (1UL << (PMUD_TEMP_INT_W + PMUD_TEMP_FRAC_W - 1U))) != 0U)
+    {
+        /* Extend the sign bit */
+        temperatureCode |= (0xFFFFFFFFU << (PMUD_TEMP_INT_W + PMUD_TEMP_FRAC_W));
+    }
 
-    /* Correct for temperature-dependent error in BATMON sensor */
-    temperature = TemperatureLPF3_scaleToRealTemperature(temperature);
+    /* Convert to signed integer */
+    batmonTemperature = (int32_t)temperatureCode;
 
-    return temperature;
+    /* Correct for temperature-dependent error in the BATMON sensor. */
+    realTemperature = TemperatureLPF3_scaleToRealTemperature(batmonTemperature);
+
+    return realTemperature;
+}
+
+/*
+ *  ======== TemperatureLPF3_enableTSDMonitoring ========
+ */
+void TemperatureLPF3_enableTSDMonitoring(int16_t shutdownThreshold)
+{
+    /* Register a notify object on threshold value, that calls the thermal
+     * shutdown callback. The callback will immediately trigger a thermal
+     * shutdown.
+     */
+    (void)Temperature_registerNotifyHigh(&thermalShutdown,
+                                         shutdownThreshold,
+                                         TemperatureLPF3_thermalShutdownCallback,
+                                         (uintptr_t)NULL);
+}
+
+/*
+ *  ======== TemperatureLPF3_disableTSDMonitoring ========
+ */
+void TemperatureLPF3_disableTSDMonitoring(void)
+{
+    /* Unregister the thermal shutdown notify-object. */
+    (void)Temperature_unregisterNotify(&thermalShutdown);
+}
+
+/*
+ *  ======== TemperatureLPF3_triggerThermalShutdown ========
+ */
+void TemperatureLPF3_triggerThermalShutdown(void)
+{
+    HWREG(PMCTL_BASE + PMCTL_O_RSTCTL) |= PMCTL_RSTCTL_TSDEN_EN;
+}
+
+/*
+ *  ======== TemperatureLPF3_setNextThresholds ========
+ */
+static void TemperatureLPF3_setNextThresholds(void)
+{
+    List_Elem *notifyLink;
+    int16_t nextThresholdHigh = INVALID_TEMPERATURE_MAX;
+    int16_t nextThresholdLow  = INVALID_TEMPERATURE_MIN;
+    uintptr_t key;
+
+    key = HwiP_disable();
+
+    /* Starting with the head of the list, keep track of the smallest high
+     * threshold and largest low threshold.
+     */
+    notifyLink = List_head((List_List *)&TemperatureLPF3_notificationList);
+
+    while (notifyLink != NULL)
+    {
+        Temperature_NotifyObj *notifyObject = (Temperature_NotifyObj *)notifyLink;
+
+        nextThresholdHigh = Math_MIN(nextThresholdHigh, notifyObject->thresholdHigh);
+        nextThresholdLow  = Math_MAX(nextThresholdLow, notifyObject->thresholdLow);
+
+        notifyLink = List_next(notifyLink);
+    }
+
+    /* Now that we have found the next upper and lower thresholds, set them.
+     * These could be INVALID_TEMPERATURE_MAX and/or INVALID_TEMPERATURE_MIN
+     * if the list is empty or only high/low notifications were registered.
+     */
+    TemperatureLPF3_updateThresholds(nextThresholdHigh, nextThresholdLow);
+
+    HwiP_restore(key);
+}
+
+/*
+ *  ======== TemperatureLPF3_walkNotifyList ========
+ */
+static void TemperatureLPF3_walkNotifyList(void)
+{
+    List_Elem *notifyLink      = List_head((List_List *)&TemperatureLPF3_notificationList);
+    int16_t currentTemperature = Temperature_getTemperature();
+
+    /* If the notification list is empty, the head pointer will be
+     * NULL and the while loop will never execute the statement.
+     */
+    while (notifyLink != NULL)
+    {
+        Temperature_NotifyObj *notifyObject = (Temperature_NotifyObj *)notifyLink;
+
+        /* Buffer the next link in case the notification triggers.
+         * Without buffering, we might skip list entries if the
+         * notifyObject is freed or reregistered and the notifyObject->link.next
+         * pointer is altered.
+         */
+        List_Elem *notifyLinkNext = List_next(notifyLink);
+
+        /* If the current temperature is below this notification's low
+         * threshold or above its high threshold, remove it from the list and
+         * call the callback fxn
+         */
+        if ((currentTemperature <= notifyObject->thresholdLow) || (currentTemperature >= notifyObject->thresholdHigh))
+        {
+
+            /* Choose the threshold to provide to the notifyFxn based on the
+             * thresholds and the current temperature.
+             */
+            int16_t threshold = (currentTemperature <= notifyObject->thresholdLow) ? notifyObject->thresholdLow
+                                                                                   : notifyObject->thresholdHigh;
+
+            List_remove((List_List *)&TemperatureLPF3_notificationList, notifyLink);
+            notifyObject->isRegistered = false;
+
+            notifyObject->notifyFxn(currentTemperature, threshold, notifyObject->clientArg, notifyObject);
+        }
+
+        notifyLink = notifyLinkNext;
+    }
 }
 
 /*
@@ -408,7 +461,7 @@ int_fast16_t Temperature_registerNotifyHigh(Temperature_NotifyObj *notifyObject,
                                             Temperature_NotifyFxn notifyFxn,
                                             uintptr_t clientArg)
 {
-    uint32_t key;
+    uintptr_t key;
 
     key = HwiP_disable();
 
@@ -423,12 +476,12 @@ int_fast16_t Temperature_registerNotifyHigh(Temperature_NotifyObj *notifyObject,
          * There is the implicit assumption that the notification is not already
          * in the list. Otherwise the list linkage will be corrupted.
          */
-        List_put(&notificationList, &notifyObject->link);
+        List_put((List_List *)&TemperatureLPF3_notificationList, &notifyObject->link);
 
         notifyObject->isRegistered = true;
     }
 
-    updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
+    TemperatureLPF3_updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
 
     HwiP_restore(key);
 
@@ -443,7 +496,7 @@ int_fast16_t Temperature_registerNotifyLow(Temperature_NotifyObj *notifyObject,
                                            Temperature_NotifyFxn notifyFxn,
                                            uintptr_t clientArg)
 {
-    uint32_t key;
+    uintptr_t key;
 
     key = HwiP_disable();
 
@@ -458,12 +511,12 @@ int_fast16_t Temperature_registerNotifyLow(Temperature_NotifyObj *notifyObject,
          * There is the implicit assumption that the notification is not already
          * in the list. Otherwise the list linkage will be corrupted.
          */
-        List_put(&notificationList, &notifyObject->link);
+        List_put((List_List *)&TemperatureLPF3_notificationList, &notifyObject->link);
 
         notifyObject->isRegistered = true;
     }
 
-    updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
+    TemperatureLPF3_updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
 
     HwiP_restore(key);
 
@@ -479,7 +532,7 @@ int_fast16_t Temperature_registerNotifyRange(Temperature_NotifyObj *notifyObject
                                              Temperature_NotifyFxn notifyFxn,
                                              uintptr_t clientArg)
 {
-    uint32_t key;
+    uintptr_t key;
 
     key = HwiP_disable();
 
@@ -494,12 +547,12 @@ int_fast16_t Temperature_registerNotifyRange(Temperature_NotifyObj *notifyObject
          * There is the implicit assumption that the notification is not already
          * in the list. Otherwise the list linkage will be corrupted.
          */
-        List_put(&notificationList, &notifyObject->link);
+        List_put((List_List *)&TemperatureLPF3_notificationList, &notifyObject->link);
 
         notifyObject->isRegistered = true;
     }
 
-    updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
+    TemperatureLPF3_updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
 
     HwiP_restore(key);
 
@@ -511,20 +564,20 @@ int_fast16_t Temperature_registerNotifyRange(Temperature_NotifyObj *notifyObject
  */
 int_fast16_t Temperature_unregisterNotify(Temperature_NotifyObj *notifyObject)
 {
-    uint32_t key;
+    uintptr_t key;
 
     key = HwiP_disable();
 
     if (notifyObject->isRegistered == true)
     {
         /* Remove the notification from the list */
-        List_remove(&notificationList, &(notifyObject->link));
+        List_remove((List_List *)&TemperatureLPF3_notificationList, &(notifyObject->link));
 
         notifyObject->isRegistered = false;
     }
 
     /* Find the next set of thresholds and update the registers */
-    setNextThresholds();
+    TemperatureLPF3_setNextThresholds();
 
     HwiP_restore(key);
 
@@ -532,38 +585,15 @@ int_fast16_t Temperature_unregisterNotify(Temperature_NotifyObj *notifyObject)
 }
 
 /*
- *  ======== TemperatureLPF3_enableTSDMonitoring ========
- */
-void TemperatureLPF3_enableTSDMonitoring(int16_t shutdownThreshold)
-{
-    /*
-     * Register a notify object on threshold value, that calls the thermal shutdown callback.
-     * The callback will immediately trigger a thermal shutdown
-     */
-    Temperature_registerNotifyHigh(&thermalShutdown, shutdownThreshold, thermalShutdownCallback, (uintptr_t)NULL);
-}
-
-/*
- *  ======== TemperatureLPF3_disableTSDMonitoring ========
- */
-void TemperatureLPF3_disableTSDMonitoring(void)
-{
-    /*
-     * Unregister the thermal shutdown notify-object.
-     */
-    Temperature_unregisterNotify(&thermalShutdown);
-}
-
-/*
- *  ======== TemperatureLPF3_triggerThermalShutdown ========
- */
-void TemperatureLPF3_triggerThermalShutdown(void)
-{
-    HWREG(PMCTL_BASE + PMCTL_O_RSTCTL) |= PMCTL_RSTCTL_TSDEN_EN;
-}
-
-/*
  *  ======== TemperatureLPF3_scaleToRealTemperature ========
+ *  Converts BATMON temperature to real temperature
+ *
+ *  @param temperature  BATMON temperature with 2 fractional bits
+ *  @return             Real temperature as an integer with 0 fractional bits
+ *
+ *  This function performs internal calculations with 22 fractional bits.
+ *  The p1 coefficient has 20 fractional bits, and p0 has 22 fractional
+ *  bits (-28174886), ensuring correct fixed-point addition.
  */
 static int16_t TemperatureLPF3_scaleToRealTemperature(int32_t temperature)
 {
@@ -581,38 +611,55 @@ static int16_t TemperatureLPF3_scaleToRealTemperature(int32_t temperature)
      * p1 = 1.04348435
      * p0 = -6.71741627
      *
-     * Scaled by 2^20 to fixed-point integers:
+     * Scaled p1 by 2^20 and p0 by 2^22 to fixed-point integers:
      *
-     * p1 = 1094173
-     * p0 = -7043721
+     * p1 = 1094172
+     * p0 = -28174886
      */
 
     int32_t p1 = 1094172;
-    int32_t p0 = -7043721;
+    int32_t p0 = -28174886;
+    int32_t realTemperature;
 
-    temperature = (temperature * p1) + p0;
+    /* realTemperature will have 22 fractional bits */
+    realTemperature = (temperature * p1) + p0;
 
     /* Round to nearest integer. Divide by 2^22 to bring scaled
      * temperature with two fractional bits down to temperature with no
      * fractional bits. Do division instead of right-shift, since temperature
      * is a signed integer.
      */
-    if (temperature > 0)
+    if (realTemperature > 0)
     {
-        temperature = (temperature + (1 << 21)) / (1 << 22);
+        realTemperature = (realTemperature + (int32_t)(1UL << 21U)) / (int32_t)(1UL << 22U);
     }
     else
     {
-        temperature = (temperature - (1 << 21)) / (1 << 22);
+        realTemperature = (realTemperature - (int32_t)(1UL << 21U)) / (int32_t)(1UL << 22U);
     }
 
-    return temperature;
+    return (int16_t)realTemperature;
 }
 
+/*
+ *  ======== TemperatureLPF3_scaleFromRealTemperature ========
+ *  Converts real temperature to BATMON temperature
+ *
+ *  @param temperature  Real temperature as an integer with 0 fractional bits
+ *  @return             BATMON temperature as an integer with 0 fractional bits
+ *
+ *  This function adds 2 fractional bits to the input by multiplying by 4.
+ *  Internal calculations produce a result with 22 fractional bits:
+ *  - realTemperature has 2 fractional bits
+ *  - p1 has 20 fractional bits
+ *  - p0 should have 22 fractional bits (27000775) for correct fixed-point
+ *    addition
+ *  The final result is rounded to an integer by dividing by 2^22.
+ */
 static int16_t TemperatureLPF3_scaleFromRealTemperature(int32_t temperature)
 {
     /* Due to a non-linearity in the BATMON temperature sensor, the temperature
-     * programmed in the hardware should be adjusted to reflect a more accruate
+     * programmed in the hardware should be adjusted to reflect a more accurate
      * temperature. The transfer function accurate temperature to BATMON
      * temperature is as follows:
      *
@@ -621,43 +668,52 @@ static int16_t TemperatureLPF3_scaleFromRealTemperature(int32_t temperature)
      * p1 = 0.95832774109
      * p0 = 6.43748636
      *
-     * Scaled by 2^20 to fixed-point integers:
+     * Scaled p1 by 2^20 and p0 by 2^22 to fixed-point integers:
      *
      * p1 = 1004879
-     * p0 = 6750194
+     * p0 = 27000775
      */
     int32_t p1 = 1004879;
-    int32_t p0 = 6750194;
+    int32_t p0 = 27000775;
+    int32_t realTemperature; /* Real temperature with 2 fractional bits */
+    int32_t batmonTemperature;
 
     /* Add two fractional bits */
-    temperature *= 4;
+    realTemperature = 4 * temperature;
 
     /* Bring temperature from real temperature to BATMON temperature */
-    temperature = (temperature * p1) + p0;
+    batmonTemperature = (realTemperature * p1) + p0;
 
     /* Round to nearest integer. Divide by 2^22 to bring scaled
      * temperature with two fractional bits down to temperature with no
      * fractional bits. Do division instead of right-shift, since temperature
      * is a signed integer.
      */
-    if (temperature > 0)
+    if (batmonTemperature > 0)
     {
-        temperature = (temperature + (1 << 21)) / (1 << 22);
+        batmonTemperature = (batmonTemperature + (int32_t)(1UL << 21U)) / (int32_t)(1UL << 22U);
     }
     else
     {
-        temperature = (temperature - (1 << 21)) / (1 << 22);
+        batmonTemperature = (batmonTemperature - (int32_t)(1UL << 21U)) / (int32_t)(1UL << 22U);
     }
 
     /* Limit the temperature to valid BATMON temperatures */
-    if (temperature > BATMON_TEMPERATURE_MAX)
+    if (batmonTemperature > BATMON_TEMPERATURE_MAX)
     {
-        temperature = BATMON_TEMPERATURE_MAX;
+        batmonTemperature = BATMON_TEMPERATURE_MAX;
     }
-    else if (temperature < BATMON_TEMPERATURE_MIN)
+    else if (batmonTemperature < BATMON_TEMPERATURE_MIN)
     {
-        temperature = BATMON_TEMPERATURE_MIN;
+        batmonTemperature = BATMON_TEMPERATURE_MIN;
+    }
+    else
+    {
+        /* Do nothing. The BATMON temperature is the valid range. */
     }
 
-    return temperature;
+    /* It is safe to convert to 16 bit integer, since the values are limited by
+     * above if statements.
+     */
+    return (int16_t)batmonTemperature;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2024, Texas Instruments Incorporated
+ * Copyright (c) 2017-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -159,6 +159,10 @@
  * By default, the ECDH API expects the private and public keys to be formatted in
  * big-endian format. The details of octet string formatting can be found in
  * SEC 1: Elliptic Curve Cryptography.
+ *
+ * ## Limitations #
+ * For CC27XX devices, the ECDH driver cannot accept private keys with a
+ * value of 0x01 (entire value is 0x01).
  *
  * Private keys can be formatted as big-endian or little-endian integers of the same
  * length as the curve length.
@@ -591,11 +595,49 @@ typedef enum
                                  */
 } ECDH_KeyMaterialEndianness;
 
+#if (((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || \
+    (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)) && \
+    !defined(CONFIG_ZEPHYR))
+/*!
+ *  @brief  Enum for the curve types supported by the driver.
+ */
+typedef enum
+{
+    ECDH_TYPE_SEC_P_224_R1 = 1,
+    ECDH_TYPE_SEC_P_256_R1 = 2,
+    ECDH_TYPE_SEC_P_384_R1 = 3,
+    ECDH_TYPE_SEC_P_521_R1 = 4,
+    ECDH_TYPE_BRP_P_256_R1 = 5,
+    ECDH_TYPE_BRP_P_384_R1 = 6,
+    ECDH_TYPE_BRP_P_512_R1 = 7,
+    ECDH_TYPE_CURVE_25519  = 8,
+} ECDH_CurveType;
+
+/*!
+ *  @brief  Enum for signature sizes in bits supported by the driver.
+ */
+typedef enum
+{
+    ECDH_CURVE_LENGTH_192 = 192,
+    ECDH_CURVE_LENGTH_224 = 224,
+    ECDH_CURVE_LENGTH_255 = 255,
+    ECDH_CURVE_LENGTH_256 = 256,
+    ECDH_CURVE_LENGTH_384 = 384,
+    ECDH_CURVE_LENGTH_512 = 512,
+    ECDH_CURVE_LENGTH_521 = 521,
+} ECDH_CurveLength;
+#endif
+
 /*!
  *  @brief  Struct containing the parameters required to generate a public key.
  */
 typedef struct
 {
+#if (((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || \
+    (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)) && \
+    !defined(CONFIG_ZEPHYR))
+    ECDH_CurveType curveType; /*!< An ECDSA_CurveType value indicating which EC curve to use for the operation*/
+#endif
     const ECCParams_CurveParams *curve; /*!< A pointer to the elliptic curve parameters for myPrivateKey */
     const CryptoKey *myPrivateKey;      /*!< A pointer to the private ECC key from which the new public
                                          *   key will be generated. (maybe your static key)
@@ -615,6 +657,11 @@ typedef struct
  */
 typedef struct
 {
+#if (((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || \
+    (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)) && \
+    !defined(CONFIG_ZEPHYR))
+    ECDH_CurveType curveType; /*!< An ECDSA_CurveType value indicating which EC curve to use for the operation*/
+#endif
     const ECCParams_CurveParams *curve;               /*!< A pointer to the elliptic curve parameters for myPrivateKey.
                                                        *   If ECDH_generateKey() was used, this should be the same private key.
                                                        */
