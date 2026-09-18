@@ -3,7 +3,7 @@
  *
  *  Description:    Defines and prototypes for the CKMD module.
  *
- *  Copyright (c) 2023 Texas Instruments Incorporated
+ *  Copyright (c) 2023-2025 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -86,11 +86,34 @@ extern "C" {
 #define CKMD_LFOSC_MID_TEMP_COEFFICIENT_RANGE_MAX (70)
 //! \}
 
+//! Watchdog unlocking value
+#define CKMD_WATCHDOG_UNLOCK 0x1ACCE551
+
 //*****************************************************************************
 //
 // API Functions and prototypes
 //
 //*****************************************************************************
+
+//*****************************************************************************
+//
+//! \brief Enable high performance clock buffer
+//
+//*****************************************************************************
+__STATIC_INLINE void CKMDEnableHighPerformanceClockBuffer(void)
+{
+    HWREG(CKMD_BASE + CKMD_O_HFXTCTL) |= CKMD_HFXTCTL_HPBUFEN;
+}
+
+//*****************************************************************************
+//
+//! \brief Disable high performance clock buffer
+//
+//*****************************************************************************
+__STATIC_INLINE void CKMDDisableHighPerformanceClockBuffer(void)
+{
+    HWREG(CKMD_BASE + CKMD_O_HFXTCTL) &= ~CKMD_HFXTCTL_HPBUFEN;
+}
 
 //*****************************************************************************
 //
@@ -572,7 +595,7 @@ __STATIC_INLINE uint_least16_t CKMDGetLfoscRtnPpm(void)
     uint8_t ppmRtn = 20;
     if (fcfg->appTrims.revision >= 0x5)
     {
-        ppmRtn = fcfg->appTrims.cc23x0r5.lfOscParams.ppmRtn;
+        ppmRtn = fcfg->appTrims.cc23x0r5.misc0.lfoscPpmRtn;
     }
 
     // The ppmTempMid field uses units of 30ppm, convert to ppm
@@ -599,7 +622,7 @@ __STATIC_INLINE uint_least16_t CKMDGetLfoscMidTempCoefficientPpmPerC(void)
     uint8_t ppmTempMid = 20;
     if (fcfg->appTrims.revision >= 0x5)
     {
-        ppmTempMid = fcfg->appTrims.cc23x0r5.lfOscParams.ppmTempMid;
+        ppmTempMid = fcfg->appTrims.cc23x0r5.misc0.lfoscPpmTempMid;
     }
 
     // The ppmTempMid field uses units of 13ppm/C, convert to ppm/C
@@ -627,11 +650,68 @@ __STATIC_INLINE uint_least16_t CKMDGetLfoscExtTempCoefficientPpmPerC(void)
     uint8_t ppmTempExt = 20;
     if (fcfg->appTrims.revision >= 0x5)
     {
-        ppmTempExt = fcfg->appTrims.cc23x0r5.lfOscParams.ppmTempExt;
+        ppmTempExt = fcfg->appTrims.cc23x0r5.misc0.lfoscPpmTempExt;
     }
 
     // The ppmTempExt field uses units of 35ppm/C, convert to ppm/C
     return ppmTempExt * 35;
+}
+
+//*****************************************************************************
+//
+//! \brief Unlock write access to the Watchdog
+//!
+//! The function will wait until the Watchdog has actually been unlocked, before
+//! returning.
+//
+//*****************************************************************************
+__STATIC_INLINE void CKMDUnlockWatchdog(void)
+{
+    // Unlock the Watchdog
+    HWREG(CKMD_BASE + CKMD_O_WDTLOCK) = CKMD_WATCHDOG_UNLOCK;
+
+    // Make sure the Watchdog is unlocked before continuing
+    while (HWREG(CKMD_BASE + CKMD_O_WDTLOCK) == 1) {}
+}
+
+//*****************************************************************************
+//
+//! \brief Lock write access to the Watchdog
+//
+//*****************************************************************************
+__STATIC_INLINE void CKMDLockWatchdog(void)
+{
+    HWREG(CKMD_BASE + CKMD_O_WDTLOCK) = 0x0;
+}
+
+//*****************************************************************************
+//
+//! \brief Set watchdog counter value.
+//!
+//! Calling this function will immediately start (or restart) the counter. It
+//! will count down from the \c value
+//!
+//! \param value is the value to write to the Watchdog counter.
+//
+//*****************************************************************************
+__STATIC_INLINE void CKMDSetWatchdogCounter(uint32_t value)
+{
+    HWREG(CKMD_BASE + CKMD_O_WDTCNT) = value;
+}
+
+//*****************************************************************************
+//
+//! \brief Configure if the Watchdog should stop when the CPU is halted by a
+//! debugger
+//!
+//! \param stopWhenCpuIsHalted if true, the Watchdog will stop counting while
+//! the CPU is stopped by a debugger. If false, the Watchdog will continue
+//! counting while the CPU is stopped by a debugger.
+//
+//*****************************************************************************
+__STATIC_INLINE void CKMDSetWatchdogDebugConfig(bool stopWhenCpuIsHalted)
+{
+    HWREG(CKMD_BASE + CKMD_O_WDTTEST) = stopWhenCpuIsHalted ? CKMD_WDTTEST_STALLEN_EN : CKMD_WDTTEST_STALLEN_DIS;
 }
 
 //*****************************************************************************

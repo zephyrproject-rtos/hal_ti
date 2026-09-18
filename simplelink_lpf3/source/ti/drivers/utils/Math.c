@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Texas Instruments Incorporated
+ * Copyright (c) 2023-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,11 +40,104 @@
  */
 uint32_t Math_divideBy1000(uint32_t dividend)
 {
-    uint32_t p1 = (dividend >> 16) * (0x83126E98 >> 16);
-    uint32_t p2 = (dividend & 0xFFFF) * (0x83126E98 >> 16);
-    p2 += (dividend >> 16) * (0x83126E98 & 0xFFFF);
-    p2 >>= 7;
-    p2 += 222;
-    p1 += p2 >> 9;
-    return p1 >> 9;
+    uint32_t p1 = (dividend >> 16U) * (0x83126E98U >> 16U);
+    uint32_t p2 = (dividend & 0xFFFFU) * (0x83126E98U >> 16U);
+    p2 += (dividend >> 16U) * (0x83126E98U & 0xFFFFU);
+    p2 >>= 7U;
+    p2 += 222U;
+    p1 += p2 >> 9U;
+    return p1 >> 9U;
+}
+
+/*
+ *  ======== Math_avgBestOfThreeValues ========
+ */
+uint16_t Math_avgBestOfThreeValues(uint16_t arr[])
+{
+    uint16_t diff01, diff02, diff12;
+    uint16_t average;
+
+    /* Calculate the difference of each combination of the three values */
+    if (arr[0] > arr[1])
+    {
+        diff01 = arr[0] - arr[1];
+    }
+    else
+    {
+        diff01 = arr[1] - arr[0];
+    }
+
+    if (arr[0] > arr[2])
+    {
+        diff02 = arr[0] - arr[2];
+    }
+    else
+    {
+        diff02 = arr[2] - arr[0];
+    }
+
+    if (arr[1] > arr[2])
+    {
+        diff12 = arr[1] - arr[2];
+    }
+    else
+    {
+        diff12 = arr[2] - arr[1];
+    }
+
+    /* Calculate the average value of the two samples with the least difference */
+    if (diff01 > diff02)
+    {
+        if (diff02 > diff12)
+        {
+            average = (arr[1] + arr[2]) / 2;
+        }
+        else
+        {
+            average = (arr[0] + arr[2]) / 2;
+        }
+    }
+    else
+    {
+        if (diff01 > diff12)
+        {
+            average = (arr[1] + arr[2]) / 2;
+        }
+        else
+        {
+            average = (arr[0] + arr[1]) / 2;
+        }
+    }
+
+    return average;
+}
+
+/*
+ *  ======== Math_calcAverage ========
+ */
+uint16_t Math_calcAverage(uint16_t arr[], uint_fast16_t size)
+{
+    uint32_t sum     = 0;
+    uint16_t average = 0;
+
+    /* Check for empty array to avoid division by zero */
+    if (size == 0)
+    {
+        return 0;
+    }
+
+    /* Calculate the sum of all elements */
+    int i;
+    for (i = 0; i < size; i++)
+    {
+        sum += arr[i];
+    }
+
+    /* Calculate the average */
+    if (sum > 0)
+    {
+        average = sum / size;
+    }
+
+    return average;
 }

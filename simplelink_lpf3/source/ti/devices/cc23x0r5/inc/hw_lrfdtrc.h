@@ -1,7 +1,7 @@
 /******************************************************************************
-*  Filename:       hw_lrfdtrc_h
+*  Filename:       hw_lrfdtrc.h
 ******************************************************************************
-*  Copyright (c) 2021 Texas Instruments Incorporated. All rights reserved.
+*  Copyright (c) 2021-2025 Texas Instruments Incorporated. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions are met:
@@ -39,34 +39,34 @@
 // LRFDTRC component
 //
 //*****************************************************************************
-// Tracer Configuration 
+// Internal. Only to be used through TI provided API.
 #define LRFDTRC_O_CFG                                               0x00000000U
 
-// Channel 1 Command Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDTRC_O_CH1CMD                                            0x00000004U
 
-// Channel 2 Command Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDTRC_O_CH2CMD                                            0x00000008U
 
-// Channel 3 Command Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDTRC_O_CH3CMD                                            0x0000000CU
 
-// Channel 1 Parameter 0/1 Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDTRC_O_CH1PAR01                                          0x00000014U
 
-// Channel 2 Parameter 0/1 Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDTRC_O_CH2PAR01                                          0x00000018U
 
-// Channel 3 Parameter 0/1 Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDTRC_O_CH3PAR01                                          0x0000001CU
 
-// Channel 1 Parameter 2/3 Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDTRC_O_CH1PAR23                                          0x00000024U
 
-// Channel 2 Parameter 2/3 Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDTRC_O_CH2PAR23                                          0x00000028U
 
-// Channel 3 Parameter 2/3 Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDTRC_O_CH3PAR23                                          0x0000002CU
 
 //*****************************************************************************
@@ -74,14 +74,14 @@
 // Register: LRFDTRC_O_CFG
 //
 //*****************************************************************************
-// Field:   [8:7] PRESCAL 
+// Field:   [8:7] PRESCAL
 //
-// Data rate prescaler for bit clock of the serialized data 
-// ENUMs: 
-// DIV4                     Divide clock by 4 
-// DIV3                     Divide clock by 3 
-// DIV2                     Divide clock by 2 
-// DIV1                     Divide clock by 1 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// DIV4                     Internal. Only to be used through TI provided API.
+// DIV3                     Internal. Only to be used through TI provided API.
+// DIV2                     Internal. Only to be used through TI provided API.
+// DIV1                     Internal. Only to be used through TI provided API.
 #define LRFDTRC_CFG_PRESCAL_W                                                2U
 #define LRFDTRC_CFG_PRESCAL_M                                       0x00000180U
 #define LRFDTRC_CFG_PRESCAL_S                                                7U
@@ -90,39 +90,37 @@
 #define LRFDTRC_CFG_PRESCAL_DIV2                                    0x00000080U
 #define LRFDTRC_CFG_PRESCAL_DIV1                                    0x00000000U
 
-// Field:     [6] TSCLR 
+// Field:     [6] TSCLR
 //
-// Writing  1 to this bit clears the TX timer 
-// ENUMs: 
-// ONE                      The bit is 1 
-// ZERO                     The bit is 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ONE                      Internal. Only to be used through TI provided API.
+// ZERO                     Internal. Only to be used through TI provided API.
 #define LRFDTRC_CFG_TSCLR                                           0x00000040U
 #define LRFDTRC_CFG_TSCLR_M                                         0x00000040U
 #define LRFDTRC_CFG_TSCLR_S                                                  6U
 #define LRFDTRC_CFG_TSCLR_ONE                                       0x00000040U
 #define LRFDTRC_CFG_TSCLR_ZERO                                      0x00000000U
 
-// Field:     [5] TSEN 
+// Field:     [5] TSEN
 //
-// Enables the Timestamp 
-// ENUMs: 
-// ON                       The bit is 1 
-// OFF                      The bit is 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ON                       Internal. Only to be used through TI provided API.
+// OFF                      Internal. Only to be used through TI provided API.
 #define LRFDTRC_CFG_TSEN                                            0x00000020U
 #define LRFDTRC_CFG_TSEN_M                                          0x00000020U
 #define LRFDTRC_CFG_TSEN_S                                                   5U
 #define LRFDTRC_CFG_TSEN_ON                                         0x00000020U
 #define LRFDTRC_CFG_TSEN_OFF                                        0x00000000U
 
-// Field:   [4:3] CH3EN 
+// Field:   [4:3] CH3EN
 //
-// Enables CH3 traces 
-// ENUMs: 
-// TOPSM                    Enabled with MCE, MCO and CCE backdoor access 
-//                          access 
-// NORM                     Enabled in normal mode. Data from bus slave 
-//                          interface. 
-// OFF                      Disabled. No tracer transfer due to CH3 events 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// TOPSM                    Internal. Only to be used through TI provided API.
+// NORM                     Internal. Only to be used through TI provided API.
+// OFF                      Internal. Only to be used through TI provided API.
 #define LRFDTRC_CFG_CH3EN_W                                                  2U
 #define LRFDTRC_CFG_CH3EN_M                                         0x00000018U
 #define LRFDTRC_CFG_CH3EN_S                                                  3U
@@ -130,14 +128,13 @@
 #define LRFDTRC_CFG_CH3EN_NORM                                      0x00000008U
 #define LRFDTRC_CFG_CH3EN_OFF                                       0x00000000U
 
-// Field:   [2:1] CH2EN 
+// Field:   [2:1] CH2EN
 //
-// Enables CH2 traces 
-// ENUMs: 
-// TOPSM                    Enabled with PBE and RFE backdoor access access 
-// NORM                     Enabled in normal mode. Data from bus slave 
-//                          interface. 
-// OFF                      Disabled. No tracer transfer due to CH2 events 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// TOPSM                    Internal. Only to be used through TI provided API.
+// NORM                     Internal. Only to be used through TI provided API.
+// OFF                      Internal. Only to be used through TI provided API.
 #define LRFDTRC_CFG_CH2EN_W                                                  2U
 #define LRFDTRC_CFG_CH2EN_M                                         0x00000006U
 #define LRFDTRC_CFG_CH2EN_S                                                  1U
@@ -145,13 +142,12 @@
 #define LRFDTRC_CFG_CH2EN_NORM                                      0x00000002U
 #define LRFDTRC_CFG_CH2EN_OFF                                       0x00000000U
 
-// Field:     [0] CH1EN 
+// Field:     [0] CH1EN
 //
-// Enables CH1 traces 
-// ENUMs: 
-// NORM                     Enabled in normal mode. Data from bus slave 
-//                          interface. 
-// OFF                      Disabled. No tracer transfer due to CH1 events 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// NORM                     Internal. Only to be used through TI provided API.
+// OFF                      Internal. Only to be used through TI provided API.
 #define LRFDTRC_CFG_CH1EN                                           0x00000001U
 #define LRFDTRC_CFG_CH1EN_M                                         0x00000001U
 #define LRFDTRC_CFG_CH1EN_S                                                  0U
@@ -163,26 +159,24 @@
 // Register: LRFDTRC_O_CH1CMD
 //
 //*****************************************************************************
-// Field:  [15:8] PKTHDR 
+// Field:  [15:8] PKTHDR
 //
-// Header Byte. Reverts back to 0 when ready to transmit. A Write starts a 
-// transmission sequence. 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH1CMD_PKTHDR_W                                              8U
 #define LRFDTRC_CH1CMD_PKTHDR_M                                     0x0000FF00U
 #define LRFDTRC_CH1CMD_PKTHDR_S                                              8U
 #define LRFDTRC_CH1CMD_PKTHDR_ALLONES                               0x0000FF00U
 #define LRFDTRC_CH1CMD_PKTHDR_ALLZEROS                              0x00000000U
 
-// Field:   [2:0] PARCNT 
+// Field:   [2:0] PARCNT
 //
-// Number of parameters to transmit. Reverts back to 0 when ready to transmit. 
-// A Write starts a transmission sequence. 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH1CMD_PARCNT_W                                              3U
 #define LRFDTRC_CH1CMD_PARCNT_M                                     0x00000007U
 #define LRFDTRC_CH1CMD_PARCNT_S                                              0U
@@ -194,26 +188,24 @@
 // Register: LRFDTRC_O_CH2CMD
 //
 //*****************************************************************************
-// Field:  [15:8] PKTHDR 
+// Field:  [15:8] PKTHDR
 //
-// Header Byte. Reverts back to 0 when ready to transmit. A Write starts a 
-// transmission sequence. 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH2CMD_PKTHDR_W                                              8U
 #define LRFDTRC_CH2CMD_PKTHDR_M                                     0x0000FF00U
 #define LRFDTRC_CH2CMD_PKTHDR_S                                              8U
 #define LRFDTRC_CH2CMD_PKTHDR_ALLONES                               0x0000FF00U
 #define LRFDTRC_CH2CMD_PKTHDR_ALLZEROS                              0x00000000U
 
-// Field:   [2:0] PARCNT 
+// Field:   [2:0] PARCNT
 //
-// Number of parameters to transmit. Reverts back to 0 when ready to transmit. 
-// A Write starts a transmission sequence. 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH2CMD_PARCNT_W                                              3U
 #define LRFDTRC_CH2CMD_PARCNT_M                                     0x00000007U
 #define LRFDTRC_CH2CMD_PARCNT_S                                              0U
@@ -225,26 +217,24 @@
 // Register: LRFDTRC_O_CH3CMD
 //
 //*****************************************************************************
-// Field:  [15:8] PKTHDR 
+// Field:  [15:8] PKTHDR
 //
-// Header Byte. Reverts back to 0 when ready to transmit. A Write starts a 
-// transmission sequence. 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH3CMD_PKTHDR_W                                              8U
 #define LRFDTRC_CH3CMD_PKTHDR_M                                     0x0000FF00U
 #define LRFDTRC_CH3CMD_PKTHDR_S                                              8U
 #define LRFDTRC_CH3CMD_PKTHDR_ALLONES                               0x0000FF00U
 #define LRFDTRC_CH3CMD_PKTHDR_ALLZEROS                              0x00000000U
 
-// Field:   [2:0] PARCNT 
+// Field:   [2:0] PARCNT
 //
-// Number of parameters to transmit. Reverts back to 0 when ready to transmit. 
-// A Write starts a transmission sequence. 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH3CMD_PARCNT_W                                              3U
 #define LRFDTRC_CH3CMD_PARCNT_M                                     0x00000007U
 #define LRFDTRC_CH3CMD_PARCNT_S                                              0U
@@ -256,24 +246,24 @@
 // Register: LRFDTRC_O_CH1PAR01
 //
 //*****************************************************************************
-// Field: [31:16] PAR1 
+// Field: [31:16] PAR1
 //
-// Parameter 1 for Channel 1 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH1PAR01_PAR1_W                                             16U
 #define LRFDTRC_CH1PAR01_PAR1_M                                     0xFFFF0000U
 #define LRFDTRC_CH1PAR01_PAR1_S                                             16U
 #define LRFDTRC_CH1PAR01_PAR1_ALLONES                               0xFFFF0000U
 #define LRFDTRC_CH1PAR01_PAR1_ALLZEROS                              0x00000000U
 
-// Field:  [15:0] PAR0 
+// Field:  [15:0] PAR0
 //
-// Parameter 0 for Channel 1 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH1PAR01_PAR0_W                                             16U
 #define LRFDTRC_CH1PAR01_PAR0_M                                     0x0000FFFFU
 #define LRFDTRC_CH1PAR01_PAR0_S                                              0U
@@ -285,24 +275,24 @@
 // Register: LRFDTRC_O_CH2PAR01
 //
 //*****************************************************************************
-// Field: [31:16] PAR1 
+// Field: [31:16] PAR1
 //
-// Parameter 1 for Channel 2 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH2PAR01_PAR1_W                                             16U
 #define LRFDTRC_CH2PAR01_PAR1_M                                     0xFFFF0000U
 #define LRFDTRC_CH2PAR01_PAR1_S                                             16U
 #define LRFDTRC_CH2PAR01_PAR1_ALLONES                               0xFFFF0000U
 #define LRFDTRC_CH2PAR01_PAR1_ALLZEROS                              0x00000000U
 
-// Field:  [15:0] PAR0 
+// Field:  [15:0] PAR0
 //
-// Parameter 0 for Channel 2 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH2PAR01_PAR0_W                                             16U
 #define LRFDTRC_CH2PAR01_PAR0_M                                     0x0000FFFFU
 #define LRFDTRC_CH2PAR01_PAR0_S                                              0U
@@ -314,24 +304,24 @@
 // Register: LRFDTRC_O_CH3PAR01
 //
 //*****************************************************************************
-// Field: [31:16] PAR1 
+// Field: [31:16] PAR1
 //
-// Parameter 1 for Channel 3 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH3PAR01_PAR1_W                                             16U
 #define LRFDTRC_CH3PAR01_PAR1_M                                     0xFFFF0000U
 #define LRFDTRC_CH3PAR01_PAR1_S                                             16U
 #define LRFDTRC_CH3PAR01_PAR1_ALLONES                               0xFFFF0000U
 #define LRFDTRC_CH3PAR01_PAR1_ALLZEROS                              0x00000000U
 
-// Field:  [15:0] PAR0 
+// Field:  [15:0] PAR0
 //
-// Parameter 0 for Channel 3 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH3PAR01_PAR0_W                                             16U
 #define LRFDTRC_CH3PAR01_PAR0_M                                     0x0000FFFFU
 #define LRFDTRC_CH3PAR01_PAR0_S                                              0U
@@ -343,24 +333,24 @@
 // Register: LRFDTRC_O_CH1PAR23
 //
 //*****************************************************************************
-// Field: [31:16] PAR3 
+// Field: [31:16] PAR3
 //
-// Parameter 3 for Channel 1 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH1PAR23_PAR3_W                                             16U
 #define LRFDTRC_CH1PAR23_PAR3_M                                     0xFFFF0000U
 #define LRFDTRC_CH1PAR23_PAR3_S                                             16U
 #define LRFDTRC_CH1PAR23_PAR3_ALLONES                               0xFFFF0000U
 #define LRFDTRC_CH1PAR23_PAR3_ALLZEROS                              0x00000000U
 
-// Field:  [15:0] PAR2 
+// Field:  [15:0] PAR2
 //
-// Parameter 2 for Channel 1 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH1PAR23_PAR2_W                                             16U
 #define LRFDTRC_CH1PAR23_PAR2_M                                     0x0000FFFFU
 #define LRFDTRC_CH1PAR23_PAR2_S                                              0U
@@ -372,24 +362,24 @@
 // Register: LRFDTRC_O_CH2PAR23
 //
 //*****************************************************************************
-// Field: [31:16] PAR3 
+// Field: [31:16] PAR3
 //
-// Parameter 3 for Channel 2 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH2PAR23_PAR3_W                                             16U
 #define LRFDTRC_CH2PAR23_PAR3_M                                     0xFFFF0000U
 #define LRFDTRC_CH2PAR23_PAR3_S                                             16U
 #define LRFDTRC_CH2PAR23_PAR3_ALLONES                               0xFFFF0000U
 #define LRFDTRC_CH2PAR23_PAR3_ALLZEROS                              0x00000000U
 
-// Field:  [15:0] PAR2 
+// Field:  [15:0] PAR2
 //
-// Parameter 2 for Channel 2 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH2PAR23_PAR2_W                                             16U
 #define LRFDTRC_CH2PAR23_PAR2_M                                     0x0000FFFFU
 #define LRFDTRC_CH2PAR23_PAR2_S                                              0U
@@ -401,24 +391,24 @@
 // Register: LRFDTRC_O_CH3PAR23
 //
 //*****************************************************************************
-// Field: [31:16] PAR3 
+// Field: [31:16] PAR3
 //
-// Parameter 3 for Channel 3 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH3PAR23_PAR3_W                                             16U
 #define LRFDTRC_CH3PAR23_PAR3_M                                     0xFFFF0000U
 #define LRFDTRC_CH3PAR23_PAR3_S                                             16U
 #define LRFDTRC_CH3PAR23_PAR3_ALLONES                               0xFFFF0000U
 #define LRFDTRC_CH3PAR23_PAR3_ALLZEROS                              0x00000000U
 
-// Field:  [15:0] PAR2 
+// Field:  [15:0] PAR2
 //
-// Parameter 2 for Channel 3 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDTRC_CH3PAR23_PAR2_W                                             16U
 #define LRFDTRC_CH3PAR23_PAR2_M                                     0x0000FFFFU
 #define LRFDTRC_CH3PAR23_PAR2_S                                              0U

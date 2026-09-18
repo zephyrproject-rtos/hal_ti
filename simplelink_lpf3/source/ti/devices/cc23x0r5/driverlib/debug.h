@@ -3,7 +3,7 @@
  *
  *  Description:    Macros for assisting debug of the driver library.
  *
- *  Copyright (c) 2022 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2025 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -47,6 +47,16 @@
 
 //*****************************************************************************
 //
+// If building with a C++ compiler, make all of the definitions in this header
+// have a C binding.
+//
+//*****************************************************************************
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+//*****************************************************************************
+//
 //! Function stub for allowing compile with DRIVERLIB_DEBUG flag asserted.
 //
 //*****************************************************************************
@@ -69,6 +79,15 @@ extern void __error__(char *pFilename, uint32_t line);
 
 #else
     #define ASSERT(expr)
+#endif
+
+//*****************************************************************************
+//
+// Mark the end of the C bindings section for C++ compilers.
+//
+//*****************************************************************************
+#ifdef __cplusplus
+}
 #endif
 
 //*****************************************************************************

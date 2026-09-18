@@ -3,7 +3,7 @@
  *
  *  Description:    Defines and prototypes for the LPCMP peripheral.
  *
- *  Copyright (c) 2022, Texas Instruments Incorporated
+ *  Copyright (c) 2022-2024, Texas Instruments Incorporated
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -99,7 +99,7 @@ extern "C" {
 //
 //*****************************************************************************
 #define LPCMP_NEG_INPUT_VDDD SYS0_LPCMPCFG_NSEL_VDDD      //!< Select VDDD as negative input
-#define LPCMP_NEG_INPUT_VDDA SYS0_LPCMPCFG_NSEL_VDDA      //!< Select VDDA as negative input
+#define LPCMP_NEG_INPUT_VDDS SYS0_LPCMPCFG_NSEL_VDDA      //!< Select VDDS(VDDA) as negative input
 #define LPCMP_NEG_INPUT_A2   SYS0_LPCMPCFG_NSEL_VA_PAD_A2 //!< Select PAD_A2 as negative input
 #define LPCMP_NEG_INPUT_A3   SYS0_LPCMPCFG_NSEL_VA_PAD_A3 //!< Select PAD_A3 as negative input
 #define LPCMP_NEG_INPUT_OPEN SYS0_LPCMPCFG_NSEL_OPEN      //!< Leave negative input floating
@@ -113,7 +113,7 @@ extern "C" {
 #define LPCMP_POS_INPUT_A1   SYS0_LPCMPCFG_PSEL_VA_PAD_A1 //!< Select PAD_A1 as positive input
 #define LPCMP_POS_INPUT_A2   SYS0_LPCMPCFG_PSEL_VA_PAD_A2 //!< Select PAD_A2 as positive input
 #define LPCMP_POS_INPUT_A3   SYS0_LPCMPCFG_PSEL_VA_PAD_A3 //!< Select PAD_A3 as positive input
-#define LPCMP_POS_INPUT_VDDA SYS0_LPCMPCFG_PSEL_VDDA      //!< Selects VDDA as positive input
+#define LPCMP_POS_INPUT_VDDS SYS0_LPCMPCFG_PSEL_VDDA      //!< Selects VDDS(VDDA) as positive input
 #define LPCMP_POS_INPUT_OPEN SYS0_LPCMPCFG_PSEL_OPEN      //!< Leave negative positive floating
 
 //*****************************************************************************
@@ -224,7 +224,7 @@ __STATIC_INLINE void LPCMPDisableWakeup(void)
 //! \param input
 //!     LPCMP negative input source:
 //!     - \ref LPCMP_NEG_INPUT_VDDD
-//!     - \ref LPCMP_NEG_INPUT_VDDA
+//!     - \ref LPCMP_NEG_INPUT_VDDS
 //!     - \ref LPCMP_NEG_INPUT_A2
 //!     - \ref LPCMP_NEG_INPUT_A3
 //!     - \ref LPCMP_NEG_INPUT_OPEN
@@ -274,7 +274,7 @@ __STATIC_INLINE bool LPCMPIsOutputHigh(void)
 //!     - \ref LPCMP_POS_INPUT_A1
 //!     - \ref LPCMP_POS_INPUT_A2
 //!     - \ref LPCMP_POS_INPUT_A3
-//!     - \ref LPCMP_POS_INPUT_VDDA
+//!     - \ref LPCMP_POS_INPUT_VDDS
 //!     - \ref LPCMP_POS_INPUT_OPEN
 //
 //*****************************************************************************

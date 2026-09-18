@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Texas Instruments Incorporated
+ * Copyright (c) 2022-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,8 +42,8 @@
 #include <ti/drivers/temperature/TemperatureLPF3.h>
 
 #include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/evtsvt.h)
 #include DeviceFamily_constructPath(inc/hw_memmap.h)
-#include DeviceFamily_constructPath(inc/hw_evtsvt.h)
 #include DeviceFamily_constructPath(inc/hw_evtull.h)
 #include DeviceFamily_constructPath(inc/hw_ints.h)
 #include DeviceFamily_constructPath(inc/hw_pmud.h)
@@ -54,9 +54,6 @@ static void batMonHwiFxn(uintptr_t arg0);
 
 /* Globals */
 
-/* HWI struct for the shared BATMON interrupt */
-static HwiP_Struct batMonHwi;
-
 /* Allocate memory for registered event callback functions */
 static BatMonSupportLPF3_EventCb temperatureCb = NULL;
 static BatMonSupportLPF3_EventCb batteryCb     = NULL;
@@ -64,8 +61,6 @@ static BatMonSupportLPF3_EventCb batteryCb     = NULL;
 /* Event masks for the registered event callback functions */
 static uint32_t temperatureEventMask = 0;
 static uint32_t batteryEventMask     = 0;
-
-static bool isInitialized = false;
 
 extern const BatMonSupportLPF3_Config BatMonSupportLPF3_config;
 
@@ -76,19 +71,22 @@ extern const BatMonSupportLPF3_Config BatMonSupportLPF3_config;
  */
 static void batMonHwiFxn(uintptr_t arg0)
 {
+    /* Unused parameter */
+    (void)arg0;
+
     uint32_t events = HWREG(PMUD_BASE + PMUD_O_EVENT);
 
-    if (((events & batteryEventMask) != 0) && (batteryCb != NULL))
+    if (((events & batteryEventMask) != 0U) && (batteryCb != NULL))
     {
         batteryCb(events & batteryEventMask);
     }
 
-    if (((events & temperatureEventMask) != 0) && (temperatureCb != NULL))
+    if (((events & temperatureEventMask) != 0U) && (temperatureCb != NULL))
     {
         temperatureCb(events & temperatureEventMask);
     }
 
-    HwiP_clearInterrupt(BatMonSupportLPF3_config.intNum);
+    HwiP_clearInterrupt((int)BatMonSupportLPF3_config.intNum);
 }
 
 /*
@@ -96,14 +94,18 @@ static void batMonHwiFxn(uintptr_t arg0)
  */
 void BatMonSupportLPF3_init(void)
 {
-    uint32_t key;
+    /* Static variables */
+    static HwiP_Struct batMonHwi; /* HWI struct for the shared BATMON interrupt. */
+    static bool isInitialized = false;
+
+    uintptr_t key;
 
     key = HwiP_disable();
 
     if (isInitialized == false)
     {
         /* Claim configurable CPUIRQ as AON_PMU_COMB */
-        HWREG(EVTSVT_BASE + EVTSVT_O_CPUIRQ0SEL + (BatMonSupportLPF3_config.intNum - INT_CPUIRQ0) * sizeof(uint32_t)) = BatMonSupportLPF3_config.intMux;
+        EVTSVTConfigureEvent(BatMonSupportLPF3_config.intSubscriberId, EVTSVT_PUB_AON_PMU_COMB);
 
         /* Initialise the BatMon HWI. The temperature sensor shares this
          * interrupt with the battery voltage monitoring events.
@@ -112,7 +114,7 @@ void BatMonSupportLPF3_init(void)
         HwiP_Params_init(&hwiParams);
         hwiParams.priority  = BatMonSupportLPF3_config.intPriority;
         hwiParams.enableInt = true;
-        HwiP_construct(&batMonHwi, BatMonSupportLPF3_config.intNum, batMonHwiFxn, &hwiParams);
+        (void)HwiP_construct(&batMonHwi, (int)BatMonSupportLPF3_config.intNum, batMonHwiFxn, &hwiParams);
 
         /* Disable all events */
         HWREG(PMUD_BASE + PMUD_O_EVENTMASK) = 0;
@@ -139,7 +141,7 @@ void BatMonSupportLPF3_init(void)
  */
 void BatMonSupportLPF3_registerTemperatureCb(uint32_t eventMask, BatMonSupportLPF3_EventCb callback)
 {
-    uint32_t key;
+    uintptr_t key;
 
     key = HwiP_disable();
 
@@ -154,7 +156,7 @@ void BatMonSupportLPF3_registerTemperatureCb(uint32_t eventMask, BatMonSupportLP
  */
 void BatMonSupportLPF3_registerBatteryCb(uint32_t eventMask, BatMonSupportLPF3_EventCb callback)
 {
-    uint32_t key;
+    uintptr_t key;
 
     key = HwiP_disable();
 

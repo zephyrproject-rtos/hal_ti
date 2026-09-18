@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Texas Instruments Incorporated
+ * Copyright (c) 2023-2026, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,8 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ti_drivers_RCL_commands_adc_noise_h__include
-#define ti_drivers_RCL_commands_adc_noise_h__include
+#ifndef ti_drivers_rcl_commands_adc_noise__include
+#define ti_drivers_rcl_commands_adc_noise__include
 
 #include <ti/drivers/rcl/RCL_Command.h>
 #include <ti/drivers/rcl/handlers/adc_noise.h>
@@ -42,7 +42,7 @@ typedef struct RCL_CMD_ADC_NOISE_GET RCL_CmdAdcNoiseGet;
 #define RCL_CMDID_ADC_NOISE_GET 0x0001
 
 /* Max number of samples that can be collected in one session */
-#define RCL_ADC_NOISE_MAX_NUM_WORDS (1024)
+#define RCL_ADC_NOISE_MAX_NUM_WORDS (1024U)
 
 /**
  *  @brief ADC noise command
@@ -88,4 +88,4 @@ struct RCL_CMD_ADC_NOISE_GET
         .output = NULL,                                                 \
     }
 
-#endif // ti_drivers_RCL_commands_adc_noise_h__include
+#endif /* ti_drivers_rcl_commands_adc_noise__include */

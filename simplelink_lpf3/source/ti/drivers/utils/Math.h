@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Texas Instruments Incorporated
+ * Copyright (c) 2023-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,7 +82,7 @@ extern "C" {
  *
  *  @return     The absolute value of  @c x
  */
-#define Math_ABS(x) ((x) < 0 ? -(x) : (x))
+#define Math_ABS(x) (((x) < 0) ? -(x) : (x))
 
 /*!
  *  @brief      Divide a number by 1000
@@ -103,6 +103,34 @@ extern "C" {
  *  @return     Returns  @c dividend / 1000 (see limitations)
  */
 extern uint32_t Math_divideBy1000(uint32_t dividend);
+
+/*!
+ *  @brief  Function to average the best of three values.
+ *
+ *  The value with the highest deviation will be discarded
+ *  and the average of the two remaining values will be returned.
+ *
+ *  @param[in]  arr    array with 3 uint16_t elements
+ *
+ *  @return     Returns the average value
+ */
+extern uint16_t Math_avgBestOfThreeValues(uint16_t arr[]);
+
+/*!
+ *  @brief  Function to calculate the average of an array of numbers.
+ *
+ *  The function takes an uint16 array and its size as input.
+ *  It iterates through the array, summing its elements. Then calculates
+ *  the average.
+ *
+ *  @note The maximum size of the array is 65537.
+ *
+ *  @param[in]  arr    Array with @c size uint16_t elements
+ *  @param[in]  size   The size of the array
+ *
+ *  @return     Returns the average value
+ */
+extern uint16_t Math_calcAverage(uint16_t arr[], uint_fast16_t size);
 
 #ifdef __cplusplus
 }
