@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, Texas Instruments Incorporated
+ * Copyright (c) 2020-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,8 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ti_drivers_RCL_Command_h__include
-#define ti_drivers_RCL_Command_h__include
+#ifndef ti_drivers_rcl_RCL_Command__include
+#define ti_drivers_rcl_RCL_Command__include
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -61,6 +61,9 @@ struct RCL_CommandRuntime_s {
     LRF_Events lrfCallbackMask;         /*!< Callbacks enabled for events directly from LRF */
     RCL_Events rclCallbackMask;         /*!< Callbacks enabled for events generated in RCL */
     RCL_Callback callback;              /*!< Callback function */
+#if defined(DeviceFamily_PARENT) && ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X0))
+    uint32_t activityInfo;              /*!< DMM (Dynamic Multi-protocol Manager) run-time priority information */
+#endif
 };
 
 /**
@@ -95,6 +98,7 @@ typedef enum RCL_CommandStatus_e {
     RCL_CommandStatus_RxErr,                        /*!< Command ended due to errors with the received packet (e.g, CRC errors) */
     RCL_CommandStatus_RejectedStart,                /*!< Command was rejected start due to scheduling parameters */
     RCL_CommandStatus_UnexpectedMdrRx,              /*!< Command ended because an MDR packet was received when we have MDR disabled */
+    RCL_CommandStatus_CoexNoGrant,                  /*!< Command ended because the coexistence procedure did not allow operation */
     RCL_CommandStatus_DescheduledApi = 0x31,        /*!< Command was descheduled before starting running in the radio because stop API was called */
     RCL_CommandStatus_DescheduledScheduling,        /*!< Command was descheduled before starting running in the radio due to scheduling of another command */
     RCL_CommandStatus_GracefulStopTimeout = 0x34,   /*!< Command ended because graceful stop time was reached */
@@ -106,6 +110,7 @@ typedef enum RCL_CommandStatus_e {
     RCL_CommandStatus_Connect = 0x40,               /*!< Command has finished and a connection may be established (BLE5 advertiser and initiator) */
     RCL_CommandStatus_MaxNak,                       /*!< Command ended because more subsequent NAKs than supported were received (BLE5) */
     RCL_CommandStatus_MaxAuxWaitTimeExceeded,       /*!< Command ended because the wait time for a new packet following an AuxPtr was exceeded (BLE5 scanner and initiator) */
+    RCL_CommandStatus_FramePending,                 /*!< Command or TX action ended after receiving ACK with frame pending bit set to 1 (IEEE 802.15.4) */
     RCL_CommandStatus_Error  = 0x80,                /*!< Command ended with unknown error */
     RCL_CommandStatus_Error_Setup,                  /*!< Command ended because of an error in the setup */
     RCL_CommandStatus_Error_Param,                  /*!< Command ended because of an error with a parameter */
@@ -137,7 +142,7 @@ typedef enum RCL_CommandStatus_e {
  *
  *  Type of stop to perform
  */
-typedef enum {
+typedef enum RCL_StopType_e {
     RCL_StopType_None = 0,        /*!< No stop requested */
     RCL_StopType_DescheduleOnly,  /*!< Stop a command that is queued or pending start, but do not stop it from running */
     RCL_StopType_Graceful,        /*!< Stop the command gracefully, that is finish a packet or transaction in progress before ending */
@@ -149,7 +154,7 @@ typedef enum {
  *
  *  The type of scheduling used for a command
  */
-typedef enum  {
+typedef enum RCL_ScheduleType_e {
     RCL_Schedule_Now = 0,               /*!< Schedule the command to start as soon as possible */
     RCL_Schedule_AbsTime = 1,           /*!< Schedule command to start at a given time; give error if delays occur */
 } RCL_ScheduleType;
@@ -159,7 +164,7 @@ typedef enum  {
  *
  *  How will this command interact with an already running and overlapping command
  */
-typedef enum {
+typedef enum RCL_ConflictPolicy_e {
     RCL_ConflictPolicy_AlwaysInterrupt = 0, /*!< Always stop a running command if necessary to run this command */
     RCL_ConflictPolicy_Polite = 1,          /*!< Stop a running command unless it is communicating, i.e. transmitting or is actively receiving */
     RCL_ConflictPolicy_NeverInterrupt = 2,  /*!< Never stop an ongoing command */
@@ -173,9 +178,9 @@ typedef enum {
 struct RCL_Command_s {
     uint16_t cmdId;                         /*!< Command ID */
     uint16_t phyFeatures;                   /*!< PHY feature selector; use 0 if only one PHY */
-    RCL_ScheduleType scheduling : 8;        /*!< Scheduling type */
-    RCL_CommandStatus status    : 8;        /*!< Status of command */
-    RCL_ConflictPolicy conflictPolicy : 8;  /*!< Conflict resolution policy */
+    RCL_ScheduleType scheduling;            /*!< Scheduling type */
+    RCL_CommandStatus status;               /*!< Status of command */
+    RCL_ConflictPolicy conflictPolicy;      /*!< Conflict resolution policy */
     bool allowDelay;                        /*!< Start may be delayed */
     RCL_CommandRuntime runtime;             /*!< Runtime information */
     RCL_CommandTiming timing;               /*!< Timing information */
@@ -188,7 +193,7 @@ struct RCL_Command_s {
     .scheduling = RCL_Schedule_Now,                         \
     .status  = RCL_CommandStatus_Idle,                      \
     .conflictPolicy = RCL_ConflictPolicy_AlwaysInterrupt,   \
-    .allowDelay = false,                                    \
+    .allowDelay = (bool) false,                                    \
     .runtime = {                                            \
         .handler = _handler,                                \
     },                                                      \
@@ -199,6 +204,40 @@ struct RCL_Command_s {
     },                                                      \
 }
 #define RCL_Command_DefaultRuntime(_id, _handler) (RCL_Command) RCL_Command_Default(_id, _handler)
+
+/**
+ *  @brief Type for Coex priority
+ *
+ */
+typedef enum RCL_Command_CoexPriority_e {
+    RCL_CoexPriority_Low = 0,                   /*!< Low priority */
+    RCL_CoexPriority_High = 1,                  /*!< High priority */
+} RCL_Command_CoexPriority;
+
+/**
+ *  @brief Type for Coex receive mode
+ *
+ */
+typedef enum RCL_Command_CoexRxMode_e {
+    RCL_CoexRxMode_AlwaysRequest = 0,           /*!< Always assert request while in RX */
+    RCL_CoexRxMode_RequestOnPacket = 1,         /*!< Request assert in RX only on indication of a packet to receive */
+} RCL_Command_CoexRxMode;
+
+/**
+ *  @brief Type for Coex control
+ *
+ *  Control which coex lines to enable, for commands supporting the feature
+ */
+typedef union {
+    struct  {
+        uint8_t grantEnable : 1;                /*!< Enable GRANT line as an input according to global configuration */
+        uint8_t requestPriorityEnable : 1;      /*!< Enable REQUEST and PRIORITY lines according to global configuration  */
+        RCL_Command_CoexPriority priority : 1;  /*!< Priority level to signal */
+        RCL_Command_CoexRxMode rxMode : 1;      /*!< RX mode for operation */
+        uint8_t reserved : 4;
+    };
+    uint8_t value;
+} RCL_Command_CoexControl;
 
 /**
  * @brief Type for TX power
@@ -225,4 +264,4 @@ static inline void RCL_Command_setRawTxPower(uint32_t registerSetting, uint32_t 
     LRF_setRawTxPower(registerSetting, temperatureCoefficient);
 }
 
-#endif /* ti_drivers_RCL_Command_h__include */
+#endif /* ti_drivers_rcl_RCL_Command__include */

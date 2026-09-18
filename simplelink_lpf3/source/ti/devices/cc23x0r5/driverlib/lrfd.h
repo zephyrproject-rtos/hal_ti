@@ -3,7 +3,7 @@
  *
  *  Description:    Defines and prototypes for LRFD.
  *
- *  Copyright (c) 2023 Texas Instruments Incorporated
+ *  Copyright (c) 2023-2026 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -33,8 +33,8 @@
  *
  ******************************************************************************/
 
-#ifndef __LRFD_H__
-#define __LRFD_H__
+#ifndef ti_devices_lrfd__include
+#define ti_devices_lrfd__include
 
 //*****************************************************************************
 //
@@ -58,12 +58,19 @@ extern "C" {
 #include <stdint.h>
 #include "../inc/hw_lrfddbell.h"
 
+//! The bit position of the bit set in \ref LRFD_CLK_DEP_LRFD_M
+#define LRFD_CLK_DEP_LRFD_S (LRFDDBELL_CLKCTL_BRIDGE_S)
+
+//! Special value for clock dependency mask to indicate dependency on
+//! the LRFD module itself, without any dependency on a specific LRFD clock.
+#define LRFD_CLK_DEP_LRFD_M (1U << LRFD_CLK_DEP_LRFD_S)
+
 // Number of LRFD clock dependency sets
-#define LRFD_NUM_CLK_DEP   2
+#define LRFD_NUM_CLK_DEP   (2U)
 //! LRFD Clock dependency set to be used by the Power driver
-#define LRFD_CLK_DEP_POWER 0
+#define LRFD_CLK_DEP_POWER (0U)
 //! LRFD Clock dependency set to be used by the RCL
-#define LRFD_CLK_DEP_RCL   1
+#define LRFD_CLK_DEP_RCL   (1U)
 
 //*****************************************************************************
 //
@@ -78,7 +85,9 @@ extern "C" {
 //! module itself will be clocked, otherwise it will not be clocked.
 //!
 //! \param mask bitmask defining the set of LRFD modules to set clock dependency on.
-//! - \ref LRFDDBELL_O_CLKCTL
+//! - See LRFDDBELL_O_CLKCTL
+//! - \note \ref LRFD_CLK_DEP_LRFD_M can be used to set a dependency on the LRFD
+//!   module itself, without any dependency on a specific LRFD clock.
 //! \param dependencySetId ID for the clock dependency set to use.
 //! - \ref LRFD_CLK_DEP_POWER
 //! - \ref LRFD_CLK_DEP_RCL
@@ -100,7 +109,7 @@ extern void LRFDSetClockDependency(uint16_t mask, uint8_t dependencySetId);
 //! See description of \ref LRFDSetClockDependency()
 //!
 //! \param mask bitmask defining the set of LRFD modules to release clock dependency from.
-//! - \ref LRFDDBELL_O_CLKCTL
+//! - See LRFDDBELL_O_CLKCTL and \ref LRFD_CLK_DEP_LRFD_M
 //! \param dependencySetId ID for the clock dependency set to use.
 //! - \ref LRFD_CLK_DEP_POWER
 //! - \ref LRFD_CLK_DEP_RCL
@@ -151,4 +160,4 @@ extern void LRFDApplyClockDependencies(void);
 //
 //*****************************************************************************
 
-#endif // __LRFD_H__
+#endif // ti_devices_lrfd__include

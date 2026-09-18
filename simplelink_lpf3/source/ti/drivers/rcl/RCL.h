@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, Texas Instruments Incorporated
+ * Copyright (c) 2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,130 +30,27 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ti_drivers_RCL_h__include
-#define ti_drivers_RCL_h__include
+#ifndef ti_drivers_rcl_RCL__include
+#define ti_drivers_rcl_RCL__include
 
-#include <stdint.h>
-#include <stddef.h>
-
-#include <ti/drivers/rcl/LRF.h>
-#include <ti/drivers/rcl/RCL_Types.h>
-#include <ti/drivers/rcl/RCL_Client.h>
-#include <ti/drivers/rcl/RCL_Event.h>
-#include <ti/drivers/rcl/RCL_Command.h>
-#include <ti/drivers/rcl/RCL_Buffer.h>
-#include <ti/drivers/rcl/RCL_Scheduler.h>
-
-#include <ti/drivers/rcl/hal/hal.h>
-
-#include <ti/drivers/dpl/SemaphoreP.h>
-
-/**
- * @brief RCL power state
+/*
+ * DEPRECATED: This header file is deprecated and should not be included directly.
  *
- * Tracks when the RCL core has requested standby to be disallowed to the power driver.
+ * Please include <ti/drivers/RCL.h> instead of <ti/drivers/rcl/RCL.h>.
+ *
+ * Correct usage:
+ *   #include <ti/drivers/RCL.h>        // Use this
+ *
+ * Deprecated usage:
+ *   #include <ti/drivers/rcl/RCL.h>    // Do not use - deprecated
  */
-typedef enum {
-    RCL_standbyAllow = 0,
-    RCL_standbyDisallow,
-} RCL_PowerState;
 
-/**
- * @brief Global shared driver state
- */
-typedef struct RCL_s {
-    uint8_t                   numClients;
-    uint8_t                   powerNotifyEnableCount;
-    LRF_RadioState            lrfState;
-    RCL_PowerState            powerState;
-    const LRF_Config         *lrfConfig;
-    RCL_Command              *nextCmd;
-    RCL_Command              *doneCmd;
-} RCL;
-
-/**
- * @brief Initializes the RCL driver state
- *
- * Resets global state and initialize hardware.
- *
- * @note Must be called before using any other RCL API
- */
-void RCL_init(void);
-
-/**
- * @brief Initializes an RCL client instance
- *
- * @param[in] c - Client object struct to be initialized
- * @param[in] lrfConfig - Radio configuration to be used by client
- *
- * @return Instance %RCL_Handle handle or NULL
- */
-RCL_Handle RCL_open(RCL_Client *c, const LRF_Config *lrfConfig);
-
-/**
- * @brief Closes client instance and deallocates open resources
- *
- * @param[in] h - Client handle
- */
-void RCL_close(RCL_Handle h);
-
-/**
- * @brief Request RCL power notifications
- */
-void RCL_openPowerNotifications(void);
-
-/**
- * @brief Remove RCL power notification request
- */
-void RCL_closePowerNotifications(void);
-
-/**
- * @brief Submit RCL command object to be scheduled for execution
- *
- * This API returns immediately with either %RCL_CommandStatus_Error or the asynchronous
- * current state of the command.
- *
- * @param[in] h - Client handle
- * @param[in] c - Command handle
- *
- * @return %RCL_CommandStatus result of the submission
- */
-RCL_CommandStatus RCL_Command_submit(RCL_Handle h, RCL_Command_Handle c);
-
-/**
- * @brief Wait for a submitted command to complete.
- *
- * Uses %SemaphoreP_pend to block in the callers context.
- *
- * @pre This function must be called from a task context, with interrupts enabled.
- *
- * @param[in] c - Client handle
- */
-RCL_CommandStatus RCL_Command_pend(RCL_Command_Handle c);
-
-/**
- * @brief Stop a command
- *
- * Sends the message to try to stop a command. When the function returns, the command may still be
- * running. Depending on the stop type, the command may stop after some time. %RCL_Command_pend
- * may be used to wait for the command to finish.
- *
- * @param c [in] - Command handle
- * @param stopType [in] - Stop type; telling which situations the command will stop
- *
- * @return Status of the command; if the command is not finished, a wait is needed.
- */
-RCL_CommandStatus RCL_Command_stop(RCL_Command_Handle c, RCL_StopType stopType);
-
-/**
- * @brief Get the last valid RSSI value.
- *
- * This API returns the last valid RSSI value or a specific error status if the last obtained RSSI
- * value is no longer valid.
- *
- * @return Returns RSSI value, or LRF_RSSI_INVALID if the last obtained RSSI value is no longer valid
- * or if the radio is unavailable (e.g. in the middle of a Tx operation).
- */
-int8_t RCL_readRssi(void);
-
+/* Emit deprecation warning for supported compilers */
+#if defined(__GNUC__) || defined(__IAR_SYSTEMS_ICC__) || (defined(__clang__) && defined(__ti_version__))
+    #warning "Including <ti/drivers/rcl/RCL.h> is deprecated. Use <ti/drivers/RCL.h> instead."
 #endif
+
+/* Include top-level header file */
+#include <ti/drivers/RCL.h>
+
+#endif /* ti_drivers_rcl_RCL__include */

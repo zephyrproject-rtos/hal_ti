@@ -3,7 +3,7 @@
  *
  *  Description:    Driverlib for the high accuracy temperature diode
  *
- *  Copyright (c) 2023, Texas Instruments Incorporated
+ *  Copyright (c) 2023-2024, Texas Instruments Incorporated
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -101,6 +101,9 @@ static void enableADC(void)
     /* Enable ADC peripheral */
     HWREG(CLKCTL_BASE + CLKCTL_O_CLKENSET0) = CLKCTL_CLKENSET0_ADC0;
 
+    /* Disable ADC conversions to allow changes to the ADC configuration */
+    ADCDisableConversion();
+
     /* Configure ADC CTL-register 0 */
     ADCSetMemctlRange(0, 0);
 
@@ -118,6 +121,17 @@ static void enableADC(void)
 
     /* Perform single conversion */
     ADCSetSequence(ADC_SEQUENCE_SINGLE);
+
+    /* Set trigger source to software */
+    ADCSetTriggerSource(ADC_TRIGGER_SOURCE_SOFTWARE);
+
+    /* Set sampling mode to automatic, to use the sample duration configured
+     * above with ADCSetSampleDuration()
+     */
+    ADCSetSamplingMode(ADC_SAMPLE_MODE_AUTO);
+
+    /* Enable conversion. The ADC will wait for the software trigger */
+    ADCEnableConversion();
 }
 
 //*****************************************************************************
@@ -355,14 +369,16 @@ int32_t TempDiodeGetTemp(void)
     HWREG(SYS0_BASE + SYS0_O_TSENSCFG) = SYS0_TSENSCFG_SEL_VALUE;
 
     /* Perform a dummy-read of the ADC for better settling */
-    ADCManualTrigger();
+    ADCEnableConversion();
+    ADCStartConversion();
     CPUDelay(3);
     ADCReadResult(0);
 
     /* Do 4 ADC conversions for averaging */
     for (uint32_t i = 0; i < 4; i++)
     {
-        ADCManualTrigger();
+        ADCEnableConversion();
+        ADCStartConversion();
         CPUDelay(3);
         diodeVoltage += ADCReadResult(0);
     }
@@ -371,14 +387,16 @@ int32_t TempDiodeGetTemp(void)
     HWREG(SYS0_BASE + SYS0_O_TSENSCFG) = SYS0_TSENSCFG_SEL_GND;
 
     /* Perform a dummy-read of the ADC for better settling */
-    ADCManualTrigger();
+    ADCEnableConversion();
+    ADCStartConversion();
     CPUDelay(3);
     ADCReadResult(0);
 
     /* Do 4 ADC conversions for averaging */
     for (uint32_t i = 0; i < 4; i++)
     {
-        ADCManualTrigger();
+        ADCEnableConversion();
+        ADCStartConversion();
         CPUDelay(3);
         diodeVoltage -= ADCReadResult(0);
     }

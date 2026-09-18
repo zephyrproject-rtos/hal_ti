@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, Texas Instruments Incorporated
+ * Copyright (c) 2020-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -283,7 +283,7 @@ extern "C" {
  * struct definition because of the circular dependency between
  * #Temperature_NotifyFxn() and #Temperature_NotifyObj.
  */
-typedef struct Temperature_NotifyObj Temperature_NotifyObj;
+typedef struct Temperature_NotifyObj_ Temperature_NotifyObj;
 /* @endcond */
 
 /*!
@@ -318,7 +318,7 @@ typedef void (*Temperature_NotifyFxn)(int16_t currentTemperature,
  *  or #Temperature_registerNotifyRange() will take care initializing the
  *  internal elements appropriately.
  */
-struct Temperature_NotifyObj
+struct Temperature_NotifyObj_
 {
     List_Elem link;                  /*!< For placing on the notify list */
     Temperature_NotifyFxn notifyFxn; /*!< Application callback function */
@@ -480,7 +480,7 @@ int_fast16_t Temperature_unregisterNotify(Temperature_NotifyObj *notifyObject);
  *  @pre Register @c notifyObject with #Temperature_registerNotifyHigh(),
  *       or #Temperature_registerNotifyRange()
  */
-int16_t Temperature_getThresholdHigh(Temperature_NotifyObj *notifyObject);
+int16_t Temperature_getThresholdHigh(const Temperature_NotifyObj *notifyObject);
 
 /*!
  *  @brief Get the low threshold of a notification.
@@ -496,7 +496,7 @@ int16_t Temperature_getThresholdHigh(Temperature_NotifyObj *notifyObject);
  *  @pre Register @c notifyObject with #Temperature_registerNotifyLow(),
  *       or #Temperature_registerNotifyRange()
  */
-int16_t Temperature_getThresholdLow(Temperature_NotifyObj *notifyObject);
+int16_t Temperature_getThresholdLow(const Temperature_NotifyObj *notifyObject);
 
 /*!
  *  @brief Get the high and low threshold of a notification.
@@ -516,7 +516,9 @@ int16_t Temperature_getThresholdLow(Temperature_NotifyObj *notifyObject);
  *
  *  @pre Register @c notifyObject with #Temperature_registerNotifyRange()
  */
-void Temperature_getThresholdRange(Temperature_NotifyObj *notifyObject, int16_t *thresholdHigh, int16_t *thresholdLow);
+void Temperature_getThresholdRange(const Temperature_NotifyObj *notifyObject,
+                                   int16_t *thresholdHigh,
+                                   int16_t *thresholdLow);
 
 /*!
  *  @brief Get the application-provided clientArg of a notification.
@@ -528,7 +530,7 @@ void Temperature_getThresholdRange(Temperature_NotifyObj *notifyObject, int16_t 
  *  @pre Register @c notifyObject with #Temperature_registerNotifyHigh(),
  *       #Temperature_registerNotifyLow(), or #Temperature_registerNotifyRange()
  */
-uintptr_t Temperature_getClientArg(Temperature_NotifyObj *notifyObject);
+uintptr_t Temperature_getClientArg(const Temperature_NotifyObj *notifyObject);
 
 /*!
  *  @brief Get the notifyFxn provided during registration.
@@ -540,7 +542,7 @@ uintptr_t Temperature_getClientArg(Temperature_NotifyObj *notifyObject);
  *  @pre Register @c notifyObject with #Temperature_registerNotifyHigh(),
  *       #Temperature_registerNotifyLow(), or #Temperature_registerNotifyRange()
  */
-Temperature_NotifyFxn Temperature_getNotifyFxn(Temperature_NotifyObj *notifyObject);
+Temperature_NotifyFxn Temperature_getNotifyFxn(const Temperature_NotifyObj *notifyObject);
 
 #ifdef __cplusplus
 }

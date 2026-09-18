@@ -3,7 +3,7 @@
  *
  *  Description:    Defines and prototypes for the uDMA controller.
  *
- *  Copyright (c) 2022 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2024 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -248,18 +248,18 @@ typedef struct
 //*****************************************************************************
 //
 // Channel numbers to be passed to API functions that require a channel number
-// ID. On CC23x0 each uDMA channel is multiplexed between two different
+// ID. On CC23x0 each uDMA channel is multiplexed between one or two different
 // peripherals. The 1-to-1 mapping between UDMA channel and peripheral must be
 // decided by the user and set in the event fabric registers EVTSVT.DMACH[x]SEL.
 // The two valid peripherals for each channel are listed next to each channel's
 // mask definition.
 //
 //*****************************************************************************
-#define UDMA_CHANNEL_0_M 0x01 //!< UDMA channel 0 (SSI0_TX or UART0_RX)
-#define UDMA_CHANNEL_1_M 0x02 //!< UDMA channel 1 (SSI0_RX or UART0_TX)
-#define UDMA_CHANNEL_2_M 0x04 //!< UDMA channel 2 (LRFD or UART0_TX)
+#define UDMA_CHANNEL_0_M 0x01 //!< UDMA channel 0 (SPI0_TX or UART0_RX)
+#define UDMA_CHANNEL_1_M 0x02 //!< UDMA channel 1 (SPI0_RX or UART0_TX)
+#define UDMA_CHANNEL_2_M 0x04 //!< UDMA channel 2 (UART0_TX)
 #define UDMA_CHANNEL_3_M 0x08 //!< UDMA channel 3 (ADC0 or UART0_RX)
-#define UDMA_CHANNEL_4_M 0x10 //!< UDMA channel 4 (AES_A or LRFD)
+#define UDMA_CHANNEL_4_M 0x10 //!< UDMA channel 4 (AES_A)
 #define UDMA_CHANNEL_5_M 0x20 //!< UDMA channel 5 (AES_B or ADC0)
 #define UDMA_CHANNEL_6_M 0x40 //!< UDMA channel 6 (Software Event Channel 0)
 #define UDMA_CHANNEL_7_M 0x80 //!< UDMA channel 7 (Software Event Channel 1)

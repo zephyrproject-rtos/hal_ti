@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Texas Instruments Incorporated
+ * Copyright (c) 2022-2026, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,8 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ti_drivers_RCL_handlers_ble_cs_h__include
-#define ti_drivers_RCL_handlers_ble_cs_h__include
+#ifndef ti_drivers_rcl_handlers_ble_cs__include
+#define ti_drivers_rcl_handlers_ble_cs__include
 
 #include <stdint.h>
 #include <ti/drivers/rcl/RCL_Command.h>
@@ -41,4 +41,4 @@
 RCL_Events RCL_Handler_BLE_CS(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
 RCL_Events RCL_Handler_BLE_CS_Precal(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
 
-#endif /* ti_drivers_RCL_handlers_ble_cs_h__include */
+#endif /* ti_drivers_rcl_handlers_ble_cs__include */

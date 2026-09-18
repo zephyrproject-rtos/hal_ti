@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Texas Instruments Incorporated - http://www.ti.com
+ * Copyright (c) 2022-2025, Texas Instruments Incorporated - http://www.ti.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,8 +46,9 @@
 
 #include <stdint.h>
 
-#include <ti/drivers/crypto/CryptoCC26X4_s.h>
 #include <ti/drivers/cryptoutils/cryptokey/CryptoKeyKeyStore_PSA.h>
+
+#include <ti/devices/DeviceFamily.h>
 
 #include <third_party/tfm/interface/include/psa/crypto.h>
 #include <third_party/tfm/interface/include/psa/service.h>
@@ -55,18 +56,21 @@
 /* For client side key attribute structure */
 #include <third_party/tfm/interface/include/psa/crypto_client_struct.h>
 
-/*
- * Crypto Key Store secure message types
- */
-#define KEYSTORE_PSA_S_MSG_TYPE_GET_KEY              KEYSTORE_PSA_S_MSG_TYPE(0U)
-#define KEYSTORE_PSA_S_MSG_TYPE_GENERATE_KEY         KEYSTORE_PSA_S_MSG_TYPE(1U)
-#define KEYSTORE_PSA_S_MSG_TYPE_EXPORT_PUBLIC_KEY    KEYSTORE_PSA_S_MSG_TYPE(2U)
-#define KEYSTORE_PSA_S_MSG_TYPE_EXPORT_KEY           KEYSTORE_PSA_S_MSG_TYPE(3U)
-#define KEYSTORE_PSA_S_MSG_TYPE_DESTROY_KEY          KEYSTORE_PSA_S_MSG_TYPE(4U)
-#define KEYSTORE_PSA_S_MSG_TYPE_IMPORT_KEY           KEYSTORE_PSA_S_MSG_TYPE(5U)
-#define KEYSTORE_PSA_S_MSG_TYPE_PURGE_KEY            KEYSTORE_PSA_S_MSG_TYPE(6U)
-#define KEYSTORE_PSA_S_MSG_TYPE_GET_KEY_ATTRIBUTES   KEYSTORE_PSA_S_MSG_TYPE(7U)
-#define KEYSTORE_PSA_S_MSG_TYPE_RESET_KEY_ATTRIBUTES KEYSTORE_PSA_S_MSG_TYPE(8U)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4)
+    #include <ti/drivers/crypto/CryptoCC26X4_s.h>
+    /*
+     * Crypto Key Store secure message types
+     */
+    #define KEYSTORE_PSA_S_MSG_TYPE_GET_KEY              KEYSTORE_PSA_S_MSG_TYPE(0U)
+    #define KEYSTORE_PSA_S_MSG_TYPE_GENERATE_KEY         KEYSTORE_PSA_S_MSG_TYPE(1U)
+    #define KEYSTORE_PSA_S_MSG_TYPE_EXPORT_PUBLIC_KEY    KEYSTORE_PSA_S_MSG_TYPE(2U)
+    #define KEYSTORE_PSA_S_MSG_TYPE_EXPORT_KEY           KEYSTORE_PSA_S_MSG_TYPE(3U)
+    #define KEYSTORE_PSA_S_MSG_TYPE_DESTROY_KEY          KEYSTORE_PSA_S_MSG_TYPE(4U)
+    #define KEYSTORE_PSA_S_MSG_TYPE_IMPORT_KEY           KEYSTORE_PSA_S_MSG_TYPE(5U)
+    #define KEYSTORE_PSA_S_MSG_TYPE_PURGE_KEY            KEYSTORE_PSA_S_MSG_TYPE(6U)
+    #define KEYSTORE_PSA_S_MSG_TYPE_GET_KEY_ATTRIBUTES   KEYSTORE_PSA_S_MSG_TYPE(7U)
+    #define KEYSTORE_PSA_S_MSG_TYPE_RESET_KEY_ATTRIBUTES KEYSTORE_PSA_S_MSG_TYPE(8U)
+#endif
 
 /*
  * ============ KeyStore driver Secure Message Structs =========

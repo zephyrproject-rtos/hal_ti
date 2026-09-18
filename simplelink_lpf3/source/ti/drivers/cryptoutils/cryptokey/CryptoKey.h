@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023, Texas Instruments Incorporated
+ * Copyright (c) 2017-2024, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -163,11 +163,14 @@ extern "C" {
  *  _HSM encodings are only available for select devices, CC27XX.
  */
 typedef uint8_t CryptoKey_Encoding;
-static const CryptoKey_Encoding CryptoKey_PLAINTEXT       = CRYPTOKEY_PLAINTEXT;
-static const CryptoKey_Encoding CryptoKey_BLANK_PLAINTEXT = CRYPTOKEY_BLANK_PLAINTEXT;
-static const CryptoKey_Encoding CryptoKey_KEYSTORE        = CRYPTOKEY_KEYSTORE;
-static const CryptoKey_Encoding CryptoKey_BLANK_KEYSTORE  = CRYPTOKEY_BLANK_KEYSTORE;
-static const CryptoKey_Encoding CryptoKey_PLAINTEXT_HSM   = CRYPTOKEY_PLAINTEXT | CRYPTOKEY_HSM;
+static const CryptoKey_Encoding CryptoKey_PLAINTEXT           = CRYPTOKEY_PLAINTEXT;
+static const CryptoKey_Encoding CryptoKey_BLANK_PLAINTEXT     = CRYPTOKEY_BLANK_PLAINTEXT;
+static const CryptoKey_Encoding CryptoKey_KEYSTORE            = CRYPTOKEY_KEYSTORE;
+static const CryptoKey_Encoding CryptoKey_BLANK_KEYSTORE      = CRYPTOKEY_BLANK_KEYSTORE;
+static const CryptoKey_Encoding CryptoKey_PLAINTEXT_HSM       = CRYPTOKEY_PLAINTEXT | CRYPTOKEY_HSM;
+static const CryptoKey_Encoding CryptoKey_BLANK_PLAINTEXT_HSM = CRYPTOKEY_BLANK_PLAINTEXT | CRYPTOKEY_HSM;
+static const CryptoKey_Encoding CryptoKey_KEYSTORE_HSM        = CRYPTOKEY_KEYSTORE | CRYPTOKEY_HSM;
+static const CryptoKey_Encoding CryptoKey_BLANK_KEYSTORE_HSM  = CRYPTOKEY_BLANK_KEYSTORE | CRYPTOKEY_HSM;
 
 /*!
  *  @brief  Plaintext CryptoKey datastructure.
@@ -195,7 +198,7 @@ typedef struct
 {
     uint32_t keyLength;
     uint32_t keyID;
-    void *keyAttributes;
+    const void *keyAttributes;
 } CryptoKey_KeyStore;
 
 /*!
