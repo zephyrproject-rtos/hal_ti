@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       i2s.h
-*  Revised:        2018-11-16 11:16:53 +0100 (Fri, 16 Nov 2018)
-*  Revision:       53356
 *
 *  Description:    Defines and prototypes for the I2S.
 *

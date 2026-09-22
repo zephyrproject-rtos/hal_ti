@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       setup_rom.c
-*  Revised:        2020-09-17 15:26:49 +0200 (Thu, 17 Sep 2020)
-*  Revision:       58682
 *
 *  Description:    Setup file for CC13xx/CC26xx devices.
 *

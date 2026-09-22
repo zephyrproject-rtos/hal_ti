@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       setup_rom.h
-*  Revised:        2020-09-17 15:26:49 +0200 (Thu, 17 Sep 2020)
-*  Revision:       58682
 *
 *  Description:    Prototypes and defines for the setup API.
 *

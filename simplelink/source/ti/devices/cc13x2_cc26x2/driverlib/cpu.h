@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       cpu.h
-*  Revised:        2020-09-22 10:52:20 +0200 (Tue, 22 Sep 2020)
-*  Revision:       58746
 *
 *  Description:    Defines and prototypes for the CPU instruction wrapper
 *                  functions.

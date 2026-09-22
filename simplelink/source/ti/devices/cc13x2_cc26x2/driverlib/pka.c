@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       pka.c
-*  Revised:        2020-09-14 11:11:23 +0200 (Mon, 14 Sep 2020)
-*  Revision:       58613
 *
 *  Description:    Driver for the PKA module
 *

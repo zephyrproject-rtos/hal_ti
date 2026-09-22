@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       sha2.c
-*  Revised:        2020-09-14 11:12:36 +0200 (Mon, 14 Sep 2020)
-*  Revision:       58614
 *
 *  Description:    Driver for the SHA-2 functions of the crypto module
 *

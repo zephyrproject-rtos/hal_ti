@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       watchdog.c
-*  Revised:        2020-09-07 14:45:02 +0200 (Mon, 07 Sep 2020)
-*  Revision:       58504
 *
 *  Description:    Driver for the Watchdog Timer.
 *

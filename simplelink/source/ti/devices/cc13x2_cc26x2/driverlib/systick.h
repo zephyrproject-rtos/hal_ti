@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       systick.h
-*  Revised:        2017-05-23 12:08:52 +0200 (Tue, 23 May 2017)
-*  Revision:       49048
 *
 *  Description:    Prototypes for the SysTick driver.
 *

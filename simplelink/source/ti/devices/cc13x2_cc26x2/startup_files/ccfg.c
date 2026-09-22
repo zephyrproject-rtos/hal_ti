@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       ccfg.c
-*  Revised:        $Date: 2017-11-02 11:36:28 +0100 (Thu, 02 Nov 2017) $
-*  Revision:       $Revision: 18030 $
 *
 *  Description:    Customer Configuration for:
 *                  CC13x2, CC13x4, CC26x2, CC26x4 device family (HW rev 2).

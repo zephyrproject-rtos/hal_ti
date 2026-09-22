@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       ddi.h
-*  Revised:        2020-02-14 11:30:20 +0100 (Fri, 14 Feb 2020)
-*  Revision:       56760
 *
 *  Description:    Defines and prototypes for the DDI master interface.
 *

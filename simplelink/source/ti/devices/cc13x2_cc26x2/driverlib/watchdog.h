@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       watchdog.h
-*  Revised:        2020-09-07 16:11:55 +0200 (Mon, 07 Sep 2020)
-*  Revision:       58511
 *
 *  Description:    Defines and prototypes for the Watchdog Timer.
 *

@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       flash.h
-*  Revised:        2020-06-07 13:30:55 +0200 (Sun, 07 Jun 2020)
-*  Revision:       57689
 *
 *  Description:    Defines and prototypes for the Flash driver.
 *

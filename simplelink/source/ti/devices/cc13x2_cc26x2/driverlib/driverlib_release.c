@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       driverlib_release.c
-*  Revised:        $Date: 2016-09-13 14:21:40 +0200 (Tue, 13 Sep 2016) $
-*  Revision:       $Revision: 47152 $
 *
 *  Description:    Provides macros for ensuring that a specfic release of
 *                  DriverLib is used.

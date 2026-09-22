@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       aon_rtc.h
-*  Revised:        2020-08-25 16:10:23 +0200 (Tue, 25 Aug 2020)
-*  Revision:       58298
 *
 *  Description:    Defines and prototypes for the AON RTC
 *

@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       gpio.h
-*  Revised:        2020-09-09 19:57:34 +0200 (Wed, 09 Sep 2020)
-*  Revision:       58572
 *
 *  Description:    Defines and prototypes for the GPIO.
 *

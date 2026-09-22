@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       flash.c
-*  Revised:        2020-05-14 17:23:02 +0200 (Thu, 14 May 2020)
-*  Revision:       57519
 *
 *  Description:    Driver for on chip Flash.
 *

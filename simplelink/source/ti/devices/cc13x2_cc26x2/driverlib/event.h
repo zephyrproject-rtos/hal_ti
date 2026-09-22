@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       event.h
-*  Revised:        2016-09-19 10:36:17 +0200 (Mon, 19 Sep 2016)
-*  Revision:       47179
 *
 *  Description:    Defines and prototypes for the Event Handler.
 *

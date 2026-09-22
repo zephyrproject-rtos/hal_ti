@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       setup.h
-*  Revised:        2018-10-24 11:23:04 +0200 (Wed, 24 Oct 2018)
-*  Revision:       52993
 *
 *  Description:    Prototypes and defines for the setup API.
 *

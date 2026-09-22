@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       prcm.h
-*  Revised:        2020-08-19 12:18:33 +0200 (Wed, 19 Aug 2020)
-*  Revision:       58172
 *
 *  Description:    Defines and prototypes for the PRCM
 *

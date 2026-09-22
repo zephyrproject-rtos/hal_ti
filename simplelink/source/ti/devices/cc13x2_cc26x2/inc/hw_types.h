@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       hw_types.h
-*  Revised:        2020-09-07 16:52:52 +0200 (Mon, 07 Sep 2020)
-*  Revision:       58514
 *
 *  Description:    Common types and macros.
 *

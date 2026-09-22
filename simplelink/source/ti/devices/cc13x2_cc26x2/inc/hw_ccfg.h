@@ -1,7 +1,5 @@
 /******************************************************************************
 *  Filename:       hw_ccfg_h
-*  Revised:        2019-04-01 09:23:38 +0200 (Mon, 01 Apr 2019)
-*  Revision:       55513
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
