@@ -66,6 +66,7 @@ set(SOURCES_KERNEL
     SemaphoreP_zephyr.c
     SwiP_zephyr.c
     TaskP_zephyr.c
+    dpl.c
 )
 
 set(SOURCES_KERNEL_EVENTS
