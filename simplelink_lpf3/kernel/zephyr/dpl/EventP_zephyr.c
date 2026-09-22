@@ -50,8 +50,12 @@ static void dpl_event_pool_free(struct k_event *event)
 EventP_Handle EventP_create(void)
 {
     struct k_event *event = dpl_event_pool_alloc();
-    k_event_init(event);
-    return (EventP_Handle) event;
+    if(event)
+    {
+        k_event_init(event);
+        return (EventP_Handle) event;
+    }
+    return NULL;
 }
 
 /*
@@ -75,11 +79,12 @@ EventP_Handle EventP_construct(EventP_Struct *obj)
     struct k_event *event;
     event = (struct k_event*)obj;
 
-    if (event) {
+    if (event)
+    {
         k_event_init(event);
+        return (EventP_Handle)event;
     }
-
-    return (EventP_Handle)event;
+    return NULL;
 }
 
 /*
@@ -99,25 +104,10 @@ void EventP_destruct(EventP_Struct *obj)
  */
 uint32_t EventP_pend(EventP_Handle event, uint32_t eventMask, bool waitForAll, uint32_t timeout)
 {
-    uint32_t eventBits, tickPeriod;
+    uint32_t eventBits;
     k_timeout_t eventTimeout;
 
-
-    if (timeout == EventP_WAIT_FOREVER)
-    {
-        eventTimeout = K_FOREVER;
-    }
-    else if (timeout == EventP_NO_WAIT)
-    {
-        eventTimeout = K_NO_WAIT;
-    }
-    else
-    {
-        /* if necessary, convert ClockP ticks to Zephyr ticks */
-        /* Should really be ClockP_getSystemTickPeriod() but this causes issues with ielftool post build step */
-        tickPeriod = ClockP_TICK_PERIOD;
-        eventTimeout = K_TICKS(timeout);
-    }
+    eventTimeout = dpl_to_zephyr_timeout(timeout);
 
     if(waitForAll)
     {
