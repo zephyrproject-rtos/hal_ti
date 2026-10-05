@@ -35,7 +35,7 @@ add_subdirectory(source/ti/boards)
 
 if(CONFIG_HAS_CC23X0_SDK)
 
-  if(CONFIG_SOC_CC2340R5)
+  if(CONFIG_SOC_CC2340R5 OR CONFIG_SOC_CC2340R53)
     zephyr_compile_definitions(DeviceFamily_CC23X0R5 ${COMPILER})
   endif()
 
