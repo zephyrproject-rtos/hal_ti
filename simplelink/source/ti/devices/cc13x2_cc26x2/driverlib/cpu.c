@@ -106,6 +106,16 @@ CPUcpsid(void)
     // you expect in R0.
     return(0);
 }
+#elif defined(__clang__)
+uint32_t __attribute__((naked))
+CPUcpsid(void)
+{
+    // Read PRIMASK and disable interrupts
+    __asm volatile ("    mrs     r0, PRIMASK\n"
+                    "    cpsid   i\n"
+                    "    bx      lr\n"
+                   );
+}
 #else
 uint32_t __attribute__((naked))
 CPUcpsid(void)
@@ -173,6 +183,15 @@ CPUprimask(void)
     // return(0) is never executed and the function returns with the value
     // you expect in R0.
     return(0);
+}
+#elif defined(__clang__)
+uint32_t __attribute__((naked))
+CPUprimask(void)
+{
+    // Read PRIMASK
+    __asm volatile ("    mrs     r0, PRIMASK\n"
+                    "    bx      lr\n"
+                   );
 }
 #else
 uint32_t __attribute__((naked))
@@ -244,6 +263,16 @@ CPUcpsie(void)
     // you expect in R0.
     return(0);
 }
+#elif defined(__clang__)
+uint32_t __attribute__((naked))
+CPUcpsie(void)
+{
+    // Read PRIMASK and enable interrupts.
+    __asm volatile ("    mrs     r0, PRIMASK\n"
+                    "    cpsie   i\n"
+                    "    bx      lr\n"
+                   );
+}
 #else
 uint32_t __attribute__((naked))
 CPUcpsie(void)
@@ -311,6 +340,15 @@ CPUbasepriGet(void)
     // return(0) is never executed and the function returns with the value
     // you expect in R0.
     return(0);
+}
+#elif defined(__clang__)
+uint32_t __attribute__((naked))
+CPUbasepriGet(void)
+{
+    // Read BASEPRI.
+    __asm volatile ("    mrs     r0, BASEPRI\n"
+                    "    bx      lr\n"
+                   );
 }
 #else
 uint32_t __attribute__((naked))
@@ -394,11 +432,9 @@ void __attribute__((naked))
 CPUdelay(uint32_t ui32Count)
 {
     // Loop the specified number of times
-    __asm volatile ("%=:  subs  %0, #1\n"
-                    "     bne   %=b\n"
-                    "     bx    lr\n"
-                    : /* No output */
-                    : "r" (ui32Count)
+    __asm volatile ("CPUdel:  subs  r0, #1\n"
+                    "         bne   CPUdel\n"
+                    "         bx    lr\n"
                    );
 }
 #endif
