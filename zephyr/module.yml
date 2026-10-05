@@ -1,4 +1,23 @@
+name: hal_ti
 build:
   cmake: .
   settings:
     dts_root: .
+
+blobs:
+  # TIFS (TI Foundational Security) firmware for AM62Lx SoC
+  - path: ti-sysfw/ti-fs-firmware-am62lx-hs-enc.bin
+    sha256: a0f950de0258ee2dd1b6f4b48a6cc6a92df53bb19cea9f89cdde4266e89a060b
+    type: img
+    version: '12.00.00.07'
+    license-path: zephyr/blobs/LICENSE.ti
+    url: https://github.com/TexasInstruments/ti-linux-firmware/raw/12.00.00.07/ti-sysfw/ti-fs-firmware-am62lx-hs-enc.bin
+    description: "TIFS (TI Foundational Security) firmware for AM62Lx SoC"
+
+  - path: ti-sysfw/ti-fs-firmware-am62lx-hs-cert.bin
+    sha256: 114389460bb1c087c52e8d0709080b7b99d5c7da7e81d33d623de49f35c7375b
+    type: img
+    version: '12.00.00.07'
+    license-path: zephyr/blobs/LICENSE.ti
+    url: https://github.com/TexasInstruments/ti-linux-firmware/raw/12.00.00.07/ti-sysfw/ti-fs-firmware-am62lx-hs-cert.bin
+    description: "TIFS inner certificate for AM62Lx SoC"
