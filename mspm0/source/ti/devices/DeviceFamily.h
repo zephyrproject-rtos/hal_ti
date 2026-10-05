@@ -76,6 +76,12 @@ extern "C" {
 #define DeviceFamily_ID_MSPM0G351X      13
 #define DeviceFamily_ID_MSPM0L111X      14
 #define DeviceFamily_ID_MSPM0H321X      15
+#define DeviceFamily_ID_MSPM0C1105_C1106   16
+#define DeviceFamily_ID_MSPM0G511X      17
+#define DeviceFamily_ID_MSPM0G518X      18
+#define DeviceFamily_ID_MSPM0L211X      19
+#define DeviceFamily_ID_MSPM0L112X      20
+#define DeviceFamily_ID_MSPM0G352X      21
 
 /*
  * DeviceFamily_PARENT_XYZ values.
@@ -92,6 +98,11 @@ extern "C" {
 #define DeviceFamily_PARENT_MSPM0GX51X          6
 #define DeviceFamily_PARENT_MSPM0L111X          7
 #define DeviceFamily_PARENT_MSPM0H321X          8
+#define DeviceFamily_PARENT_MSPM0C1105_C1106    9
+#define DeviceFamily_PARENT_MSPM0G511X          10
+#define DeviceFamily_PARENT_MSPM0G518X          11
+#define DeviceFamily_PARENT_MSPM0L211X_L112X    12
+#define DeviceFamily_PARENT_MSPM0G352X          13
 
 /*
  * Lookup table that sets DeviceFamily_ID, DeviceFamily_DIRECTORY, and
@@ -142,6 +153,7 @@ extern "C" {
     #define DeviceFamily_ID             DeviceFamily_ID_MSPM0G350X
     #define DeviceFamily_DIRECTORY      msp
     #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSPM0G1X0X_G3X0X
+
 #elif defined(DeviceFamily_MSPM0C110X) || defined(__MSPM0C1104__) \
     || defined(__MSPM0C1103__)
     #define DeviceFamily_ID             DeviceFamily_ID_MSPM0C110X
@@ -178,6 +190,11 @@ extern "C" {
     #define DeviceFamily_DIRECTORY      msp
     #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSPM0GX51X
 
+#elif defined(DeviceFamily_MSPM0G352X) || defined(__MSPM0G3529__)
+    #define DeviceFamily_ID             DeviceFamily_ID_MSPM0G352X
+    #define DeviceFamily_DIRECTORY      msp
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSPM0G352X
+
 #elif defined(DeviceFamily_MSPM0L111X) || defined(__MSPM0L1117__) \
     || defined(__MSPM0L1116__)
     #define DeviceFamily_ID             DeviceFamily_ID_MSPM0L111X
@@ -189,6 +206,36 @@ extern "C" {
     #define DeviceFamily_ID             DeviceFamily_ID_MSPM0H321X
     #define DeviceFamily_DIRECTORY      msp
     #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSPM0H321X
+
+#elif defined(DeviceFamily_MSPM0C1105_C1106) || defined(__MSPM0C1106__) \
+    || defined(__MSPM0C1105__)
+    #define DeviceFamily_ID             DeviceFamily_ID_MSPM0C1105_C1106
+    #define DeviceFamily_DIRECTORY      msp
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSPM0C1105_C1106
+
+#elif defined(DeviceFamily_MSPM0G511X) || defined(__MSPM0G5117__) \
+    || defined(__MSPM0G5116__) || defined(__MSPM0G5115__)
+    #define DeviceFamily_ID             DeviceFamily_ID_MSPM0G511X
+    #define DeviceFamily_DIRECTORY      msp
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSPM0G511X
+
+#elif defined(DeviceFamily_MSPM0G518X) || defined(__MSPM0G5187__)
+    #define DeviceFamily_ID             DeviceFamily_ID_MSPM0G518X
+    #define DeviceFamily_DIRECTORY      msp
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSPM0G518X
+
+
+#elif defined(DeviceFamily_MSPM0L211X) || defined(__MSPM0L2117__) \
+    || defined(__MSPM0L2116__)
+    #define DeviceFamily_ID             DeviceFamily_ID_MSPM0L211X
+    #define DeviceFamily_DIRECTORY      msp
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSPM0L211X_L112X
+
+#elif defined(DeviceFamily_MSPM0L112X) || defined(__MSPM0L1127__) \
+    || defined(__MSPM0L1126__)
+    #define DeviceFamily_ID             DeviceFamily_ID_MSPM0L112X
+    #define DeviceFamily_DIRECTORY      msp
+    #define DeviceFamily_PARENT         DeviceFamily_PARENT_MSPM0L211X_L112X
 
 
 #else
@@ -209,8 +256,14 @@ extern "C" {
     + defined(DeviceFamily_MSPM0L222X) \
     + defined(DeviceFamily_MSPM0G151X) \
     + defined(DeviceFamily_MSPM0G351X) \
+    + defined(DeviceFamily_MSPM0G352X) \
     + defined(DeviceFamily_MSPM0L111X) \
     + defined(DeviceFamily_MSPM0H321X) \
+    + defined(DeviceFamily_MSPM0C1105_C1106) \
+    + defined(DeviceFamily_MSPM0G511X) \
+    + defined(DeviceFamily_MSPM0G518X) \
+    + defined(DeviceFamily_MSPM0L211X) \
+    + defined(DeviceFamily_MSPM0L112X) \
     ) > 1
     #error More then one DeviceFamily has been defined!
 #endif
