@@ -4,7 +4,7 @@
  *
  *  Description:    Defines and prototypes for the UART peripheral.
  *
- *  Copyright (c) 2022-2024 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2026 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -266,7 +266,7 @@ __STATIC_INLINE void UARTEnableFifo(uint32_t base)
 //! \return None
 //
 //*****************************************************************************
-__STATIC_INLINE void UARTDisableFIFO(uint32_t base)
+__STATIC_INLINE void UARTDisableFifo(uint32_t base)
 {
     // Disable the FIFO.
     HWREG(base + UART_O_LCRH) &= ~(UART_LCRH_FEN);
@@ -670,7 +670,7 @@ __STATIC_INLINE void UARTClearRxError(uint32_t base)
 //! \return None
 //
 //*****************************************************************************
-__STATIC_INLINE void UARTEnableCTS(uint32_t base)
+__STATIC_INLINE void UARTEnableCts(uint32_t base)
 {
     HWREG(base + UART_O_CTL) |= (UART_CTL_CTSEN);
 }
@@ -686,7 +686,7 @@ __STATIC_INLINE void UARTEnableCTS(uint32_t base)
 //! \return None
 //
 //*****************************************************************************
-__STATIC_INLINE void UARTEnableRTS(uint32_t base)
+__STATIC_INLINE void UARTEnableRts(uint32_t base)
 {
     HWREG(base + UART_O_CTL) |= (UART_CTL_RTSEN);
 }
@@ -702,7 +702,7 @@ __STATIC_INLINE void UARTEnableRTS(uint32_t base)
 //! \return None
 //
 //*****************************************************************************
-__STATIC_INLINE void UARTDisableCTS(uint32_t base)
+__STATIC_INLINE void UARTDisableCts(uint32_t base)
 {
     HWREG(base + UART_O_CTL) &= ~(UART_CTL_CTSEN);
 }
@@ -718,9 +718,248 @@ __STATIC_INLINE void UARTDisableCTS(uint32_t base)
 //! \return None
 //
 //*****************************************************************************
-__STATIC_INLINE void UARTDisableRTS(uint32_t base)
+__STATIC_INLINE void UARTDisableRts(uint32_t base)
 {
     HWREG(base + UART_O_CTL) &= ~(UART_CTL_RTSEN);
+}
+
+//*****************************************************************************
+//
+//! \brief Enable the UART module.
+//!
+//! This function enables the UART module by setting the UARTEN bit in the
+//! CTL register. This function does NOT enable the transmitter or receiver.
+//! Use \ref UARTEnableTx() and \ref UARTEnableRx() to enable TX and RX separately.
+//!
+//! \note This provides finer control than \ref UARTEnable(), which enables
+//! UARTEN, TXE, and RXE all at once.
+//!
+//! \param base is the base address of the UART port.
+//!
+//! \return None
+//!
+//! \sa \ref UARTEnable()
+//! \sa \ref UARTEnableTx()
+//! \sa \ref UARTEnableRx()
+//
+//*****************************************************************************
+__STATIC_INLINE void UARTEnableModule(uint32_t base)
+{
+    // Enable the UART module
+    HWREG(base + UART_O_CTL) |= UART_CTL_UARTEN;
+}
+
+//*****************************************************************************
+//
+//! \brief Enable the UART transmitter.
+//!
+//! This function enables the UART transmitter by setting the TXE bit in the
+//! CTL register.
+//!
+//! \note If the UART is disabled in the middle of transmission, it completes
+//! the current character before stopping.
+//!
+//! \param base is the base address of the UART port.
+//!
+//! \return None
+//!
+//! \sa \ref UARTDisableTx()
+//! \sa \ref UARTEnableModule()
+//
+//*****************************************************************************
+__STATIC_INLINE void UARTEnableTx(uint32_t base)
+{
+    // Enable the UART transmitter
+    HWREG(base + UART_O_CTL) |= UART_CTL_TXE;
+}
+
+//*****************************************************************************
+//
+//! \brief Disable the UART transmitter.
+//!
+//! This function disables the UART transmitter by clearing the TXE bit in the
+//! CTL register.
+//!
+//! \note If the UART is disabled in the middle of transmission, it completes
+//! the current character before stopping.
+//!
+//! \param base is the base address of the UART port.
+//!
+//! \return None
+//!
+//! \sa \ref UARTEnableTx()
+//! \sa \ref UARTDisable()
+//
+//*****************************************************************************
+__STATIC_INLINE void UARTDisableTx(uint32_t base)
+{
+    // Disable the UART transmitter
+    HWREG(base + UART_O_CTL) &= ~UART_CTL_TXE;
+}
+
+//*****************************************************************************
+//
+//! \brief Enable the UART receiver.
+//!
+//! This function enables the UART receiver by setting the RXE bit in the
+//! CTL register.
+//!
+//! \note If the UART is disabled in the middle of reception, it completes
+//! the current character before stopping.
+//!
+//! \param base is the base address of the UART port.
+//!
+//! \return None
+//!
+//! \sa \ref UARTDisableRx()
+//! \sa \ref UARTEnableModule()
+//
+//*****************************************************************************
+__STATIC_INLINE void UARTEnableRx(uint32_t base)
+{
+    // Enable the UART receiver
+    HWREG(base + UART_O_CTL) |= UART_CTL_RXE;
+}
+
+//*****************************************************************************
+//
+//! \brief Disable the UART receiver.
+//!
+//! This function disables the UART receiver by clearing the RXE bit in the
+//! CTL register.
+//!
+//! \note If the UART is disabled in the middle of reception, it completes
+//! the current character before stopping.
+//!
+//! \param base is the base address of the UART port.
+//!
+//! \return None
+//!
+//! \sa \ref UARTEnableRx()
+//! \sa \ref UARTDisable()
+//
+//*****************************************************************************
+__STATIC_INLINE void UARTDisableRx(uint32_t base)
+{
+    // Disable the UART receiver
+    HWREG(base + UART_O_CTL) &= ~UART_CTL_RXE;
+}
+
+//*****************************************************************************
+//
+//! \brief Enable IrDA SIR mode.
+//!
+//! This function enables the IrDA Serial Infrared (SIR) encoder and decoder
+//! by setting the SIREN bit in the CTL register. Data is transmitted and
+//! received via nSIROUT and SIRIN.
+//!
+//! \note This bit has no effect if the UARTEN bit disables the UART.
+//!
+//! \param base is the base address of the UART port.
+//!
+//! \return None
+//!
+//! \sa \ref UARTEnableSirLp()
+//
+//*****************************************************************************
+__STATIC_INLINE void UARTEnableSir(uint32_t base)
+{
+    // Enable IrDA SIR encoder/decoder
+    HWREG(base + UART_O_CTL) |= UART_CTL_SIREN;
+}
+
+//*****************************************************************************
+//
+//! \brief Enable IrDA SIR low-power mode.
+//!
+//! This function enables the IrDA Serial Infrared (SIR) low-power encoder
+//! and decoder by setting both the SIREN and SIRLP bits in the CTL register.
+//! In low-power mode, low-level bits are transmitted with a pulse width of
+//! 3 times the period of IrLPBaud16. The UART rejects random noise on the
+//! received serial data input by ignoring SIRIN pulses that are less than
+//! 3 periods of IrLPBaud16.
+//!
+//! When using this mode, the IrDA low-power clock divider should also be
+//! configured using \ref UARTSetIrdaLowPowerDivider().
+//!
+//! \param base is the base address of the UART port.
+//!
+//! \return None
+//!
+//! \sa \ref UARTEnableSir()
+//! \sa \ref UARTSetIrdaLowPowerDivider()
+//
+//*****************************************************************************
+__STATIC_INLINE void UARTEnableSirLp(uint32_t base)
+{
+    // Enable IrDA SIR low-power encoder/decoder
+    HWREG(base + UART_O_CTL) |= (UART_CTL_SIREN | UART_CTL_SIRLP);
+}
+
+//*****************************************************************************
+//
+//! \brief Set the IrDA low-power clock divider.
+//!
+//! This function sets the 8-bit low-power counter divisor value used to
+//! generate the IrDA SIR low-power mode transmit and receive clock.
+//! The divisor value is written to the UARTILPR register. In low-power IrDA
+//! mode, the UART rejects random noise on the received serial data input by
+//! ignoring SIRIN pulses that are less than 3 periods of IrLPBaud16.
+//!
+//! \param base is the base address of the UART port.
+//! \param divider is the 8-bit clock divider value (0-255).
+//!
+//! \return None
+//!
+//! \sa \ref UARTEnableSirLp()
+//
+//*****************************************************************************
+__STATIC_INLINE void UARTSetIrdaLowPowerDivider(uint32_t base, uint8_t divider)
+{
+    // Set the IrDA low-power counter divisor
+    HWREG(base + UART_O_UARTILPR) = divider;
+}
+
+//*****************************************************************************
+//
+//! \brief Enable UART FIFO concatenation.
+//!
+//! This function enables FIFO concatenation mode by setting the FCEN bit
+//! in the CTL register. Enabling the FIFO concatenation in TX mode results
+//! in 16 TX buffers.
+//!
+//! \param base is the base address of the UART port.
+//!
+//! \return None
+//!
+//! \sa \ref UARTDisableFifoConcatenation()
+//
+//*****************************************************************************
+__STATIC_INLINE void UARTEnableFifoConcatenation(uint32_t base)
+{
+    // Enable FIFO concatenation
+    HWREG(base + UART_O_CTL) |= UART_CTL_FCEN;
+}
+
+//*****************************************************************************
+//
+//! \brief Disable UART FIFO concatenation.
+//!
+//! This function disables FIFO concatenation mode by clearing the FCEN bit
+//! in the CTL register, returning the FIFOs to their normal 8-buffer
+//! operation for both TX and RX.
+//!
+//! \param base is the base address of the UART port.
+//!
+//! \return None
+//!
+//! \sa \ref UARTEnableFifoConcatenation()
+//
+//*****************************************************************************
+__STATIC_INLINE void UARTDisableFifoConcatenation(uint32_t base)
+{
+    // Disable FIFO concatenation
+    HWREG(base + UART_O_CTL) &= ~UART_CTL_FCEN;
 }
 
 //*****************************************************************************

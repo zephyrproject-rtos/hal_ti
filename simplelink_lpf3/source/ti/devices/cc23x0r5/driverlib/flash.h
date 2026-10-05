@@ -1,5 +1,5 @@
 /******************************************************************************
- *  Copyright (c) 2022-2023 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2024 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -58,7 +58,6 @@ extern "C" {
 #include "../inc/hw_flash.h"
 #include "../inc/hw_memmap.h"
 #include "../inc/hw_ints.h"
-#include "../inc/hw_fcfg.h"
 #include "../inc/hw_vims.h"
 #include "hapi.h"
 #include "chipinfo.h"
@@ -153,10 +152,7 @@ __STATIC_INLINE uint32_t FlashCheckFsmForError(void)
 //*****************************************************************************
 __STATIC_INLINE uint32_t FlashCheckFsmForReady(void)
 {
-    uint32_t reg = HWREG(FLASH_BASE + FLASH_O_STATCMD);
-
-    if (((reg & FLASH_STATCMD_CMDINPROGRESS_M) == 0) ||
-         (reg & FLASH_STATCMD_CMDDONE_M))
+    if (HWREG(FLASH_BASE + FLASH_O_STATCMD) & FLASH_STATCMD_CMDDONE_M)
     {
         return (FAPI_STATUS_FSM_READY);
     }

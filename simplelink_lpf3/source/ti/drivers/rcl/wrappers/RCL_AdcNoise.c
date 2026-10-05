@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024, Texas Instruments Incorporated
+ * Copyright (c) 2023-2026, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 
 #include <ti/devices/DeviceFamily.h>
 
-#include <ti/drivers/rcl/RCL.h>
+#include <ti/drivers/RCL.h>
 #include <ti/drivers/rcl/commands/adc_noise.h>
 
 #include <ti/drivers/Power.h>
@@ -45,6 +45,21 @@
 
 extern const LRF_Config LRF_configAdcNoise;
 
+/* Callback function type */
+typedef void (*applicationCallback_t)(uint32_t* buffer, uint32_t numWords, int_fast16_t status);
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+/* Place the necessary RCL structs in SYSRAM instead of BUFRAM. For CC27XX devices, it's not safe to use BUFRAM to save bytes.
+ * See RCL-429 and RCL-957.
+ */
+static RCL_Client rclClient;
+static RCL_CmdAdcNoiseGet cmdAdcNoiseGet;
+static applicationCallback_t applicationCallback;
+
+#define RCL_CLIENT_PTR      (&rclClient)
+#define RCL_ADC_NOISE_CMD_PTR    (&cmdAdcNoiseGet)
+#define CALLBACK_PTR        (&applicationCallback)
+#else
 /* Place necessary RCL structs in BUFRAM to avoid using static SYSRAM. This saves 148 B */
 /* Note that we need to skip the part of the BUFRAM used by common RAM variables, as they
   may be written by the RCL */
@@ -61,13 +76,14 @@ extern const LRF_Config LRF_configAdcNoise;
 #define RCL_CLIENT_PTR      ((RCL_Client*)RCL_CLIENT_ADDR)
 #define RCL_ADC_NOISE_CMD_PTR    ((RCL_CmdAdcNoiseGet*)RCL_ADC_NOISE_CMD_ADDR)
 #define CALLBACK_PTR        ((applicationCallback_t*)CALLBACK_ADDR)
+#endif
 
 #define STATUS_SUCCESS 0
 #define STATUS_ERROR -1
 #define RCL_STATUS_TO_WRAPPER_STATUS(x) ((x) == RCL_CommandStatus_Finished ? STATUS_SUCCESS : STATUS_ERROR)
 
-/* Callback function type */
-typedef void (*applicationCallback_t)(uint32_t* buffer, uint32_t numWords, int_fast16_t status);
+int_fast16_t RCL_AdcNoise_get_samples_blocking(uint32_t* buffer, uint32_t numWords);
+int_fast16_t RCL_AdcNoise_get_samples_callback(uint32_t* buffer, uint32_t numWords, applicationCallback_t callback);
 
 /******************************************************************************
  * Internal callback function
@@ -84,10 +100,10 @@ static void adcNoiseCallback(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events 
     RCL_close(cmd->runtime.client);
 
     /* This must come after closing because command and client structs are in BUFRAM */
-    Power_releaseDependency(PowerLPF3_PERIPH_LRFD_BUFRAM);
+    (void) Power_releaseDependency(PowerLPF3_PERIPH_LRFD_BUFRAM);
 
     /* Release power constraint to allow standby */
-    hal_power_release_constraint();
+    RCL_Hal_powerReleaseStandbyConstraint();
 }
 
 /******************************************************************************
@@ -98,16 +114,16 @@ static void adcNoiseCallback(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events 
 /*
  *  ======== RCL_AdcNoise_get_samples_blocking ========
  */
-int_fast16_t RCL_AdcNoise_get_samples_blocking(uint32_t* buffer, uint32_t numWords)
+__attribute__((weak)) int_fast16_t RCL_AdcNoise_get_samples_blocking(uint32_t* buffer, uint32_t numWords)
 {
     RCL_CommandStatus status;
     RCL_CmdAdcNoiseGet *adcNoiseCmd = RCL_ADC_NOISE_CMD_PTR;
 
     /* Turn on BUFRAM before calling RCL_open, since the RCL_client resides in BUFRAM */
-    Power_setDependency(PowerLPF3_PERIPH_LRFD_BUFRAM);
+    (void) Power_setDependency(PowerLPF3_PERIPH_LRFD_BUFRAM);
 
     /* Prevent the system from going to standby because BUFRAM doesn't have retention */
-    hal_power_set_constraint();
+    RCL_Hal_powerSetStandbyConstraint();
 
     RCL_init();
 
@@ -133,10 +149,10 @@ int_fast16_t RCL_AdcNoise_get_samples_blocking(uint32_t* buffer, uint32_t numWor
     RCL_close(h);
 
     /* This must come after closing because command and client structs are in BUFRAM */
-    Power_releaseDependency(PowerLPF3_PERIPH_LRFD_BUFRAM);
+    (void) Power_releaseDependency(PowerLPF3_PERIPH_LRFD_BUFRAM);
 
     /* Release power constraint to allow standby */
-    hal_power_release_constraint();
+    RCL_Hal_powerReleaseStandbyConstraint();
 
     return RCL_STATUS_TO_WRAPPER_STATUS(status);
 }
@@ -146,16 +162,16 @@ int_fast16_t RCL_AdcNoise_get_samples_blocking(uint32_t* buffer, uint32_t numWor
  *
  *  NOTE: This function must be called from a task context, with interrupts enabled
  */
-int_fast16_t RCL_AdcNoise_get_samples_callback(uint32_t* buffer, uint32_t numWords, applicationCallback_t callback)
+__attribute__((weak)) int_fast16_t RCL_AdcNoise_get_samples_callback(uint32_t* buffer, uint32_t numWords, applicationCallback_t callback)
 {
     RCL_CommandStatus status;
     RCL_CmdAdcNoiseGet *adcNoiseCmd = RCL_ADC_NOISE_CMD_PTR;
 
     /* Turn on BUFRAM before calling RCL_open, since the RCL_client resides in BUFRAM */
-    Power_setDependency(PowerLPF3_PERIPH_LRFD_BUFRAM);
+    (void) Power_setDependency(PowerLPF3_PERIPH_LRFD_BUFRAM);
 
     /* Prevent the system from going to standby because BUFRAM doesn't have retention */
-    hal_power_set_constraint();
+    RCL_Hal_powerSetStandbyConstraint();
 
     RCL_init();
 

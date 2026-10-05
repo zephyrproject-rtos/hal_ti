@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Texas Instruments Incorporated
+ * Copyright (c) 2022-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,58 +50,55 @@
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(inc/hw_types.h)
 #include DeviceFamily_constructPath(inc/hw_memmap.h)
-#include DeviceFamily_constructPath(inc/hw_evtsvt.h)
-#include DeviceFamily_constructPath(inc/hw_evtull.h)
 #include DeviceFamily_constructPath(inc/hw_ints.h)
 #include DeviceFamily_constructPath(inc/hw_pmud.h)
 #include DeviceFamily_constructPath(inc/hw_pmctl.h)
 #include DeviceFamily_constructPath(driverlib/interrupt.h)
 
-/* Macros */
-#define BATMON_VOLTAGE_MAX (7996)
-#define BATMON_VOLTAGE_MIN (0)
-
-#define INVALID_VOLTAGE_MAX BATMON_VOLTAGE_MAX
-#define INVALID_VOLTAGE_MIN BATMON_VOLTAGE_MIN
-
 /* Forward declarations */
-static void walkNotifyList(uint16_t currentVoltage);
-static void setNextThresholds(void);
-static void batteryEventCb(uint32_t eventMask);
-static void updateThresholds(uint16_t thresholdHigh, uint16_t thresholdLow);
-static uint32_t millivoltsToCode(uint16_t voltageMillivolts);
-static void setBatLowerLimit(uint16_t thresholdLow);
-static void setBatUpperLimit(uint16_t thresholdHigh);
-static void enableBatLowerLimit(void);
-static void enableBatUpperLimit(void);
-static void disableBatLowerLimit(void);
-static void disableBatUpperLimit(void);
-static void clearEventFlags(void);
+static void BatteryMonitorLPF3_walkNotifyList(uint16_t currentVoltage);
+static void BatteryMonitorLPF3_setNextThresholds(void);
+static void BatteryMonitorLPF3_batteryEventCb(uint32_t eventMask);
+static void BatteryMonitorLPF3_updateThresholds(uint16_t thresholdHigh, uint16_t thresholdLow);
+static uint32_t BatteryMonitorLPF3_millivoltsToCode(uint16_t voltageMillivolts);
+static void BatteryMonitorLPF3_setBatLowerLimit(uint16_t thresholdLow);
+static void BatteryMonitorLPF3_setBatUpperLimit(uint16_t thresholdHigh);
+static void BatteryMonitorLPF3_enableBatLowerLimit(void);
+static void BatteryMonitorLPF3_enableBatUpperLimit(void);
+static void BatteryMonitorLPF3_disableBatLowerLimit(void);
+static void BatteryMonitorLPF3_disableBatUpperLimit(void);
+static void BatteryMonitorLPF3_clearEventFlags(void);
 
 /* Globals */
 
 /* Global list that stores all registered notifications */
-static List_List notificationList;
+static volatile List_List BatteryMonitorLPF3_notificationList;
 
 /* Current threshold values. These should always reflect the state of the
  * BATMON registers without the need to read them out, and convert to
  * millivolts.
  */
-static volatile uint16_t currentThresholdHigh = INVALID_VOLTAGE_MAX;
-static volatile uint16_t currentThresholdLow  = INVALID_VOLTAGE_MIN;
-
-static bool isInitialized = false;
+static volatile uint16_t BatteryMonitorLPF3_currentThresholdHigh = INVALID_VOLTAGE_MAX;
+static volatile uint16_t BatteryMonitorLPF3_currentThresholdLow  = INVALID_VOLTAGE_MIN;
 
 /*
- *  ======== millivoltsToCode ========
+ *  ======== BatteryMonitorLPF3_millivoltsToCode ========
+ * This function takes in a voltage in millivolts (with no fractional bits) and
+ * converts it to a code that can be written directly to the BATMON hardware,
+ * when configuring thresholds.
  */
-static uint32_t millivoltsToCode(uint16_t voltageMillivolts)
+static uint32_t BatteryMonitorLPF3_millivoltsToCode(uint16_t voltageMillivolts)
 {
     /* Add fractional bits */
-    uint32_t voltageCode = voltageMillivolts << PMUD_BAT_INT_S;
+    uint32_t voltageCode = ((uint32_t)voltageMillivolts) << PMUD_BAT_INT_S;
 
+#if DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX
+    /* Convert from millivolts to volts */
+    voltageCode /= 1000U;
+#else
     /* Convert from millivolts to volts */
     voltageCode = Math_divideBy1000(voltageCode);
+#endif
 
     /* Mask result */
     voltageCode &= (PMUD_BAT_INT_M | PMUD_BAT_FRAC_M);
@@ -110,199 +107,132 @@ static uint32_t millivoltsToCode(uint16_t voltageMillivolts)
 }
 
 /*
- *  ======== setBatLowerLimit ========
+ *  ======== BatteryMonitorLPF3_setBatLowerLimit ========
  */
-static void setBatLowerLimit(uint16_t thresholdLow)
+static void BatteryMonitorLPF3_setBatLowerLimit(uint16_t thresholdLow)
 {
-    uint32_t voltageCode = millivoltsToCode(thresholdLow);
+    uintptr_t key;
+    uint32_t voltageCode = BatteryMonitorLPF3_millivoltsToCode(thresholdLow);
 
+    key                              = HwiP_disable();
     HWREG(PMUD_BASE + PMUD_O_BATTLL) = voltageCode;
 
-    currentThresholdLow = thresholdLow;
+    BatteryMonitorLPF3_currentThresholdLow = thresholdLow;
+    HwiP_restore(key);
 }
 
 /*
- *  ======== setBatUpperLimit ========
+ *  ======== BatteryMonitorLPF3_setBatUpperLimit ========
  */
-static void setBatUpperLimit(uint16_t thresholdHigh)
+static void BatteryMonitorLPF3_setBatUpperLimit(uint16_t thresholdHigh)
 {
-    uint32_t voltageCode = millivoltsToCode(thresholdHigh);
+    uintptr_t key;
+    uint32_t voltageCode = BatteryMonitorLPF3_millivoltsToCode(thresholdHigh);
 
+    key                              = HwiP_disable();
     HWREG(PMUD_BASE + PMUD_O_BATTUL) = voltageCode;
 
-    currentThresholdHigh = thresholdHigh;
+    BatteryMonitorLPF3_currentThresholdHigh = thresholdHigh;
+    HwiP_restore(key);
 }
 
 /*
- *  ======== enableBatLowerLimit ========
+ *  ======== BatteryMonitorLPF3_enableBatLowerLimit ========
  */
-static void enableBatLowerLimit(void)
+static void BatteryMonitorLPF3_enableBatLowerLimit(void)
 {
     HWREG(PMUD_BASE + PMUD_O_EVENTMASK) |= PMUD_EVENTMASK_BATT_BELOW_LL_MASK;
 }
 
 /*
- *  ======== enableBatUpperLimit ========
+ *  ======== BatteryMonitorLPF3_enableBatUpperLimit ========
  */
-static void enableBatUpperLimit(void)
+static void BatteryMonitorLPF3_enableBatUpperLimit(void)
 {
     HWREG(PMUD_BASE + PMUD_O_EVENTMASK) |= PMUD_EVENTMASK_BATT_OVER_UL_MASK;
 }
 
 /*
- *  ======== disableBatLowerLimit ========
+ *  ======== BatteryMonitorLPF3_disableBatLowerLimit ========
  */
-static void disableBatLowerLimit(void)
+static void BatteryMonitorLPF3_disableBatLowerLimit(void)
 {
-    HWREG(PMUD_BASE + PMUD_O_EVENTMASK) &= ~PMUD_EVENTMASK_BATT_BELOW_LL_MASK;
+    HWREG(PMUD_BASE + PMUD_O_EVENTMASK) &= ~(uint32_t)PMUD_EVENTMASK_BATT_BELOW_LL_MASK;
 }
 
 /*
- *  ======== disableBatUpperLimit ========
+ *  ======== BatteryMonitorLPF3_disableBatUpperLimit ========
  */
-static void disableBatUpperLimit(void)
+static void BatteryMonitorLPF3_disableBatUpperLimit(void)
 {
-    HWREG(PMUD_BASE + PMUD_O_EVENTMASK) &= ~PMUD_EVENTMASK_BATT_OVER_UL_MASK;
+    HWREG(PMUD_BASE + PMUD_O_EVENTMASK) &= ~(uint32_t)PMUD_EVENTMASK_BATT_OVER_UL_MASK;
 }
 
 /*
- *  ======== clearEventFlags ========
+ *  ======== BatteryMonitorLPF3_clearEventFlags ========
  */
-static void clearEventFlags(void)
+static void BatteryMonitorLPF3_clearEventFlags(void)
 {
     HWREG(PMUD_BASE + PMUD_O_EVENT) &= (PMUD_EVENT_BATT_BELOW_LL | PMUD_EVENT_BATT_OVER_UL);
 }
 
 /*
- *  ======== setNextThresholds ========
+ *  ======== BatteryMonitorLPF3_updateThresholds ========
  */
-static void setNextThresholds(void)
+static void BatteryMonitorLPF3_updateThresholds(uint16_t thresholdHigh, uint16_t thresholdLow)
 {
-    List_Elem *notifyLink;
-    int16_t nextThresholdHigh = INVALID_VOLTAGE_MAX;
-    int16_t nextThresholdLow  = INVALID_VOLTAGE_MIN;
-    uint32_t key;
-
-    key = HwiP_disable();
-
-    /* Starting with the head of the list, keep track of the smallest high
-     * threshold and largest low threshold.
-     */
-    notifyLink = List_head(&notificationList);
-
-    while (notifyLink != NULL)
+    if (thresholdHigh < BatteryMonitorLPF3_currentThresholdHigh)
     {
-        BatteryMonitor_NotifyObj *notifyObject = (BatteryMonitor_NotifyObj *)notifyLink;
-
-        nextThresholdHigh = Math_MIN(nextThresholdHigh, notifyObject->thresholdHigh);
-        nextThresholdLow  = Math_MAX(nextThresholdLow, notifyObject->thresholdLow);
-
-        notifyLink = List_next(notifyLink);
+        BatteryMonitorLPF3_setBatUpperLimit(thresholdHigh);
+        BatteryMonitorLPF3_enableBatUpperLimit();
     }
 
-    /* Now that we have found the next upper and lower thresholds, set them.
-     * These could be INVALID_VOLTAGE_MAX and/or INVALID_VOLTAGE_MIN
-     * if the list is empty or only high/low notifications were registered.
-     */
-    updateThresholds(nextThresholdHigh, nextThresholdLow);
-
-    HwiP_restore(key);
-}
-
-/*
- *  ======== walkNotifyList ========
- */
-static void walkNotifyList(uint16_t currentVoltage)
-{
-    List_Elem *notifyLink = List_head(&notificationList);
-
-    /* If the notification list is empty, the head pointer will be
-     * NULL and the while loop will never execute the statement.
-     */
-    while (notifyLink != NULL)
+    if (thresholdLow > BatteryMonitorLPF3_currentThresholdLow)
     {
-        BatteryMonitor_NotifyObj *notifyObject = (BatteryMonitor_NotifyObj *)notifyLink;
-
-        /* Buffer the next link in case the notification triggers.
-         * Without buffering, we might skip list entries if the
-         * notifyObject is freed or re-registered and the notifyObject->link.next
-         * pointer is altered.
-         */
-        List_Elem *notifyLinkNext = List_next(notifyLink);
-
-        /* If the current voltage is below this notification's low
-         * threshold or above its high threshold, remove it from the list and
-         * call the callback fxn
-         */
-        if (currentVoltage <= notifyObject->thresholdLow || currentVoltage >= notifyObject->thresholdHigh)
-        {
-
-            /* Choose the threshold to provide to the notifyFxn based on the
-             * thresholds and the current voltage.
-             */
-            uint16_t threshold = (currentVoltage <= notifyObject->thresholdLow) ? notifyObject->thresholdLow
-                                                                                : notifyObject->thresholdHigh;
-
-            List_remove(&notificationList, notifyLink);
-            notifyObject->isRegistered = false;
-
-            notifyObject->notifyFxn(currentVoltage, threshold, notifyObject->clientArg, notifyObject);
-        }
-
-        notifyLink = notifyLinkNext;
+        BatteryMonitorLPF3_setBatLowerLimit(thresholdLow);
+        BatteryMonitorLPF3_enableBatLowerLimit();
     }
 }
 
 /*
- *  ======== updateThresholds ========
- */
-static void updateThresholds(uint16_t thresholdHigh, uint16_t thresholdLow)
-{
-    if (thresholdHigh < currentThresholdHigh)
-    {
-        setBatUpperLimit(thresholdHigh);
-        enableBatUpperLimit();
-    }
-
-    if (thresholdLow > currentThresholdLow)
-    {
-        setBatLowerLimit(thresholdLow);
-        enableBatLowerLimit();
-    }
-}
-
-/*
- *  ======== batteryEventCb ========
+ *  ======== BatteryMonitorLPF3_batteryEventCb ========
  *
  *  BATMON interrupt triggered on high or low battery event
  */
-static void batteryEventCb(uint32_t eventMask)
+static void BatteryMonitorLPF3_batteryEventCb(uint32_t eventMask)
 {
+    /* Unused parameter */
+    (void)eventMask;
+
     /* Get the current voltage */
     uint16_t currentVoltage = BatteryMonitor_getVoltage();
 
+    /* Read volatile variables in well defined order */
+    uint16_t thresholdLow  = BatteryMonitorLPF3_currentThresholdLow;
+    uint16_t thresholdHigh = BatteryMonitorLPF3_currentThresholdHigh;
+
     /* Only walk through notify list if the current voltage is actually above the high threshold or below the low
      * threshold. */
-    if (currentVoltage <= currentThresholdLow || currentVoltage >= currentThresholdHigh)
+    if ((currentVoltage <= thresholdLow) || (currentVoltage >= thresholdHigh))
     {
-        setBatUpperLimit(INVALID_VOLTAGE_MAX);
-        disableBatUpperLimit();
+        BatteryMonitorLPF3_setBatUpperLimit(INVALID_VOLTAGE_MAX);
+        BatteryMonitorLPF3_disableBatUpperLimit();
 
-        setBatLowerLimit(INVALID_VOLTAGE_MIN);
-        disableBatLowerLimit();
+        BatteryMonitorLPF3_setBatLowerLimit(INVALID_VOLTAGE_MIN);
+        BatteryMonitorLPF3_disableBatLowerLimit();
 
         /* Walk the notification list and issue any callbacks that have triggered
          * at the current voltage.
          */
-        walkNotifyList(currentVoltage);
+        BatteryMonitorLPF3_walkNotifyList(currentVoltage);
 
         /* Walk the queue another time to find and set the next set of thresholds.
          */
-        setNextThresholds();
+        BatteryMonitorLPF3_setNextThresholds();
     }
 
     /* Clear event flags. */
-    clearEventFlags();
+    BatteryMonitorLPF3_clearEventFlags();
 }
 
 /*
@@ -310,14 +240,18 @@ static void batteryEventCb(uint32_t eventMask)
  */
 void BatteryMonitor_init(void)
 {
-    uint32_t key;
+    /* Static variable to track if the driver has been initialized */
+    static bool isInitialized = false;
+
+    uintptr_t key;
 
     key = HwiP_disable();
 
     if (isInitialized == false)
     {
         BatMonSupportLPF3_init();
-        BatMonSupportLPF3_registerBatteryCb((PMUD_EVENT_BATT_BELOW_LL | PMUD_EVENT_BATT_OVER_UL), batteryEventCb);
+        BatMonSupportLPF3_registerBatteryCb((PMUD_EVENT_BATT_BELOW_LL | PMUD_EVENT_BATT_OVER_UL),
+                                            BatteryMonitorLPF3_batteryEventCb);
 
         /* Wait until first measurement is ready to prevent BatteryMonitor_getVoltage
          * returning an invalid value.
@@ -344,12 +278,105 @@ uint16_t BatteryMonitor_getVoltage(void)
     uint32_t voltage = HWREG(PMUD_BASE + PMUD_O_BAT) & (PMUD_BAT_INT_M | PMUD_BAT_FRAC_M);
 
     /* Convert to mV by multiplying by 1000 */
-    voltage *= 1000;
+    voltage *= 1000U;
+
+#if (PMUD_BAT_INT_W + PMUD_BAT_INT_S + 10U) > 32U
+    #error Intermediate result in BatteryMonitor_getVoltage() will not fit in 32 bits
+#endif
 
     /* Round to nearest integer and discard fractional part */
-    voltage = (voltage + (1 << (PMUD_BAT_INT_S - 1))) >> PMUD_BAT_INT_S;
+    voltage = (voltage + ((uint32_t)1U << (PMUD_BAT_INT_S - 1U))) >> PMUD_BAT_INT_S;
 
-    return voltage;
+#if (PMUD_BAT_INT_W + 10U) > 16U
+    #error Result for BatteryMonitor_getVoltage() will not fit in 16 bits
+#endif
+
+    /* Cast to 16 bits. This is safe to do. The multiplier (1000) uses 10
+     * integer bits, so the result of the product will have a format of
+     * 13.8 and after discarding the fractional bits only 13 bits will be used.
+     * Which fits within 16 bits.
+     */
+    return (uint16_t)voltage;
+}
+
+/*
+ *  ======== BatteryMonitorLPF3_setNextThresholds ========
+ */
+static void BatteryMonitorLPF3_setNextThresholds(void)
+{
+    List_Elem *notifyLink;
+    uint16_t nextThresholdHigh = INVALID_VOLTAGE_MAX;
+    uint16_t nextThresholdLow  = INVALID_VOLTAGE_MIN;
+    uintptr_t key;
+
+    key = HwiP_disable();
+
+    /* Starting with the head of the list, keep track of the smallest high
+     * threshold and largest low threshold.
+     */
+    notifyLink = List_head((List_List *)&BatteryMonitorLPF3_notificationList);
+
+    while (notifyLink != NULL)
+    {
+        BatteryMonitor_NotifyObj *notifyObject = (BatteryMonitor_NotifyObj *)notifyLink;
+
+        nextThresholdHigh = Math_MIN(nextThresholdHigh, notifyObject->thresholdHigh);
+        nextThresholdLow  = Math_MAX(nextThresholdLow, notifyObject->thresholdLow);
+
+        notifyLink = List_next(notifyLink);
+    }
+
+    /* Now that we have found the next upper and lower thresholds, set them.
+     * These could be INVALID_VOLTAGE_MAX and/or INVALID_VOLTAGE_MIN
+     * if the list is empty or only high/low notifications were registered.
+     */
+    BatteryMonitorLPF3_updateThresholds(nextThresholdHigh, nextThresholdLow);
+
+    HwiP_restore(key);
+}
+
+/*
+ *  ======== BatteryMonitorLPF3_walkNotifyList ========
+ */
+static void BatteryMonitorLPF3_walkNotifyList(uint16_t currentVoltage)
+{
+    List_Elem *notifyLink = List_head((List_List *)&BatteryMonitorLPF3_notificationList);
+
+    /* If the notification list is empty, the head pointer will be
+     * NULL and the while loop will never execute the statement.
+     */
+    while (notifyLink != NULL)
+    {
+        BatteryMonitor_NotifyObj *notifyObject = (BatteryMonitor_NotifyObj *)notifyLink;
+
+        /* Buffer the next link in case the notification triggers.
+         * Without buffering, we might skip list entries if the
+         * notifyObject is freed or re-registered and the notifyObject->link.next
+         * pointer is altered.
+         */
+        List_Elem *notifyLinkNext = List_next(notifyLink);
+
+        /* If the current voltage is below this notification's low
+         * threshold or above its high threshold, remove it from the list and
+         * call the callback fxn
+         */
+        if ((currentVoltage <= notifyObject->thresholdLow) || (currentVoltage >= notifyObject->thresholdHigh))
+        {
+
+            /* Choose the threshold to provide to the notifyFxn based on the
+             * thresholds and the current voltage.
+             */
+            uint16_t threshold = (currentVoltage <= notifyObject->thresholdLow) ? notifyObject->thresholdLow
+                                                                                : notifyObject->thresholdHigh;
+
+            List_remove((List_List *)&BatteryMonitorLPF3_notificationList, notifyLink);
+            notifyObject->isRegistered = false;
+
+            notifyObject->notifyFxn(currentVoltage, threshold, notifyObject->clientArg, notifyObject);
+        }
+
+        notifyLink = notifyLinkNext;
+    }
 }
 
 /*
@@ -360,7 +387,7 @@ int_fast16_t BatteryMonitor_registerNotifyHigh(BatteryMonitor_NotifyObj *notifyO
                                                BatteryMonitor_NotifyFxn notifyFxn,
                                                uintptr_t clientArg)
 {
-    uint32_t key;
+    uintptr_t key;
 
     key = HwiP_disable();
 
@@ -375,12 +402,12 @@ int_fast16_t BatteryMonitor_registerNotifyHigh(BatteryMonitor_NotifyObj *notifyO
          * There is the implicit assumption that the notification is not already
          * in the list. Otherwise the list linkage will be corrupted.
          */
-        List_put(&notificationList, &notifyObject->link);
+        List_put((List_List *)&BatteryMonitorLPF3_notificationList, &notifyObject->link);
 
         notifyObject->isRegistered = true;
     }
 
-    updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
+    BatteryMonitorLPF3_updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
 
     HwiP_restore(key);
 
@@ -395,7 +422,7 @@ int_fast16_t BatteryMonitor_registerNotifyLow(BatteryMonitor_NotifyObj *notifyOb
                                               BatteryMonitor_NotifyFxn notifyFxn,
                                               uintptr_t clientArg)
 {
-    uint32_t key;
+    uintptr_t key;
 
     key = HwiP_disable();
 
@@ -410,12 +437,12 @@ int_fast16_t BatteryMonitor_registerNotifyLow(BatteryMonitor_NotifyObj *notifyOb
          * There is the implicit assumption that the notification is not already
          * in the list. Otherwise the list linkage will be corrupted.
          */
-        List_put(&notificationList, &notifyObject->link);
+        List_put((List_List *)&BatteryMonitorLPF3_notificationList, &notifyObject->link);
 
         notifyObject->isRegistered = true;
     }
 
-    updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
+    BatteryMonitorLPF3_updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
 
     HwiP_restore(key);
 
@@ -431,7 +458,7 @@ int_fast16_t BatteryMonitor_registerNotifyRange(BatteryMonitor_NotifyObj *notify
                                                 BatteryMonitor_NotifyFxn notifyFxn,
                                                 uintptr_t clientArg)
 {
-    uint32_t key;
+    uintptr_t key;
 
     key = HwiP_disable();
 
@@ -446,12 +473,12 @@ int_fast16_t BatteryMonitor_registerNotifyRange(BatteryMonitor_NotifyObj *notify
          * There is the implicit assumption that the notification is not already
          * in the list. Otherwise the list linkage will be corrupted.
          */
-        List_put(&notificationList, &notifyObject->link);
+        List_put((List_List *)&BatteryMonitorLPF3_notificationList, &notifyObject->link);
 
         notifyObject->isRegistered = true;
     }
 
-    updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
+    BatteryMonitorLPF3_updateThresholds(notifyObject->thresholdHigh, notifyObject->thresholdLow);
 
     HwiP_restore(key);
 
@@ -463,20 +490,20 @@ int_fast16_t BatteryMonitor_registerNotifyRange(BatteryMonitor_NotifyObj *notify
  */
 int_fast16_t BatteryMonitor_unregisterNotify(BatteryMonitor_NotifyObj *notifyObject)
 {
-    uint32_t key;
+    uintptr_t key;
 
     key = HwiP_disable();
 
     if (notifyObject->isRegistered == true)
     {
         /* Remove the notification from the list */
-        List_remove(&notificationList, &(notifyObject->link));
+        List_remove((List_List *)&BatteryMonitorLPF3_notificationList, &(notifyObject->link));
 
         notifyObject->isRegistered = false;
     }
 
     /* Find the next set of thresholds and update the registers */
-    setNextThresholds();
+    BatteryMonitorLPF3_setNextThresholds();
 
     HwiP_restore(key);
 

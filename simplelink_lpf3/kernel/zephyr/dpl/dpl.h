@@ -5,5 +5,8 @@
  */
 
 #include <errno.h>
-
 #define MEM_ALIGN (sizeof(uint32_t))
+#define DPL_NO_WAIT (0)
+#define DPL_WAIT_FOREVER (~0)
+
+k_timeout_t dpl_to_zephyr_timeout(uint32_t timeout);

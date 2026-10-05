@@ -3,7 +3,7 @@
  *
  *  Description:    Prototypes and defines for the setup API.
  *
- *  Copyright (c) 2022 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2024 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -66,20 +66,11 @@ extern "C" {
 //!
 //! This function should only execute coming from ROM boot.
 //!
-//! The following is handled by this function:
-//! - Checks if the driverlib variant used by the application is supported by the
-//!   device. Execution is halted in case of unsupported driverlib variant.
-//! - Configures VIMS cache mode based on setting in CCFG.
-//! - Configures functionalities like DCDC and XOSC dependent on startup modes like
-//!   cold reset, wakeup from shutdown and wakeup from from powerdown.
-//! - Configures VIMS power domain control.
-//! - Configures optimal wait time for flash FSM in cases where flash pump wakes up from sleep.
-//!
 //! \note The current implementation does not take soft reset into account. However,
 //! it does no damage to execute it again. It only consumes time.
 //!
 //! \note This function is called by the compiler specific device startup codes
-//! that are integrated in the SimpleLink SDKs for CC13xx/CC26XX devices.
+//! that are integrated in the SimpleLink SDK.
 //!
 //! \return None
 //

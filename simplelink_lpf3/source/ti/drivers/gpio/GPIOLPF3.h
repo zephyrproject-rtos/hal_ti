@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, Texas Instruments Incorporated
+ * Copyright (c) 2021-2026, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,8 +43,10 @@
  *  Refer to @ref GPIO.h for a complete description of the GPIO
  *  driver APIs provided and examples of their use.
  *
- *  The definitions in this file should not be used directly. All GPIO_CFG
- *  macros should be used as-is from GPIO.h.
+ *  Most definitions in this file should not be used directly. All GPIO_CFG
+ *  macros should be used as-is from GPIO.h. The only definitions in this file
+ *  that can be used directly are the mux options that can be found in
+ *  @ref gpiolpf3_mux_options.
  *
  *  There are no additional configuration values or platform-specific
  *  functions for GPIOLPF3.
@@ -56,24 +58,50 @@
 #include <ti/drivers/GPIO.h>
 
 #include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(inc/hw_ioc.h)
+#include DeviceFamily_constructPath(driverlib/ioc.h)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Do not configure this pin. */
-#define GPIO_CFG_DO_NOT_CONFIG_INTERNAL 0x80000000
+#define GPIO_CFG_DO_NOT_CONFIG_INTERNAL (0x80000000U)
 
-/* Re-map IOC PORTCFG defines from hw_ioc.h to GPIO defines*/
-#define GPIO_MUX_PORTCFG_PFUNC7 IOC_IOC3_PORTCFG_DTB
-#define GPIO_MUX_PORTCFG_PFUNC6 IOC_IOC3_PORTCFG_ANA
-#define GPIO_MUX_PORTCFG_PFUNC5 IOC_IOC3_PORTCFG_PFUNC5
-#define GPIO_MUX_PORTCFG_PFUNC4 IOC_IOC3_PORTCFG_PFUNC4
-#define GPIO_MUX_PORTCFG_PFUNC3 IOC_IOC3_PORTCFG_PFUNC3
-#define GPIO_MUX_PORTCFG_PFUNC2 IOC_IOC3_PORTCFG_PFUNC2
-#define GPIO_MUX_PORTCFG_PFUNC1 IOC_IOC3_PORTCFG_PFUNC1
-#define GPIO_MUX_GPIO_INTERNAL  IOC_IOC3_PORTCFG_BASE
+/** @name GPIO Mux options
+ *  @anchor gpiolpf3_mux_options
+ *  @brief Mux options for LPF3 devices
+ *
+ *  @details Mux options to be passed to the @c mux parameter of
+ *  #GPIO_setConfigAndMux().
+ *  @{
+ */
+//! \hideinitializer GPIO function. Do not use directly, use @ref GPIO_MUX_GPIO
+//! instead.
+#define GPIO_MUX_GPIO_INTERNAL (IOC_MUX_GPIO)
+/*! Digital Test Bus (DTB) function */
+#define GPIO_MUX_DTB           (IOC_MUX_DTB)
+/*! \hideinitializer Analog function */
+#define GPIO_MUX_ANALOG        (IOC_MUX_ANALOG)
+/*! \hideinitializer Digital Peripheral Function 1 */
+#define GPIO_MUX_PERIPH_FUNC1  (IOC_MUX_PERIPH_FUNC1)
+/*! \hideinitializer Digital Peripheral Function 2 */
+#define GPIO_MUX_PERIPH_FUNC2  (IOC_MUX_PERIPH_FUNC2)
+/*! \hideinitializer Digital Peripheral Function 3 */
+#define GPIO_MUX_PERIPH_FUNC3  (IOC_MUX_PERIPH_FUNC3)
+/*! \hideinitializer Digital Peripheral Function 4 */
+#define GPIO_MUX_PERIPH_FUNC4  (IOC_MUX_PERIPH_FUNC4)
+/*! \hideinitializer Digital Peripheral Function 5 */
+#define GPIO_MUX_PERIPH_FUNC5  (IOC_MUX_PERIPH_FUNC5)
+/** @} */
+
+/* Numeric PORTCFG defines for backwards compatibility */
+#define GPIO_MUX_PORTCFG_PFUNC7 GPIO_MUX_DTB
+#define GPIO_MUX_PORTCFG_PFUNC6 GPIO_MUX_ANALOG
+#define GPIO_MUX_PORTCFG_PFUNC5 GPIO_MUX_PERIPH_FUNC5
+#define GPIO_MUX_PORTCFG_PFUNC4 GPIO_MUX_PERIPH_FUNC4
+#define GPIO_MUX_PORTCFG_PFUNC3 GPIO_MUX_PERIPH_FUNC3
+#define GPIO_MUX_PORTCFG_PFUNC2 GPIO_MUX_PERIPH_FUNC2
+#define GPIO_MUX_PORTCFG_PFUNC1 GPIO_MUX_PERIPH_FUNC1
 
 /* We don't define this value on purpose - any unsupported values will cause a
  * compile-time error. If your compiler tells you that this macro is missing,
@@ -88,52 +116,56 @@ extern "C" {
  * cannot be directly mapped to the IOCn registers. The define below is the
  * mask used by the GPIO driver to mask off the non-IOC configuration values.
  */
-#define GPIOLPF3_CFG_IOC_M 0xFFFFFFF8
+#define GPIOLPF3_CFG_IOC_M (IOC_CONFIG_ALL_M)
 
 /* Low and high value interrupts are not available on Low Power F3 devices */
 #define GPIO_CFG_INT_LOW_INTERNAL  GPIOLPF3_CFG_OPTION_NOT_SUPPORTED
 #define GPIO_CFG_INT_HIGH_INTERNAL GPIOLPF3_CFG_OPTION_NOT_SUPPORTED
 
 /* General options */
-#define GPIO_CFG_NO_DIR_INTERNAL (IOC_IOC3_IOMODE_NORMAL | GPIOLPF3_CFG_PIN_IS_INPUT_INTERNAL)
-/* Hysteresis is enabled by default for all input pins due to hardware changes on these devices.
- * This may impact pin response by 1-2ns, but creates significantly more stable environments for
- * high-speed use cases like SPI.
+#define GPIO_CFG_NO_DIR_INTERNAL (IOC_CONFIG_IO_MODE_NORMAL | GPIOLPF3_CFG_PIN_IS_INPUT_INTERNAL)
+/* Hysteresis is enabled by default for all input pins due the specific hardware
+ * implementation on these devices. This may impact pin response by 1-2ns, but
+ * creates significantly more stable environments for high-speed use cases like
+ * SPI.
  */
-#define GPIO_CFG_INPUT_INTERNAL \
-    (IOC_IOC3_IOMODE_NORMAL | IOC_IOC3_INPEN | IOC_IOC3_WUENSB | IOC_IOC3_HYSTEN | GPIOLPF3_CFG_PIN_IS_INPUT_INTERNAL)
-#define GPIO_CFG_OUTPUT_INTERNAL (IOC_IOC3_IOMODE_NORMAL | IOC_IOC3_INPEN | GPIOLPF3_CFG_PIN_IS_OUTPUT_INTERNAL)
+#define GPIO_CFG_INPUT_INTERNAL                                                                        \
+    (IOC_CONFIG_IO_MODE_NORMAL | IOC_CONFIG_INPUT_BUFFER_ENABLED | IOC_CONFIG_STANDBY_WAKEUP_ENABLED | \
+     IOC_CONFIG_HYSTERESIS_ENABLED | GPIOLPF3_CFG_PIN_IS_INPUT_INTERNAL)
+#define GPIO_CFG_OUTPUT_INTERNAL \
+    (IOC_CONFIG_IO_MODE_NORMAL | IOC_CONFIG_INPUT_BUFFER_ENABLED | GPIOLPF3_CFG_PIN_IS_OUTPUT_INTERNAL)
 #define GPIO_CFG_OUTPUT_OPEN_DRAIN_INTERNAL \
-    (IOC_IOC3_IOMODE_OPEND | IOC_IOC3_INPEN | GPIOLPF3_CFG_PIN_IS_OUTPUT_INTERNAL)
-#define GPIO_CFG_OUT_OPEN_SOURCE_INTERNAL (IOC_IOC3_IOMODE_OPENS | IOC_IOC3_INPEN | GPIOLPF3_CFG_PIN_IS_OUTPUT_INTERNAL)
+    (IOC_CONFIG_IO_MODE_OPEN_DRAIN | IOC_CONFIG_INPUT_BUFFER_ENABLED | GPIOLPF3_CFG_PIN_IS_OUTPUT_INTERNAL)
+#define GPIO_CFG_OUT_OPEN_SOURCE_INTERNAL \
+    (IOC_CONFIG_IO_MODE_OPEN_SOURCE | IOC_CONFIG_INPUT_BUFFER_ENABLED | GPIOLPF3_CFG_PIN_IS_OUTPUT_INTERNAL)
 
-#define GPIO_CFG_PULL_NONE_INTERNAL IOC_IOC3_PULLCTL_PULL_DIS
-#define GPIO_CFG_PULL_UP_INTERNAL   IOC_IOC3_PULLCTL_PULL_UP
-#define GPIO_CFG_PULL_DOWN_INTERNAL IOC_IOC3_PULLCTL_PULL_DOWN
+#define GPIO_CFG_PULL_NONE_INTERNAL (IOC_CONFIG_PULL_CONTROL_NONE)
+#define GPIO_CFG_PULL_UP_INTERNAL   (IOC_CONFIG_PULL_CONTROL_UP)
+#define GPIO_CFG_PULL_DOWN_INTERNAL (IOC_CONFIG_PULL_CONTROL_DOWN)
 
-#define GPIO_CFG_INT_NONE_INTERNAL       IOC_IOC3_EDGEDET_EDGE_DIS
-#define GPIO_CFG_INT_FALLING_INTERNAL    IOC_IOC3_EDGEDET_EDGE_NEG
-#define GPIO_CFG_INT_RISING_INTERNAL     IOC_IOC3_EDGEDET_EDGE_POS
-#define GPIO_CFG_INT_BOTH_EDGES_INTERNAL IOC_IOC3_EDGEDET_EDGE_BOTH
+#define GPIO_CFG_INT_NONE_INTERNAL       (IOC_CONFIG_EDGE_DETECT_DISABLED)
+#define GPIO_CFG_INT_FALLING_INTERNAL    (IOC_CONFIG_EDGE_DETECT_FALLING)
+#define GPIO_CFG_INT_RISING_INTERNAL     (IOC_CONFIG_EDGE_DETECT_RISING)
+#define GPIO_CFG_INT_BOTH_EDGES_INTERNAL (IOC_CONFIG_EDGE_DETECT_BOTH)
 
 /* We can feed this into the low bit of IOMODE, and it can then be ORed with output/input/OD/OS */
-#define GPIO_CFG_INVERT_OFF_INTERNAL 0
-#define GPIO_CFG_INVERT_ON_INTERNAL  IOC_IOC3_IOMODE_INVERTED
+#define GPIO_CFG_INVERT_OFF_INTERNAL (IOC_CONFIG_INVERT_DISABLED)
+#define GPIO_CFG_INVERT_ON_INTERNAL  (IOC_CONFIG_INVERT_ENABLED)
 
-#define GPIO_CFG_HYSTERESIS_OFF_INTERNAL 0
-#define GPIO_CFG_HYSTERESIS_ON_INTERNAL  IOC_IOC3_HYSTEN
+#define GPIO_CFG_HYSTERESIS_OFF_INTERNAL (IOC_CONFIG_HYSTERESIS_DISABLED)
+#define GPIO_CFG_HYSTERESIS_ON_INTERNAL  (IOC_CONFIG_HYSTERESIS_ENABLED)
 
-#define GPIO_CFG_SHUTDOWN_WAKE_OFF_INTERNAL  0
-#define GPIO_CFG_SHUTDOWN_WAKE_HIGH_INTERNAL IOC_IOC3_WUCFGSD_WAKE_HIGH
-#define GPIO_CFG_SHUTDOWN_WAKE_LOW_INTERNAL  IOC_IOC3_WUCFGSD_WAKE_LOW
+#define GPIO_CFG_SHUTDOWN_WAKE_OFF_INTERNAL  (IOC_CONFIG_SHUTDOWN_WAKEUP_DISABLED)
+#define GPIO_CFG_SHUTDOWN_WAKE_HIGH_INTERNAL (IOC_CONFIG_SHUTDOWN_WAKEUP_HIGH)
+#define GPIO_CFG_SHUTDOWN_WAKE_LOW_INTERNAL  (IOC_CONFIG_SHUTDOWN_WAKEUP_LOW)
 
 /* Slew limits and drive strength are only supported on specific pins: pin 12, pins 16-19, and pin 24 */
-#define GPIO_CFG_SLEW_NORMAL_INTERNAL  IOC_IOC17_SLEWRED_NORMAL
-#define GPIO_CFG_SLEW_REDUCED_INTERNAL IOC_IOC17_SLEWRED_REDUCED
+#define GPIO_CFG_SLEW_NORMAL_INTERNAL  (IOC_CONFIG_SLEW_RATE_NORMAL)
+#define GPIO_CFG_SLEW_REDUCED_INTERNAL (IOC_CONFIG_SLEW_RATE_REDUCED)
 
-#define GPIO_CFG_DRVSTR_LOW_INTERNAL  IOC_IOC17_IOCURR_CUR_2MA
-#define GPIO_CFG_DRVSTR_MED_INTERNAL  IOC_IOC17_IOCURR_CUR_4MA
-#define GPIO_CFG_DRVSTR_HIGH_INTERNAL IOC_IOC17_IOCURR_CUR_8MA
+#define GPIO_CFG_DRVSTR_LOW_INTERNAL  (IOC_CONFIG_DRIVE_STRENGTH_2MA)
+#define GPIO_CFG_DRVSTR_MED_INTERNAL  (IOC_CONFIG_DRIVE_STRENGTH_4MA)
+#define GPIO_CFG_DRVSTR_HIGH_INTERNAL (IOC_CONFIG_DRIVE_STRENGTH_8MA)
 
 /* Configuration values stored in mux bits. Any configuration options not
  * directly handled by IOC need to be stored inside the mux bits (lowest 3 bits
@@ -143,19 +175,24 @@ extern "C" {
  */
 
 /* Default output value */
-#define GPIO_CFG_OUTPUT_DEFAULT_HIGH_INTERNAL 0x1
-#define GPIO_CFG_OUTPUT_DEFAULT_LOW_INTERNAL  0
+#define GPIO_CFG_OUTPUT_DEFAULT_HIGH_INTERNAL (0x1U)
+#define GPIO_CFG_OUTPUT_DEFAULT_LOW_INTERNAL  (0x0U)
 
 /* Whether GPIO hardware should have the output enable bit set for this pin */
-#define GPIOLPF3_CFG_PIN_IS_INPUT_INTERNAL  0x2
-#define GPIOLPF3_CFG_PIN_IS_OUTPUT_INTERNAL 0
+#define GPIOLPF3_CFG_PIN_IS_INPUT_INTERNAL  (0x2U)
+#define GPIOLPF3_CFG_PIN_IS_OUTPUT_INTERNAL (0x0U)
 
 /* Interrupt enable is in the GPIO module */
-#define GPIO_CFG_INT_ENABLE_INTERNAL  0x4
-#define GPIO_CFG_INT_DISABLE_INTERNAL 0
+#define GPIO_CFG_INT_ENABLE_INTERNAL  (0x4U)
+#define GPIO_CFG_INT_DISABLE_INTERNAL (0x0U)
+
+#if GPIOLPF3_CFG_IOC_M & (GPIO_CFG_INT_ENABLE_INTERNAL | GPIOLPF3_CFG_PIN_IS_INPUT_INTERNAL | \
+                          GPIO_CFG_OUTPUT_DEFAULT_HIGH_INTERNAL | GPIO_CFG_DO_NOT_CONFIG_INTERNAL)
+    #error "Error in GPIOLPF3 implementation: Internally used config bits are overlapping with IOC config bits"
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* ti_drivers_GPIOCC26XX__include */
+#endif /* ti_drivers_GPIOLPF3__include */
