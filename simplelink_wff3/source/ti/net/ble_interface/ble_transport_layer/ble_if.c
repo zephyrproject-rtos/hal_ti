@@ -12,16 +12,24 @@
 
  *****************************************************************************/
 #include "ble_if.h"
+#if defined(CONFIG_TI_BLE_TRANSPORT_SHARED)
 #include "ble_transport.h"
+#endif
+#if defined(CONFIG_TI_BLE_TRANSPORT_SERIAL)
 #include "hci_transport.h"
+#endif
 #include "uart_hci.h"
 #include "osi_type.h"
 #include "osi_kernel.h"
 #include "control_cmd_fw.h"
-#ifdef CC35XX
+#if defined(CONFIG_TI_BLE_TRANSPORT_SHARED)
+#if defined(__ZEPHYR__)
+#include <psa/crypto.h>
+#else
 #include <third_party/psa_crypto/include/psa/crypto.h>
 #include <third_party/psa_crypto/include/psa/crypto_types.h>
 #include <third_party/psa_crypto/include/psa/crypto_values.h>
+#endif
 #endif
 
 /*****************************************************************************/
@@ -41,7 +49,7 @@ vsFormat_e vsFormat = VENDOR_SPECIFIC_FORMAT_TI;
 /*****************************************************************************/
 int BleIf_OpenTransport()
 {
-#ifdef CC33XX
+#if defined(CONFIG_TI_BLE_TRANSPORT_SERIAL)
     if (HciTransport_IsInitialized(HCI_TRANSPORT_UART_BLE) == FALSE)
     {
         //Open the UART for HCI
@@ -57,7 +65,7 @@ int BleIf_OpenTransport()
 
     Report("\n\rBLE Serial transport opened\r\n");
 #endif
-#ifdef CC35XX
+#if defined(CONFIG_TI_BLE_TRANSPORT_SHARED)
     //Note: shared transport was previously opened when WLAN started
     //It will not be opened here
 
@@ -73,7 +81,7 @@ int BleIf_OpenTransport()
 
 int BleIf_CloseTransport()
 {
-#ifdef CC33XX
+#if defined(CONFIG_TI_BLE_TRANSPORT_SERIAL)
     if (HciTransport_IsInitialized(HCI_TRANSPORT_UART_BLE) == TRUE)
     {
         //Close the UART for HCI
@@ -198,7 +206,7 @@ int BleIf_EnableBLE()
         ASSERT_GENERAL(0);
     }
 
-#ifdef CC35XX
+#if defined(CONFIG_TI_BLE_TRANSPORT_SHARED)
     ret = BleIf_SetSeed(MAX_SEED_SIZE);
     if (ret < 0)
     {
@@ -254,7 +262,7 @@ int BleIf_SetSeed(uint8_t size)
         return ret;
     }
 
-#ifdef CC35XX
+#if defined(CONFIG_TI_BLE_TRANSPORT_SHARED)
     //Check crypto engine status
     psa_status_t status  = psa_crypto_init();
     if (status != PSA_SUCCESS) {
