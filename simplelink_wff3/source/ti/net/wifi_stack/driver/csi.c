@@ -122,7 +122,6 @@ void CSI_Deinit()
 
 int CSI_PushMessage(WlanGetCSIData_t *pCsiData)
 {
-    OsiReturnVal_e rc;
     int ret = WLAN_RET_CODE_OK;
 
 
@@ -173,5 +172,4 @@ Bool_e CSI_GetEnable()
         return FALSE;
     }
 }
-
 

@@ -488,27 +488,29 @@ typedef uint8_t Role_e;
  *************************************************/
 
 
-#define ROLE_IS_TYPE_DEVICE(roleType)              (ROLE_DEVICE == (roleType))
+#define ROLE_AS_TYPE(roleType)                     ((Role_e)(roleType))
 
-#define ROLE_IS_TYPE_TRANSCEIVER(roleType)         (ROLE_TRANSCEIVER == (roleType))
+#define ROLE_IS_TYPE_DEVICE(roleType)              (ROLE_DEVICE == ROLE_AS_TYPE(roleType))
 
-#define ROLE_IS_TYPE_P2P_CLIENT(roleType)          (ROLE_P2P_CL == (roleType))
+#define ROLE_IS_TYPE_TRANSCEIVER(roleType)         (ROLE_TRANSCEIVER == ROLE_AS_TYPE(roleType))
 
-#define ROLE_IS_TYPE_P2P_GO(roleType)              (ROLE_P2P_GO == (roleType))
+#define ROLE_IS_TYPE_P2P_CLIENT(roleType)          (ROLE_P2P_CL == ROLE_AS_TYPE(roleType))
+
+#define ROLE_IS_TYPE_P2P_GO(roleType)              (ROLE_P2P_GO == ROLE_AS_TYPE(roleType))
 
 #define ROLE_IS_TYPE_P2P(roleType)              ( ROLE_IS_TYPE_P2P_CLIENT(roleType) || ROLE_IS_TYPE_P2P_GO(roleType) )
 
-#define ROLE_IS_TYPE_STA(roleType)               (ROLE_STA == (roleType))
+#define ROLE_IS_TYPE_STA(roleType)               (ROLE_STA == ROLE_AS_TYPE(roleType))
 
-#define ROLE_IS_TYPE_AP(roleType)               (ROLE_AP == (roleType))
+#define ROLE_IS_TYPE_AP(roleType)               (ROLE_AP == ROLE_AS_TYPE(roleType))
 
-#define ROLE_IS_TYPE_AP_BASED(roleType)          ((ROLE_AP == (roleType))||(ROLE_P2P_GO == (roleType)))
+#define ROLE_IS_TYPE_AP_BASED(roleType)          ((ROLE_AP == ROLE_AS_TYPE(roleType))||(ROLE_P2P_GO == ROLE_AS_TYPE(roleType)))
 
-#define ROLE_IS_TYPE_STA_BASED(roleType)        ((ROLE_P2P_CL == (roleType))||(ROLE_STA == (roleType)))
+#define ROLE_IS_TYPE_STA_BASED(roleType)        ((ROLE_P2P_CL == ROLE_AS_TYPE(roleType))||(ROLE_STA == ROLE_AS_TYPE(roleType)))
 
-#define ROLE_IS_TYPE_STA_BASED_OR_DEVICE(roleType) ((ROLE_P2P_CL == (roleType))||(ROLE_STA == (roleType)) || (ROLE_DEVICE == (roleType)))
+#define ROLE_IS_TYPE_STA_BASED_OR_DEVICE(roleType) ((ROLE_P2P_CL == ROLE_AS_TYPE(roleType))||(ROLE_STA == ROLE_AS_TYPE(roleType)) || (ROLE_DEVICE == ROLE_AS_TYPE(roleType)))
 
-#define ROLE_IS_TYPE_AP_BASED_OR_DEVICE(roleType) ((ROLE_P2P_GO == (roleType))||(ROLE_AP == (roleType)) || (ROLE_DEVICE == (roleType)))
+#define ROLE_IS_TYPE_AP_BASED_OR_DEVICE(roleType) ((ROLE_P2P_GO == ROLE_AS_TYPE(roleType))||(ROLE_AP == ROLE_AS_TYPE(roleType)) || (ROLE_DEVICE == ROLE_AS_TYPE(roleType)))
 
 
 /******************************************************************************

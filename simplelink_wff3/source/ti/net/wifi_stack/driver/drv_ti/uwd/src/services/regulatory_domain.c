@@ -144,11 +144,11 @@ const ConfigGroupChanPatterns_t rom_gConfigGroupChanPatternsTable[] = {
 
 ConfigCountryCompressed_t rom_gConfigCountryCompressedTable[REG_DOMAIN_NUM_OF_REGIONS] = {
       /*       		Country   Rgn: */
-    { /* US */ 		'U', 'S', REG_DOMAIN_FCC_REGION }, 		 // FCC - min of FCC/IC/Taiwan
-    { /* JP */ 		'J', 'P', REG_DOMAIN_TELEC_REGION }, 	 // ROW (rest of the world) - Min of JP/EU
-    { /* WW_SAFE */ '0', '0', REG_DOMAIN_WORLDWIDE_REGION }, // WWS (worldwide safe) - Min of FCC&ROW
-	{ /* EU */ 		'E', 'U', REG_DOMAIN_ETSI_REGION },		 // EU
-	{ /* XZ */ 		'X', 'Z', REG_DOMAIN_CUSTOM_REGION }, 	 // XZ - Custom regulatory domain, set by API
+    { /* US */ 		{ 'U', 'S' }, REG_DOMAIN_FCC_REGION }, 		 // FCC - min of FCC/IC/Taiwan
+    { /* JP */ 		{ 'J', 'P' }, REG_DOMAIN_TELEC_REGION }, 	 // ROW (rest of the world) - Min of JP/EU
+    { /* WW_SAFE */ { '0', '0' }, REG_DOMAIN_WORLDWIDE_REGION }, // WWS (worldwide safe) - Min of FCC&ROW
+	{ /* EU */ 		{ 'E', 'U' }, REG_DOMAIN_ETSI_REGION },		 // EU
+	{ /* XZ */ 		{ 'X', 'Z' }, REG_DOMAIN_CUSTOM_REGION }, 	 // XZ - Custom regulatory domain, set by API
 };
 
 int                        gNumCompressedCountries       = sizeof(rom_gConfigCountryCompressedTable)/sizeof(ConfigCountryCompressed_t);
@@ -234,7 +234,9 @@ RegulatoryDomain_t RegulatoryDomain;
 ///********************************************************************************/
 ///*						Internal functions prototypes.							*/
 ///********************************************************************************/
+#if 0
 static void setWorldWideDomainSupportedChannels();
+#endif
 static void sendRegDomainCmdToFw();
 static void verifyDfsChannelValidity(channelCapability_t *pSupportedChannels, uint8_t channelIndex);
 static int32_t getCountryIdInTable(uint8_t *pCountryStr, uint32_t *pCountryID);
@@ -958,6 +960,7 @@ int32_t regulatoryDomain_SetCountry(uint8_t *pCountryStr)
 //*
 //*
 //*************************************************************************/
+#if 0
 static void setWorldWideDomainSupportedChannels()
 {
     RegulatoryDomain_t  *pRegulatoryDomain = &RegulatoryDomain;
@@ -1029,6 +1032,7 @@ static void setWorldWideDomainSupportedChannels()
 	}
 
 }
+#endif
 
 static void sendRegDomainCmdToFw()
 {

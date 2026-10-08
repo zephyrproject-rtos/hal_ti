@@ -734,7 +734,9 @@ uint32_t udata_SendTxMgmtPacket(TMgmtPktDesc *pkt)
     Bool_e       bIsExternalContext = (pkt->flags & PKTF_EXTERNAL_CONTEXT) ? TRUE : FALSE;
     TTxCtrlBlk  *pPktCtrlBlk;
     TInternalWlanLinkInfo *pLinkInfo;
+#if 0
     TUdata *pUdata = gUdataCB ;
+#endif
 
 
     if(wlanLinks_GetLink(pkt->link, &pLinkInfo) != 0)
@@ -1139,6 +1141,4 @@ void udataNet_RxTxDebug(uint32_t funcType, void *pParam)
 }
 
 #endif /* TI_DBG */
-
-
 

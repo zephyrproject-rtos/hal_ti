@@ -2275,7 +2275,7 @@ void cmeApRemovePeer(uint8_t *macAddr, BOOLEAN isUserReq)
 
 #ifdef CONFIG_AP
     struct wpa_supplicant *pApInterface;
-    struct hostapd_data *hapd;
+    struct hostapd_data *hapd = NULL;
     struct sta_info *sta = NULL;
     BOOLEAN isBroadcastMac = FALSE;
 
@@ -2355,8 +2355,6 @@ void cmeWlanConnect(uint32_t aRoleId, CMEWlanConnectCommon_t *apCmd, CMEEapWlanC
  
     _cme_minimized_wpa_ssid_t *pSsid = NULL;
     cmeScanCandidateDesc_t *pFastCandidate = NULL;
-
-    Bool_e isReassociate = FALSE;
 
 	ASSERT_GENERAL((apCmd!= NULL) || (apEapCmd!=NULL));
 
@@ -3948,7 +3946,9 @@ static void addProfileEap2DB(uint16_t    SecType,
                              uint8_t     FastTransition,
                              cmeProfileInfo_t * inputProfile)
 {
+#if 0
     int32_t i;
+#endif
     //get shared input commands
     int32_t fast_provisioning                   = 0; //not supported
     cmeEntProfileParams_t *eap_profile_entry=NULL;
@@ -4535,6 +4535,7 @@ static void addProfileEap2DB(uint16_t    SecType,
  Return code:   none
 ---------------------------------------------------------------------------- */
 
+#if 0
 static int32_t removeProfileFromDB(uint32_t aProfileId)
 {
     HOOK(HOOK_IN_CME_CONNECTION_MNG);
@@ -4581,6 +4582,7 @@ static int32_t removeProfileFromDB(uint32_t aProfileId)
 
 	return 0;
 }
+#endif
 
 
 /* ----------------------------------------------------------------------------
@@ -4695,6 +4697,7 @@ static int shouldConnectToOpenAp()
     return (!cme_is_p2p_role_configured() && (gCmeConnectionPolicyParams_ull.shouldConnectToOpenAp));
 }
 
+#if CC35XX_SUPPORT_P2P_PROFILE
 static int shouldConnectToAnyP2Pdevice()
 {
     HOOK(HOOK_IN_CME_CONNECTION_MNG);
@@ -4702,6 +4705,7 @@ static int shouldConnectToAnyP2Pdevice()
     return (cme_is_p2p_role_configured() && (gCmeConnectionPolicyParams_ull.shouldConnectToAnyP2P));
 
 }
+#endif /* CC35XX_SUPPORT_P2P_PROFILE */
 //
 // getPreferredNetworksDbInfo
 //
@@ -6260,7 +6264,6 @@ int locateAndFillStandardNetwork(int scan_ssid,
     int currentProfileIndex;
     int selectedProfileIndex = CME_SCAN_MAX_PROFILES;
     cmeProfileInfo_t *pCurrentMatchedProfile;
-    int wep_key_len = key_len_and_id & 0xFF;
 
     //Check if the added new profile is already configured in the preferredNetworks DB.
     //We will check the new profile existence even if the selectedProfileIndex above shows that there is no free index for this new profile.
@@ -6278,6 +6281,7 @@ int locateAndFillStandardNetwork(int scan_ssid,
             {
 
 #ifdef C35XX_PROFILE_CHECK_BSSID_AND_SECURITY_TO_REMOVE //?
+                int wep_key_len = key_len_and_id & 0xFF;
 
 #ifdef SL_PROFILE_STRUCT_REDUCTION
                 //Check if ssid prefix needed and if so if already exists
@@ -6857,14 +6861,10 @@ int32_t add_preferred_network_common(CMEWlanAddGetProfile_t   *apProfileCmd,
     HOOK(HOOK_IN_CME_CONNECTION_MNG);
 
     _cme_minimized_wpa_ssid_t      *apSsid = NULL;
-    int i;
     int index;
     int16_t flashStatus;
-    int32_t status;
     int8_t *passphrase = NULL;//PROFILE_PASSWORD_STRING(apProfileCmd);
-    int ssid_is_prefix = 0;
     int passphrase_length = apProfileCmd->PasswordLen;
-    int isPassphraseIsPMK = 0;
 
     apSsid = (_cme_minimized_wpa_ssid_t *)os_zalloc(sizeof(_cme_minimized_wpa_ssid_t));
     if (apSsid == NULL)
@@ -7072,7 +7072,9 @@ int16_t cmeAddPreferredNetwork(
     HOOK(HOOK_IN_CME_CONNECTION_MNG);
 
     int16_t status =  -1;
+#if 0
     uint8_t auth_alg;
+#endif
     CMEWlanAddGetProfile_t *cme_wlan_add_profile_args = pProfile;//(sl_wlan_add_profile_cmd_t *)&pScmd->func_args_start;
 
     //read preferred network from FS
@@ -7226,6 +7228,7 @@ int16_t cmeAddPreferredNetwork(
     {
         // We need to count free entries in preferredNetworks not in GLX.
         uint8_t freeEntriesNum = CME_SCAN_MAX_PROFILES - getPreferredNetworksDbInfo(preferredNetworks, 0);
+        (void)freeEntriesNum;
 
         GTRACE(GRP_CME, "add_preferred_network: Add profile succeeded, index = %d, free entries number = %d",
                         status, freeEntriesNum);
@@ -9078,7 +9081,6 @@ void cmeHandleP2pConnection(CMEWlanConnectCommon_t *apCmd, uint32_t aKeyMgmt)
 ---------------------------------------------------------------------------- */
 void cmeP2pConnect(void *apPriv)
 {
-    int32_t ret = 0;
     ti_driver_ifData_t *pDrv = (ti_driver_ifData_t *)apPriv;
     struct wpa_supplicant *wpa_s = pDrv->wpa_s;
     enum p2p_wps_method wps_method = WPS_PBC;
@@ -9102,7 +9104,7 @@ void cmeP2pConnect(void *apPriv)
 	int pd = 0; // Whether to send Provision Discovery prior to GO Negotiation as an
                 // interoperability workaround when initiating group formation
                 // when there is aGO -> pd = 1 may be needed
-	int ht40=0, vht=0, max_oper_chwidth =0 , chwidth = 0, freq2 = 0;
+	int ht40=0, vht=0, max_oper_chwidth =0 , freq2 = 0;
 	int edmg = 0;
 	int he = 0;
 	bool allow_6ghz = false;
@@ -9283,9 +9285,6 @@ void cmeP2pGroupRemove()
 #ifndef TI_STA_ONLY_BUILD
 void cmeP2pListen()
 {
-    uint32_t roleId;
-    struct wpa_supplicant *wpa_s = NULL;
-    ti_driver_ifData_t *pDrv = NULL;
     ti_driver_ifData_t *pDevDrv = drv_getDriverData(NETIF_NAME(TIWLAN_DEV_NAME_P2PDEV));
     struct wpa_supplicant *wpas = NULL;
     wpas = pDevDrv->wpa_s;

@@ -733,7 +733,6 @@ int cc3xxx_trnspt_cmd_if_stop_role (void *apDrv)
         {
             // Remove link 
             uint32_t    uHlid;
-            linkType_e eLinkType;
             EWlanLinkState eState;
             for (uHlid=0; uHlid<WLANLINKS_MAX_LINKS; uHlid++)
             {
@@ -767,6 +766,12 @@ int cc3xxx_trnspt_cmd_if_stop_role (void *apDrv)
                 wlanLinks_GetLinkState(&eState, uHlid);
                 if((TIWDRV_NETIF_ID_SAP == wlanLinks_GetNetIfId(uHlid)) && WLANLINK_STATE_FREE != eState)
                 {
+                    if (wlanLinks_GetLinkType(&eLinkType, uHlid) != OK)
+                    {
+                        ASSERT_GENERAL(0);
+                        return -NOK;
+                    }
+
                     if ((eLinkType != WLANLINK_TYPE_SPECIFIC))
                     {
                         udata_ResetLinkStats(uHlid);
@@ -806,6 +811,12 @@ int cc3xxx_trnspt_cmd_if_stop_role (void *apDrv)
                 if((TIWDRV_NETIF_ID_P2PDEV == wlanLinks_GetNetIfId(uHlid)) &&
                         WLANLINK_STATE_FREE != eState)
                 {
+                    if (wlanLinks_GetLinkType(&eLinkType, uHlid) != OK)
+                    {
+                        ASSERT_GENERAL(0);
+                        return -NOK;
+                    }
+
                     if ((eLinkType != WLANLINK_TYPE_SPECIFIC))
                     {
                         udata_ResetLinkStats(uHlid);
@@ -2212,8 +2223,8 @@ int cc3xxx_trnspt_cmd_if_one_shot_scan(void *apPriv, struct wpa_driver_scan_para
     }
 
     // For p2p related we use ssid scan if FW
-    if ((ROLE_IS_TYPE_P2P_CLIENT(apDrv->roleType) || (ROLE_IS_TYPE_DEVICE(apDrv->roleType)) 
-        && (apParams->num_ssids > 0)))
+    if ((ROLE_IS_TYPE_P2P_CLIENT(apDrv->roleType) || ROLE_IS_TYPE_DEVICE(apDrv->roleType)) &&
+        (apParams->num_ssids > 0))
     {
         if(apParams->ssids[0].ssid_len > 0)
         {
@@ -3323,7 +3334,7 @@ int cc3xxx_trnspt_cmd_if_sta_remove(void *apPriv, const uint8_t *apAddr)
 int cc3xxx_trnspt_cmd_if_sta_set_flags(void *apPriv, const u8 *apAddr, unsigned int total_flags,
                          unsigned int flags_or, unsigned int flags_and)
 {
-    int                     rc;
+    int                     rc = 0;
     CommandParamContol_t    cmd;
     CommandComplete_t       cmdComplete;
     uint16_t                retVal;
@@ -3333,7 +3344,6 @@ int cc3xxx_trnspt_cmd_if_sta_set_flags(void *apPriv, const u8 *apAddr, unsigned 
     AddPeerCmd_t            *pPrevCmd; //Previous in link list (NULL if pStaParams is first)
     Bool_e                  foundCmd = FALSE;
     uint32_t                uAcId;
-    uint32_t                supportedRatesMask, basicRatesMask;
 
     if (NULL == apAddr)
         return -1;
@@ -3377,7 +3387,7 @@ int cc3xxx_trnspt_cmd_if_sta_set_flags(void *apPriv, const u8 *apAddr, unsigned 
 
         // Use addr field in sta_info struct to get a pointer to the container of it.
         size_t memberOffset = offsetof(struct sta_info, addr);
-        struct sta_info *staInfo = (struct sta_info *)((void *)apAddr - memberOffset);
+        struct sta_info *staInfo = (struct sta_info *)((const uint8_t *)apAddr - memberOffset);
         uint8_t wps = 0;
 
         // Extract WPS flag from sta_info struct in order to detect a WPS connection attempt
@@ -3598,8 +3608,6 @@ int cc3xxx_trnspt_cmd_if_sta_set_flags(void *apPriv, const u8 *apAddr, unsigned 
 
 void WlanEventHandler(void *pWlanFwEvent)
 {
-    void *staif = NULL;
-
     if(!pWlanFwEvent)
     {
         CME_CC3XX_PORT_PRINT_ERROR("\n\rERROR [WLAN FW EVENT HANDLER] error pWlanFwEvent is NULL\n\r");
@@ -3659,7 +3667,9 @@ int32_t cc3xxx_set_defaults()
 ******************************************************************************/
 int cc3xxx_config_mem_map()
 {
+#if 0
     MemoryMap_t             tMemMap;
+#endif
     int ret = 0;
 
 #if 0

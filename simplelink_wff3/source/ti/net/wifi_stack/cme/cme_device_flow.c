@@ -221,7 +221,6 @@ void CmeDeviceROC (Cme_Users_e __user)
 
 void CmeDeviceCROC (Cme_Users_e __user)
 {
-    int32_t ret;
     struct wpa_supplicant *wpa_s;
     uint32_t*   pArgs;
 
@@ -345,4 +344,3 @@ static void supplicantRunDevice()
 
     HOOK(HOOK_IN_CME_STATION_FLOW);
 }
-

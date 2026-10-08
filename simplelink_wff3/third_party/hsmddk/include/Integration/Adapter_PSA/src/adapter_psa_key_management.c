@@ -1216,7 +1216,7 @@ local_AsymKeyType(const size_t PersistentItemSize,
     psa_status_t funcres = PSA_SUCCESS;
     size_t exponent_size = 0U;
     /* Curve25519 is the only EC curve with a key_bit size that is not exactly 8 times*/
-    size_t curve_bits;
+    size_t curve_bits = 0U;
 
     if (attributes->MBEDTLS_PRIVATE(bits) == 0)
     {
@@ -4355,7 +4355,7 @@ psaInt_KeyMgmtReadECPubKey(const size_t PersistentItemSize,
 {
     Asn1Der_BigNumber PubKey;
     psa_status_t funcres;
-    uint8_t items;
+    uint8_t items = 0U;
     uint8_t octetBytePresent = 0;
 
     if (PersistentItemSize == 0)
@@ -6822,7 +6822,7 @@ psa_export_public_key(mbedtls_svc_key_id_t key,
      * fails - but if it succeeds, we must not replace the original error condition in funcres.
      */
     psa_status_t removalResult;
-    psa_key_persistence_t key_persistence;
+    psa_key_persistence_t key_persistence = PSA_KEY_PERSISTENCE_VOLATILE;
     uint8_t fECDH = 0U;
     bool isPubKey = false;
     size_t curve_bits;

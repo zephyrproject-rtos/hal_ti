@@ -71,8 +71,6 @@
 extern void _recvNetworkPacket(uint32_t netifid,uint8_t *inbuf, uint32_t inbuf_len);
 
 static int rxData_RequestForBuffer (uint8_t **pBuf, uint32_t aLength);
-/* CallBack for recieving FwLogger packet from rxXfer (continuous mode) or FwLog (OnDemand mode) */
-static void rxData_ReceiveFwLoggerPacket (void  *pBuffer, uint32_t uLength, uint8_t fwLogMode, Bool_e RecoveryReading);
 
 static uint32_t rxData_ConvertWlanToEthHeader(void *pBuffer, uint16_t *etherType);
 static uint32_t rxData_ConvertAmsduToEthPackets(void *pBuffer,ELinkState eLinkConnState);
@@ -601,7 +599,6 @@ static void rxData_ReceivePacketFromWlan(void *pBuffer)
     rxData_t *pRxData = gRxDataCB;
     RxIfDescriptor_t *pRxParams  = (RxIfDescriptor_t *)pBuffer;
     uint8_t          uHlid = pRxParams->hlid;
-    dot11_header_t      *pHdr;
     PacketClassTag_enum class;
 
     if (uHlid >= WLANLINKS_MAX_LINKS)
@@ -1198,7 +1195,6 @@ static uint32_t rxData_ConvertAmsduToEthPackets(void *pBuffer,ELinkState eLinkCo
     uint32_t            headerLength;
     dot11_header_t     *pDot11Header;
     rxDataPacketType_e  DataPacketType;
-    RxIfDescriptor_t   *pRxParams = (RxIfDescriptor_t*)pBuffer;
     const unsigned char rfc1042_hdr[ETH_ALEN] =	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
     uint8_t            createEtherIIHeader;
     uint32_t           packet_len;
@@ -1843,12 +1839,11 @@ static uint32_t sendDataPacketToTx(void *pBuffer, uint16_t uLength, uint32_t uHl
 {
     rxData_t   *pRxData = gRxDataCB;
     TTxCtrlBlk *pPktCtrlBlk;
-    void       *pNewBuff;
     TEthernetHeader *pEthHead= NULL;
     uint32_t dataLen = uLength-ETHERNET_HDR_LEN,total_len = 0;
     uint8_t* pData;
     uint32_t status = NOK;
-    uint32_t uNetIfId = 0, extraHThdr;
+    uint32_t uNetIfId = 0;
     uint8_t roleType;
 
     roleType = (uint8_t)(pRxData->pUdata->aLinkInfo[uHlid].eRoleType);
@@ -1876,7 +1871,7 @@ static uint32_t sendDataPacketToTx(void *pBuffer, uint16_t uLength, uint32_t uHl
         return NOK;
     }
 
-    pData = pBuffer + ETHERNET_HDR_LEN;
+    pData = (uint8_t *)pBuffer + ETHERNET_HDR_LEN;
     pEthHead  = os_malloc(sizeof(TEthernetHeader));
     if (!pEthHead)
     {
@@ -1923,4 +1918,3 @@ static uint32_t sendDataPacketToTx(void *pBuffer, uint16_t uLength, uint32_t uHl
     fail:
         return status;
 }
-

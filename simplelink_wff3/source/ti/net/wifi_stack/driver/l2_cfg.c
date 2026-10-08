@@ -811,8 +811,6 @@ uint8_t l2_GetPhyConfig()
 
 uint32_t l2_cfgBuildOperatingModeNotifcationIe(uint32_t aRoleId, uint8_t *operatingModeNotifIE)
 {
-    uint16  tNextWord;
-    uint32  tNexLong;
     uint8 opmode_notif = 0; 
 	uint8 rx_nss = 0; 
 	uint8 rx_nss_type = 0;
@@ -844,7 +842,6 @@ uint32_t l2_cfgBuildOperatingModeNotifcationIe(uint32_t aRoleId, uint8_t *operat
 uint32_t l2_cfgBuildVhtCapabilitiesIe(uint32_t aRoleId, uint8_t *apVhtCapsIE)
 {
     uint16  tNextWord;
-    uint32  tNexLong;
 
     /* dot11_eleHdr_t */
     apVhtCapsIE[0] = VHT_CAPABILITY_IE_ID;

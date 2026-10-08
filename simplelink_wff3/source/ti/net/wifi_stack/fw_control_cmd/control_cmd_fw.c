@@ -1100,7 +1100,7 @@ int SendCalibrationCmd(FILE *calibrationFile, uint32_t offset, uint16_t payloadL
         cmdSize = sizeof(static_calibration_cmd_t);
     }
 
-    ALIGNN_TO_4(cmdSize);
+    cmdSize = ALIGNN_TO_4(cmdSize);
 
     cmd = os_malloc(cmdSize);
 
@@ -1567,7 +1567,6 @@ int ctrlCmdFw_GetChannelUtilizationResults(WlanChannel_utilize_res_t* res)
 {
     cmd_interrogate_get_channel_utilization_results_t cmdGetScanCUResult;
     CommandComplete_t cmdComplete;
-    WlanChannel_utilize_res_t *channel_util = NULL;
     int ret;
 
     cmdGetScanCUResult.cmdInterrogateHeader.id = GET_LATEST_CHANNEL_UTILIZATION_SURVEY;

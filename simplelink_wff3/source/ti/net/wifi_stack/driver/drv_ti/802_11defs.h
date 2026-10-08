@@ -234,7 +234,9 @@ typedef enum
 #define DOT11_QOS_CONTROL_DONT_ACK                  0x0020
 #define DOT11_QOS_CONTROL_BLOCK_ACK                 0x0060
 
+#ifndef MAC_ADDR_LEN
 #define MAC_ADDR_LEN         (6)   /* In Bytes */
+#endif
 
 typedef uint8_t   macAddress_t [MAC_ADDR_LEN];
 

@@ -65,7 +65,9 @@ typedef enum
 } EAcPriority;
 
 
+#if 0
 const static EAcTrfcType acPriorityToAcIdTable[MAX_NUM_OF_AC] = {QOS_AC_BK, QOS_AC_BE, QOS_AC_VI, QOS_AC_VO};
+#endif
 const static uint32_t MinGuarantee_PerAc[MAX_NUM_OF_AC] = {TX_DATA_MIN_GUARANTEE_BE_DEF, 
                                                               TX_DATA_MIN_GUARANTEE_BK_DEF,
                                                               TX_DATA_MIN_GUARANTEE_VI_DEF,
@@ -99,8 +101,12 @@ uint32_t gErrorNullBlk = 0;
 
 /* Internal Functions prototypes */
 static void txDataQ_RunScheduler (void* hCbHndl);
+#if 0
 static void txDataQ_TxSendPaceTimeout (Bool_e bTwdInitOccured);
+#endif
+#ifdef TI_DBG
 static void txDataQ_PrintResources (void);
+#endif
 static void txDataQ_InitResources (void);
 static void scheduleQueuesPerPriority( int32_t *pCountTxDataFrames);
 
@@ -379,7 +385,6 @@ void txDataQ_SetClsfrInitParams(TClsfrInitParams   *ClsfrInitParam)
  */
 uint32_t txDataQ_Set(TUdataInitParams TUdataParams)
 {
-    TTxDataQ  *pTxDataQ = gTxDataQCB;
     uint32_t  eStatus;
 
     /* configure the classifier sub-module */
@@ -989,9 +994,11 @@ uint32_t txDataQ_AllocCheckResources (TTxCtrlBlk *pPktCtrlBlk, uint8_t isDataFra
     TDataResources *pDataRsrc = &pTxDataQ->tDataRsrc;
     uint32_t uHlid = pPktCtrlBlk->tTxDescriptor.hlid;
     uint32_t uAc = WMEQosTagToACTable[pPktCtrlBlk->tTxDescriptor.tid];
+#if 0
     Bool_e bPktInUseAboveAcMin = FALSE;
     Bool_e bPktInUseAboveLinkMin = FALSE;
     Bool_e bEnqueuePacket;
+#endif
 
     if(uAc >= MAX_NUM_OF_AC)
     {
@@ -1014,7 +1021,7 @@ uint32_t txDataQ_AllocCheckResources (TTxCtrlBlk *pPktCtrlBlk, uint8_t isDataFra
     /* set RSRC_ALLOCATED flag, used in txDataQ_FreeResources */
     SET_TX_CTRL_FLAG_RSRC_ALLOCATED(pPktCtrlBlk);
 
-/*
+#if 0
     // Update Effective totals = Sum of Max ( PktInUse_PerAc [uAc],  Min_PerAc[uAc] ), uAc=0..MAX_AC
     // no need to calculate Sum of Max on every packet, just small check for this ac only
     if (pDataRsrc->uPktInUsePerAc[uAc] > pDataRsrc->uMinGuaranteePerAc[uAc])
@@ -1064,7 +1071,7 @@ uint32_t txDataQ_AllocCheckResources (TTxCtrlBlk *pPktCtrlBlk, uint8_t isDataFra
         TX_PRINT_ERROR("\n\rerror txDataQ_AllocCheckResources failed");
         return NOK;
     }
-*/
+#endif
     return OK;
 }
 
@@ -1143,7 +1150,6 @@ void txDataQ_FreeFwAllocated (TTxCtrlBlk *pPktCtrlBlk)
 {
     TTxDataQ *pTxDataQ = gTxDataQCB;
     TDataResources *pDataRsrc = &pTxDataQ->tDataRsrc;
-    uint32_t uHlid = pPktCtrlBlk->tTxDescriptor.hlid;
     uint32_t uAc = WMEQosTagToACTable[pPktCtrlBlk->tTxDescriptor.tid];
 
     /* Enter critical section to protect classifier data and queue access */
@@ -1404,12 +1410,13 @@ static void txDataQ_PrintResources (void)
 static void txDataQ_RunScheduler (void* hCbHndl)
 {
     TTxDataQ   *pTxDataQ = gTxDataQCB;
-    TDataResources *pDataRsrc = &pTxDataQ->tDataRsrc; //add- on for debug
     uint32_t watchDogcount = 0;
     int32_t retVal = 0;
     // Read the current counter of request schedule calls
 
 #ifdef DEBUG_TX_QUEUE_TABLE
+    TDataResources *pDataRsrc = &pTxDataQ->tDataRsrc; //add- on for debug
+
     gErrorBusy = 0;
     gErrorFailed = 0;
     gErrorNullBlk = 0;
@@ -1785,6 +1792,7 @@ static void scheduleQueuesPerPriority(int32_t *retVal)
  *
  * \sa
  */
+#if 0
 static void txDataQ_TxSendPaceTimeout (Bool_e bTwdInitOccured)
 {
     TTxDataQ *pTxDataQ = gTxDataQCB;
@@ -1793,4 +1801,4 @@ static void txDataQ_TxSendPaceTimeout (Bool_e bTwdInitOccured)
 
     txDataQ_ReqToRunTxScheduler();
 }
-
+#endif

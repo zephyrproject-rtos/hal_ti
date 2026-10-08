@@ -455,8 +455,9 @@ EStatusXmit txCtrl_XmitData(TTxCtrlBlk *pPktCtrlBlk, uint8_t *pBackpressureMap)
     txCtrl_t   *pTxCtrl = gTxCtrlCB;
     ETxnStatus eStatus;       /* The Xfer return value (different than this function's return values). */
     uint32_t  uAc;
-    uint32_t  uHlid = pPktCtrlBlk->tTxDescriptor.hlid;
+#if 0
     ETxHwQueStatus eHwQueStatus;
+#endif
     TPktOriginalAttrib  tOriginalAttrib;
     //CL_TRACE_START_L3();
 
@@ -466,6 +467,8 @@ EStatusXmit txCtrl_XmitData(TTxCtrlBlk *pPktCtrlBlk, uint8_t *pBackpressureMap)
     uAc = WMEQosTagToACTable[pPktCtrlBlk->tTxDescriptor.tid];
 
 #ifdef ENABLE_TRAFFIC_STATITIC
+    uint32_t  uHlid = pPktCtrlBlk->tTxDescriptor.hlid;
+
     if(pTxCtrl->dbgLinkCounters.dbgStartCollectCntr[uHlid])
     {
         pTxCtrl->dbgLinkCounters.dbgTimeFirstPacket_Ms[uHlid] = osi_GetTimeMS();
@@ -622,7 +625,9 @@ uint32_t txCtrl_XmitMgmt(TTxCtrlBlk *pPktCtrlBlk, uint8_t *pBackpressureMap)
     uint32_t    uAc;  /* The AC selected for the packet transmission. */
     uint32_t    uHlid = pPktCtrlBlk->tTxDescriptor.hlid;
     uint8_t     uPktType = pPktCtrlBlk->tTxPktParams.uPktType;
+#if 0
     ETxHwQueStatus eHwQueStatus;
+#endif
     TPktOriginalAttrib  tOriginalAttrib;
 
     UDATA_PRINT("\n\rtxCtrl_XmitMgmt : receive packet to send");
@@ -825,7 +830,6 @@ void *txCtrl_AllocPacketBuffer(TTxCtrlBlk *pPktCtrlBlk, uint32_t uPacketLen)
 ***************************************************************************/
 void txCtrl_FreePacket(TTxCtrlBlk *pPktCtrlBlk, uint32_t eStatus)
 {
-    txCtrl_t *pTxCtrl = gTxCtrlCB;
     uint8_t uDescId  = pPktCtrlBlk->tTxDescriptor.descID;
 
     TX_FRAME_FLOW_CNTRL_PRINT("\n\r txCtrl_FreePacket : 0x%x ", (uint32_t)pPktCtrlBlk);
@@ -972,7 +976,7 @@ static void txCtrl_TxCompleteCb(TTxResultInfo *pTxResultInfo, uint32_t counter)
         /* For STA/P2PCL role data packets */
         if ((IS_PKT_TYPE_IF_ROLE_STA(pPktCtrlBlk) || IS_PKT_TYPE_IF_ROLE_P2PCL(pPktCtrlBlk)) && TRUE == bIsDataPkt)
         {
-            if (pTxCtrl->TSMInProgressBitmap && (0x01 << pPktCtrlBlk->tTxDescriptor.tid))
+            if (pTxCtrl->TSMInProgressBitmap & (0x01 << pPktCtrlBlk->tTxDescriptor.tid))
             {
                 txCtrl_UpdateTSMDelayCounters(&pTxResultInfo[i], pPktCtrlBlk->tTxDescriptor.tid);
             }
@@ -1324,15 +1328,19 @@ static void txCtrl_BuildMgmtPkt(TTxCtrlBlk *pPktCtrlBlk, uint32_t uAc)
         dot11_mgmtHeader_t *wlanHeader = (dot11_mgmtHeader_t *)&(pPktCtrlBlk->aPktHdr[hdrPadding]);
         if (IS_AUTH(wlanHeader->fc)) {
             ACXInConnectionSTA_t param;
+#if 0
             uint32_t eStatus;
+#endif
             os_memcpy(param.mac_address, wlanHeader->DA ,TIW_DRV_MAC_ADDR);
             param.RoleID = pPktCtrlBlk->tTxPktParams.uFwRoleId;
 
-            //TODO
-            //eStatus = TWD_SendInfoEle(ACX_UPDATE_INCONNECTION_STA_LIST, (void*)&param, sizeof(param), NULL, NULL);
+#if 0
+            /* TODO */
+            eStatus = TWD_SendInfoEle(ACX_UPDATE_INCONNECTION_STA_LIST, (void*)&param, sizeof(param), NULL, NULL);
 
-            //Report("\n\r txCtrl_BuildMgmtPkt ,set in-connection state status %d " REPORT_MACSTR "\r\n",
-            //       eStatus, REPORT_MAC2STR(param.mac_address));
+            Report("\n\r txCtrl_BuildMgmtPkt ,set in-connection state status %d " REPORT_MACSTR "\r\n",
+                   eStatus, REPORT_MAC2STR(param.mac_address));
+#endif
         }
     }
 
@@ -1584,14 +1592,16 @@ static void txCtrl_UpdateTxCounters(TTxResultInfo *pTxResultInfo,
                                     uint32_t ac,
                                     Bool_e bIsDataPkt)
 {
+#ifdef ENABLE_TRAFFIC_STATITIC
     txCtrl_t *pTxCtrl = gTxCtrlCB;
     uint32_t  pktLen;
     uint32_t  dataLen;
     uint32_t  uHlid = pPktCtrlBlk->tTxDescriptor.hlid;
-    
+
     pktLen = (uint32_t)pPktCtrlBlk->tTxDescriptor.length-sizeof(TxIfDescriptor_t);//(uint32_t)ENDIAN_HANDLE_WORD(pPktCtrlBlk->tTxDescriptor.length);
     //pktLen = pktLen << 2;//convert words to bytes
-    
+#endif
+
     /* If it's not a data packet, exit (the formal statistics are only on network stack traffic). */
     if ( !bIsDataPkt )
     {
@@ -1712,11 +1722,10 @@ uint32_t txCtrl_NotifyFwReset (void)
 ***************************************************************************/
 uint32_t txCtrl_CheckForTxStuck (void)
 {
+#ifdef REMOVE_TX_CODE //TODO TX_CODE_WAS_REMOVED
     uint32_t  entry;
     TTxCtrlBlk *pPktCtrlBlk;
     uint32_t  uPktAge;      /* Time in uSec since packet start time. */
-
-#ifdef REMOVE_TX_CODE //TODO TX_CODE_WAS_REMOVED
 
     for (entry = 0; entry < CTRL_BLK_ENTRIES_NUM-1; entry++)
     {
@@ -1866,4 +1875,3 @@ uint32_t txCtrl_UpdateTSMParameters(uint32_t uHlid, TTsmParams *pTSMParams)
 
     return OK;
 }
-

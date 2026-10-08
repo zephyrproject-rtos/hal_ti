@@ -508,8 +508,6 @@ int32_t cmeSetScanCmeInfo(cmeScanSharedInfo_t *apSharedInfo,
 
 static void cmeScanDoneSendScanDigest(uint32_t aRoleId, CmeScanDoneInfo_t *apScanInfo)
 {
-    struct wpa_supplicant *wpa_s = NULL;
-
     {
         // Mark site survey has stopped
         gSetSiteSurvey = CME_SITE_SURVEY_IDLE;
@@ -592,7 +590,6 @@ int cmeScanComplete(uint32_t aRoleId, CmeScanDoneInfo_t *apScanInfo)
     int rc = 0;
     struct wpa_supplicant *wpa_s = NULL;
     Cme_STA_states_e curretnState;
-    cmeScanSharedInfo_t*    pCmeScanDB = scanResultTable_GetCmeScanDbPointer();
 
     GTRACE(GRP_CME, "CME_SCAN_STATUS_COMPLETE, (roleid=%d) type ENUM(EScanRequestType,%d) status ENUM(cmeScanStatus_e,%d)",
                      aRoleId, apScanInfo->scanType, apScanInfo->status);

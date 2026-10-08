@@ -1343,10 +1343,8 @@ TI_STATUS rsn_setExtAuthMode(rsn_t *pRsn, EExternalAuthMode extAuthMode)
 // ----------------------------------------------------------------------------
 void rsn_addKey(securityKeys_t *apSecurityKey,const char *ifname)
 {
-    uint32_t     keyIndex = apSecurityKey->keyIndex;
-
     GTRACE(GRP_DRIVER_CC33_DEBUG, "RSN: add key KeyIndex 0x%x, keyLength=%d keyType %d",
-                                   keyIndex, apSecurityKey->encLen, apSecurityKey->keyType);
+                                   apSecurityKey->keyIndex, apSecurityKey->encLen, apSecurityKey->keyType);
 
     // Remove the key when the length is 0, or the type is not set
     if ( (WPA_ALG_NONE == apSecurityKey->keyType) || (0 == apSecurityKey->encLen) )
@@ -2287,10 +2285,9 @@ static void setKey(KeyAction_e aAction, securityKeys_t *apSecurityKey, const cha
 // ----------------------------------------------------------------------------
 void rsn_removeKey(securityKeys_t *apSecurityKey, const char *ifname)
 {
-    uint32_t keyIndex = apSecurityKey->keyIndex;
     enum wpa_alg keyType = apSecurityKey->keyType;
 
-    GTRACE(GRP_DRIVER_CC33_DEBUG, "RSN: remove key link ID %d, keyType %d, keyIndex %d", apSecurityKey->lid, keyType, keyIndex);
+    GTRACE(GRP_DRIVER_CC33_DEBUG, "RSN: remove key link ID %d, keyType %d, keyIndex %d", apSecurityKey->lid, keyType, apSecurityKey->keyIndex);
 
     // If link ID is invalid, there's nothing to do here
     if (INVALID_LINK == apSecurityKey->lid)

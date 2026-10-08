@@ -459,6 +459,7 @@ int ti_driver_set_tx_queue_params(void *apPriv, int queue, int aifs,
 int ti_driver_set_rts(void *apPriv, int aRts)
 {
     ti_driver_ifData_t *pDrv = (ti_driver_ifData_t *)apPriv;
+    (void)pDrv;
 
     HOOK(HOOK_DRV_TI_AP_SPECIFIC);
 
@@ -590,7 +591,6 @@ int ti_driver_inact_sec(void *priv, const u8 *addr)
 
     char macStr[MAC_STR_LEN];
     ti_driver_ifData_t *pDrv = (ti_driver_ifData_t *)priv;
-    uint32_t lid;
 
     if (NULL == addr)
         return -1;
@@ -633,7 +633,6 @@ int ti_driver_inact_mili(void *priv, const u8 *addr)
 
     char macStr[MAC_STR_LEN];
     ti_driver_ifData_t *pDrv = (ti_driver_ifData_t *)priv;
-    uint32_t lid;
     LinkInactivity_t linkInactivity;
 
     if (NULL == addr)
@@ -679,7 +678,6 @@ int ti_driver_inact_mili(void *priv, const u8 *addr)
 ---------------------------------------------------------------------------- */
 void ti_driver_poll_client(void *priv, const u8 *own_addr, const u8 *addr, int qos)
 {
-    int rc = 0;
     char macStr[MAC_STR_LEN];
     ti_driver_ifData_t *pDrv = (ti_driver_ifData_t *)priv;
 
@@ -721,8 +719,6 @@ void ti_driver_poll_client(void *priv, const u8 *own_addr, const u8 *addr, int q
 int ti_driver_sta_deauth(void *apPriv,   const u8 *own_addr,
                            const u8 *apAddr, u16 reason)
 {
-    int32_t rc = 0;
-
     char peerMacStr[MAC_STR_LEN];
     ti_driver_ifData_t  *pDrv = (ti_driver_ifData_t *)apPriv;
 
@@ -759,7 +755,6 @@ int ti_driver_sta_deauth(void *apPriv,   const u8 *own_addr,
 int ti_driver_sta_disassoc(void *apPriv,   const u8 *own_addr,
                              const u8 *addr, u16 reason)
 {
-    int32_t rc;
     char ownMacStr[MAC_STR_LEN];
     char peerMacStr[MAC_STR_LEN];
     ti_driver_ifData_t  *pDrv = (ti_driver_ifData_t *)apPriv;
@@ -788,7 +783,6 @@ int ti_driver_hpad_send_eapol(void *apPriv, const u8 *apAddr, const u8 *apData,
                                 size_t aDataLen, int aEncrypt, const u8 *apOwnAddr,
                                 u32 aFlags)
 {
-    int rc = 0;
     ti_driver_ifData_t *pDrv = (ti_driver_ifData_t *)apPriv;
 
     HOOK(HOOK_DRV_TI_AP_SPECIFIC);

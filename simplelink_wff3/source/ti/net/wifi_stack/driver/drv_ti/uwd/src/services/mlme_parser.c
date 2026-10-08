@@ -1055,8 +1055,6 @@ static int32_t mlmeParser_readHeMuEdcaParamerterSetIE(uint8_t *pData,
 static int32_t mlmeParser_readERP(uint8_t *pData, uint32_t dataLen, uint32_t *pReadLen,
                                   dot11_erp_t *pErpIe, uint8_t *useProtection, uint8_t *barkerPreambleMode)
 {
-
-    uint32_t erpIElen;
     uint8_t ctrl;
 
     pErpIe->hdr.eleId = *pData;

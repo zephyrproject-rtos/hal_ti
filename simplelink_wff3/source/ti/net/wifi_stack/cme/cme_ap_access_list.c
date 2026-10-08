@@ -807,7 +807,7 @@ static void freeBwListWorkingCopy(cmeBwListCB_t* pWorkingCopy)
 ******************************************************************************/
 int32_t CME_SetListMode(uint8_t ListMode, BOOLEAN UpdateFlash)
 {
-    cmeBwListCB_t* pBwListWorkingCopy;
+    cmeBwListCB_t* pBwListWorkingCopy = NULL;
     int32_t status=0;
 
     HOOK(HOOK_IN_CME_AP_ACCESS_LIST);
@@ -874,7 +874,7 @@ int32_t CME_SetListMode(uint8_t ListMode, BOOLEAN UpdateFlash)
 int32_t CME_AddMacToList(uint8_t* pMacAddress, BOOLEAN UpdateFlash)
 {
     int32_t status=0;
-    cmeBwListCB_t*  pBwListWorkingCopy;
+    cmeBwListCB_t*  pBwListWorkingCopy = NULL;
     uint8_t idx;
     BOOLEAN listUpdated = FALSE;
 
@@ -974,7 +974,7 @@ int32_t CME_DelMacFromList(uint8_t* pMacAddress,
                          uint32_t index,
                          BOOLEAN UpdateFlash)
 {
-    cmeBwListCB_t*  pBwListWorkingCopy;
+    cmeBwListCB_t*  pBwListWorkingCopy = NULL;
     int32_t status=0;
     uint8_t idx;
     BOOLEAN updateList = FALSE;
@@ -1102,8 +1102,8 @@ int16_t CME_GetList(uint8_t listType,
     int16_t idx;
     uint16_t copiedLen;
     uint16_t entriesCopied;
-    uint8_t entrySize;
-    uint8_t *pSrcList;
+    uint8_t entrySize = 0;
+    uint8_t *pSrcList = NULL;
 
     //TODO: to check
     // We do not take the semaphore as this is a read operation
@@ -1200,7 +1200,7 @@ int16_t CME_GetList(uint8_t listType,
 int32_t CME_AddWildcardToList(uint8_t* pMacAddress, uint8_t* pMask, BOOLEAN UpdateFlash)
 {
     int32_t status=0;
-    cmeBwListCB_t*       pBwListWorkingCopy;
+    cmeBwListCB_t*       pBwListWorkingCopy = NULL;
     BwList_wildcardEnry pWildcardEntry;
     uint8_t idx;
     BOOLEAN listUpdated = FALSE;
@@ -1314,7 +1314,7 @@ int32_t CME_AddWildcardToList(uint8_t* pMacAddress, uint8_t* pMask, BOOLEAN Upda
 ******************************************************************************/
 int32_t CME_DelWildcardFromList(uint8_t* pMacAddress, uint8_t* pMask, uint32_t index, BOOLEAN UpdateFlash)
 {
-    cmeBwListCB_t*  pBwListWorkingCopy;
+    cmeBwListCB_t*  pBwListWorkingCopy = NULL;
     int32_t status=0;
     uint8_t idx;
     BwList_wildcardEnry pWildcardEntry;
@@ -1441,7 +1441,7 @@ int32_t CME_DelWildcardFromList(uint8_t* pMacAddress, uint8_t* pMask, uint32_t i
 ******************************************************************************/
 int32_t CME_DelList(uint8_t listType, BOOLEAN UpdateFlash)
 {
-    cmeBwListCB_t* pBwListWorkingCopy;
+    cmeBwListCB_t* pBwListWorkingCopy = NULL;
     int32_t status=0;
 
     HOOK(HOOK_IN_CME_AP_ACCESS_LIST);

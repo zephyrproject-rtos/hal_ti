@@ -94,7 +94,6 @@ int NumOfRecordOffset(char *containerName , recordHeader_t *pHeader)
 {
     FILE *containerFileHandle;
     uint16 buffer;
-    uint16 target_device_list_size;
     uint16 num_of_records_offset;
 
     //buffer = os_malloc(CHUNK_SIZE + sizeof(cmd_download_t));
@@ -117,7 +116,7 @@ int ctrlCmdFw_ContainerDownload(char *containerName)
     FILE *containerFileHandle;
     recordHeader_t *header;
     uint32_t offset = 0;
-    uint32_t currentRecordLength, writeRecordLen;
+    uint32_t currentRecordLength;
     uint32_t offsetInRecord;
     int ret;
     Bool_e isLastRecord = FALSE;
@@ -421,4 +420,3 @@ int get_device_mac_address()
 
     return 0;
 }
-
