@@ -58,8 +58,6 @@
 #include "tw_driver.h"
 #include "init_host.h"
 #include "l2_cfg.h"
-#include <stdbool.h>
-#include <stdio.h>
 /******************************************************************************
                                     EXTERN
 ******************************************************************************/
@@ -91,20 +89,6 @@ void UploadFW(FILE *DeviceFileHandle);
 extern int32_t cc3xxx_set_defaults();
 extern uint32_t drv_getDriverLink(uint32_t uNetIfId, uint8_t* dst);
 extern OsiLockObj_t extAppLockObj;
-extern bool open_at_cc35xx_debug(const char *text);
-
-static void init_host_debug(const char *text)
-{
-    (void)open_at_cc35xx_debug(text);
-}
-
-static void init_host_debug_ret(const char *tag, int32_t ret)
-{
-    char buf[88];
-
-    (void)snprintf(buf, sizeof(buf), "\r\nDBG_INIT:%s ret=%d\r\n", tag, ret);
-    init_host_debug(buf);
-}
 
 
 /******************************************************************************
@@ -127,16 +111,11 @@ int32_t InitHostDriver(void)
     const TPartition aPartition[] = {{0,0xF0000},{0,0},{0,0},{0,0}};
     uint32_t TrnsptThrdPrior;
 
-    init_host_debug("\r\nDBG_INIT:enter\r\n");
-
-    init_host_debug("\r\nDBG_INIT:wlan_IRQDeinit enter\r\n");
     wlan_IRQDeinit();
-    init_host_debug("\r\nDBG_INIT:wlan_IRQDeinit done\r\n");
 
     osi_LockObjCreate(&driverLock);
 
     ret = osi_LockObjCreate(&extAppLockObj);
-    init_host_debug_ret("extAppLockObj", ret);
     if (ret != OSI_OK)
     {
         ASSERT_GENERAL(0);
@@ -144,50 +123,29 @@ int32_t InitHostDriver(void)
     }
 
 
-    init_host_debug("\r\nDBG_INIT:ctrlCmdFw_CreateMsgQueue enter\r\n");
     ctrlCmdFw_CreateMsgQueue();
-    init_host_debug("\r\nDBG_INIT:ctrlCmdFw_CreateMsgQueue done\r\n");
 
     /* Transport init */
     TrnsptThrdPrior = TRANSPORT_THREAD_PRIORITY;
-    init_host_debug("\r\nDBG_INIT:trnspt_Init enter\r\n");
     ret = trnspt_Init(TrnsptThrdPrior);
-    init_host_debug_ret("trnspt_Init", ret);
     if(ret < 0)
     {
         ASSERT_GENERAL(0);
         return(ret);
     }
 
-    init_host_debug("\r\nDBG_INIT:twIf_Init enter\r\n");
     twIf_Init();
-    init_host_debug("\r\nDBG_INIT:twIf_Init done\r\n");
     twIf_SetPartition(aPartition);
-    init_host_debug("\r\nDBG_INIT:twIf_SetPartition done\r\n");
     tmr_Init();
-    init_host_debug("\r\nDBG_INIT:tmr_Init done\r\n");
 
-    init_host_debug("\r\nDBG_INIT:fwEvent_Init enter\r\n");
     ret |= fwEvent_Init(RX_TX_BUFFER,CONTROL_BUFFER_READ_SIZE);
-    init_host_debug_ret("fwEvent_Init cumulative", ret);
-    init_host_debug("\r\nDBG_INIT:ctrlCmdFw_CreateEventThread enter\r\n");
     ctrlCmdFw_CreateEventThread();
-    init_host_debug("\r\nDBG_INIT:ctrlCmdFw_CreateEventThread done\r\n");
-    init_host_debug("\r\nDBG_INIT:wlan_IRQInitBeforeHwInit enter\r\n");
     wlan_IRQInitBeforeHwInit(FwEvent_irq_handler);
-    init_host_debug("\r\nDBG_INIT:wlan_IRQInitBeforeHwInit done\r\n");
-    init_host_debug("\r\nDBG_INIT:cmd_Init enter\r\n");
     ret |= cmd_Init();
-    init_host_debug_ret("cmd_Init cumulative", ret);
 
-    init_host_debug("\r\nDBG_INIT:rx_Init enter\r\n");
     ret |= rx_Init();
-    init_host_debug_ret("rx_Init cumulative", ret);
 
-    init_host_debug("\r\nDBG_INIT:udata_Create enter\r\n");
     TUdata *pUdata = udata_Create();
-    init_host_debug(pUdata ? "\r\nDBG_INIT:udata_Create ok\r\n" :
-                             "\r\nDBG_INIT:udata_Create fail\r\n");
     if (pUdata == NULL)
     {
         return NOK;
@@ -195,26 +153,14 @@ int32_t InitHostDriver(void)
 #ifdef REMOVE_TX_CODE
     ret |= rxXfer_Init(); //TODO to remove
 #endif
-    init_host_debug("\r\nDBG_INIT:txXferAggr_Init enter\r\n");
     ret |= txXferAggr_Init();
-    init_host_debug_ret("txXferAggr_Init cumulative", ret);
-    init_host_debug("\r\nDBG_INIT:txXfer_Init enter\r\n");
     ret |= txXfer_Init();
-    init_host_debug_ret("txXfer_Init cumulative", ret);
-    init_host_debug("\r\nDBG_INIT:txResult_Init enter\r\n");
     ret |= txResult_Init();
-    init_host_debug_ret("txResult_Init cumulative", ret);
-    init_host_debug("\r\nDBG_INIT:txCtrlBlk_Init enter\r\n");
     ret |= txCtrlBlk_Init();
-    init_host_debug_ret("txCtrlBlk_Init cumulative", ret);
-    init_host_debug("\r\nDBG_INIT:txHwQueue_Init enter\r\n");
     ret |= txHwQueue_Init();
-    init_host_debug_ret("txHwQueue_Init cumulative", ret);
     // for lx ret |= tx_Init();
 
-    init_host_debug("\r\nDBG_INIT:udata_Init enter\r\n");
     ret |= udata_Init(pUdata);//must be performed after rx_Init()
-    init_host_debug_ret("udata_Init cumulative", ret);
     if(ret)
     {
         Report("\r\nERROR !udata_Init failed");
@@ -228,15 +174,11 @@ int32_t InitHostDriver(void)
     }
 
 
-    init_host_debug("\r\nDBG_INIT:wlanLinks_Init enter\r\n");
     wlanLinks_Init();
-    init_host_debug("\r\nDBG_INIT:wlanLinks_Init done\r\n");
 
 
     /* Set HW init */
-    init_host_debug("\r\nDBG_INIT:HwInit enter\r\n");
     ret = HwInit();
-    init_host_debug_ret("HwInit", ret);
 
     if(ret < 0)
     {
@@ -251,27 +193,19 @@ int32_t InitHostDriver(void)
     // because on FwEvent init the bus interrupt is enabled,
     //SPI init also send data to the FW,
     //so need to separate  the init into two init function
-    init_host_debug("\r\nDBG_INIT:bus_sendInitCommand enter\r\n");
     bus_sendInitCommand(0/*not used*/, 0);
-    init_host_debug("\r\nDBG_INIT:bus_sendInitCommand done\r\n");
 
     /* enable the IRQ interrupt */
-    init_host_debug("\r\nDBG_INIT:wlan_IRQEnableInt enter\r\n");
     wlan_IRQEnableInt();
-    init_host_debug("\r\nDBG_INIT:wlan_IRQEnableInt done\r\n");
 
-    init_host_debug("\r\nDBG_INIT:cc3xxx_set_defaults enter\r\n");
     ret = cc3xxx_set_defaults();
-    init_host_debug_ret("cc3xxx_set_defaults", ret);
 
     if(ret < 0)
     {
         Report("\r\nERROR !set defults failed");
         ASSERT_GENERAL(0);
     }
-    init_host_debug("\r\nDBG_INIT:init_device enter\r\n");
     ret = init_device((uint32_t)CONTROL_BUFFER_READ_SIZE_BTL,(uint32_t)CONTROL_BUFFER_READ_SIZE);
-    init_host_debug_ret("init_device", ret);
 
     if(ret < 0)
     {

@@ -58,14 +58,6 @@
 #include "gtrace.h"
 #include "l2_cfg.h"
 #include "drv_ext_app.h"
-
-extern bool open_at_cc35xx_debug(const char *text);
-
-static void sta_debug(const char *text)
-{
-    (void)open_at_cc35xx_debug(text);
-}
-
 //
 //Station Flow SM hanlders definition
 //
@@ -274,16 +266,13 @@ int CmeStationFlowSM(Cme_STA_events_e event, Cme_Users_e user)
     int rc = 0;
     if (CmeStationFlowSmValidateTransitionUserEvent(event,user))
     {
-        sta_debug("\r\nDBG_STA:FlowSM:valid enter\r\n");
         GTRACE(GRP_CME_STA_FLOW, "CmeStationFlowSM: currentState=ENUM(Cme_STA_states_e, %d), Event=ENUM(Cme_STA_events_e, %d), User: ENUM(Cme_Users_e, %d)",
                                    gCmeStationFlowState_ull, event, gCmeStationSmUser_ull);
 
         // call callback function
         if (NULL != gCmeStationFlowSM[event].pSmEventHandler)
         {
-            sta_debug("\r\nDBG_STA:FlowSM:handler enter\r\n");
             gCmeStationFlowSM[event].pSmEventHandler(user);
-            sta_debug("\r\nDBG_STA:FlowSM:handler done\r\n");
         }
 
     }
@@ -385,16 +374,13 @@ void CmeStationInit             (Cme_Users_e __user)
 {
     HOOK(HOOK_IN_CME_STATION_FLOW);
 
-    sta_debug("\r\nDBG_STA:CmeStationInit enter\r\n");
     if(supplicantRunSta()< 0)
     {
-        sta_debug("\r\nDBG_STA:CmeStationInit supplicant fail\r\n");
         g_signal_role_change_state_done.cme_signalWhenRoleStateChanged_status= CME_SIGNAL_ROLE_CHNGE_STATUS_FAILED;
         CME_PRINT_REPORT("\n\rCME ERROR! CmeStationInit failed");
     }
     else
     {
-        sta_debug("\r\nDBG_STA:CmeStationInit supplicant done\r\n");
         cmeMngInitStaDB();
         CME_PRINT_REPORT("\n\rCME Cme STA Init");
         //update state to idle
@@ -765,8 +751,6 @@ static int32_t supplicantRunSta()
     struct wpa_supplicant *wpa_s;
     struct wpa_interface iface;
 
-    sta_debug("\r\nDBG_STA:supplicantRunSta enter\r\n");
-
 #ifdef CME_MEM_ESTIMATION
     GTRACE(GRP_CME, "before wpa_interface alloc");
     mem_PrintStat();
@@ -793,9 +777,7 @@ static int32_t supplicantRunSta()
     if (NULL == gpSupplicantGlobals)
     {
         // Init global variables (were originally initialized in declaration)
-        sta_debug("\r\nDBG_STA:wpa_mem_init enter\r\n");
         wpa_mem_init();
-        sta_debug("\r\nDBG_STA:wpa_mem_init done\r\n");
 
         //
         // Init supplicant
@@ -810,9 +792,7 @@ static int32_t supplicantRunSta()
         params.wpa_debug_syslog = 1;
 #endif
 		params.wpa_debug_show_keys = 0;
-        sta_debug("\r\nDBG_STA:wpa_supplicant_init enter\r\n");
         pGlobal = wpa_supplicant_init(&params);
-        sta_debug("\r\nDBG_STA:wpa_supplicant_init done\r\n");
 #if 0 
     // TODO : no need any more use the cme periodioc timer
     CME_startSupplicantPeriodicTimer(); //Start Supplicant periodic timer (used for maintenance and cleanup)
@@ -822,19 +802,14 @@ static int32_t supplicantRunSta()
         mem_PrintStat();
 #endif
 
-        sta_debug("\r\nDBG_STA:p2p_disabled set enter\r\n");
         pGlobal->p2p_disabled = 0;
-        sta_debug("\r\nDBG_STA:p2p_disabled set done\r\n");
     }
     else
     {
-        sta_debug("\r\nDBG_STA:reuse supplicant globals\r\n");
         pGlobal = gpSupplicantGlobals;
     }
 
-    sta_debug("\r\nDBG_STA:wpa_supplicant_add_iface enter\r\n");
     wpa_s = wpa_supplicant_add_iface(pGlobal, &iface, NULL);
-    sta_debug("\r\nDBG_STA:wpa_supplicant_add_iface done\r\n");
     if (NULL == wpa_s)
     {
       //TODO need implementation
@@ -854,9 +829,7 @@ static int32_t supplicantRunSta()
 
     if (NULL == gpSupplicantGlobals)
     {
-        sta_debug("\r\nDBG_STA:wpa_supplicant_run enter\r\n");
         wpa_supplicant_run(pGlobal);
-        sta_debug("\r\nDBG_STA:wpa_supplicant_run done\r\n");
 
 #ifdef CME_MEM_ESTIMATION
         GTRACE(GRP_CME, "after wpa_supplicant_run");
@@ -865,9 +838,7 @@ static int32_t supplicantRunSta()
 
         // Store a pointer to the supplicant interface, to be used for every
         // activation of supplicant API.
-        sta_debug("\r\nDBG_STA:store globals enter\r\n");
         gpSupplicantGlobals = pGlobal;
-        sta_debug("\r\nDBG_STA:store globals done\r\n");
     }
 
     GTRACE(GRP_CME,"supplicantRunSta: done");
@@ -912,3 +883,4 @@ void cmeStaSendDisConnectedEventToApp(int16_t reason_code)
 
     os_free(pArgs);
 }
+

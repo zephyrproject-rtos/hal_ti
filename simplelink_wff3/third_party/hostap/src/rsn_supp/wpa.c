@@ -968,6 +968,7 @@ static int wpa_supplicant_install_ptk(struct wpa_sm *sm,
 
 	wpa_dbg(sm->ctx->msg_ctx, MSG_DEBUG,
 		"WPA: Installing PTK to the driver");
+
 	if (sm->pairwise_cipher == WPA_CIPHER_NONE) {
 		wpa_dbg(sm->ctx->msg_ctx, MSG_DEBUG, "WPA: Pairwise Cipher "
 			"Suite: NONE - do not use pairwise keys");

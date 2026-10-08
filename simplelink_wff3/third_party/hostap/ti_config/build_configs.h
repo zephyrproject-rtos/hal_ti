@@ -143,18 +143,18 @@
 //#define GTRACE_ENABLE
 #endif
 
-/*********** DISABLE IPv6******************************/
+/*********** DISABLE IPv6 - Eran Harary ******************************/
 /*********************************************************************/
 //CC33xx disable ipv6 for now
-//#define NX_DISABLE_IPV6    //Enable this flag in order to operate IPv6
+//#define NX_DISABLE_IPV6    //Eran Harary - Enable this flag in order to operate IPv6
 
 //#ifndef NX_DISABLE_IPV6
 //Disable Tx Fast Path (should be commented out by default)
-#define CC33XX_NO_TX_FAST_PATH    //ipv6 development
+#define CC33XX_NO_TX_FAST_PATH    //Eran Harary - ipv6 development
 //#endif
 /*********************************************************************/
 
-#define CC33XX_NO_TX_FAST_PATH_IPV6    
+#define CC33XX_NO_TX_FAST_PATH_IPV6    //eran harary fast path: define
 
 //
 //cc33xx Dec 31 2015 - Last comment for year 2015!!!!
@@ -209,7 +209,7 @@
 //#define NX_DISABLE_TCP_IPV6
 
 
-//dhcpv6: disable black list
+//Eran Harary - dhcpv6: disable black list
 //#define NX_DISABLE_IPV6_DHCPV6_BLACK_LIST
 
 
@@ -410,10 +410,8 @@
 #define __BYTE_ORDER_LITTLE_ENDIAN
 #define CONFIG_NO_VLAN
 #define OS_NO_C_LIB_DEFINES
-#ifndef TI_STA_ONLY_BUILD
 #define CONFIG_AP
 #define NEED_AP_MLME
-#endif
 #define CONFIG_IEEE80211N
 #define CONFIG_IEEE80211AX
 #define CONFIG_IEEE80211AC
@@ -427,9 +425,7 @@
 #define CONFIG_NO_HOSTAPD_LOGGER
 #define CONFIG_NO_VLAN
 #define CONFIG_NO_RANDOM_POOL
-#ifndef TI_STA_ONLY_BUILD
 #define CONFIG_P2P
-#endif
 #define CONFIG_WPS
 #define CONFIG_OFFCHANNEL
 //#define CONFIG_WPS2
@@ -489,12 +485,6 @@
 //STA to disconnect as beacons are not handled by LRXP.
 #define PMK_SW_CONFIG_PATCH
 
-//------------------------------------------------------------------------------------------------------------
-// TI Custom: AP ignores GTK rekey requests from stations
-// When enabled, the AP skips GTK rekeying triggered by station requests and keeps the initial GTK
-// To disable this feature, comment out the define below - all related code will be removed at compile time
-#define TI_IGNORE_STA_GTK_REKEY
-//------------------------------------------------------------------------------------------------------------
 
 //for windows simulation - must be true
 #define FTL_COMPILE_IN_NWP_ENV                                      /* 0 - means: NWP is not compiled */

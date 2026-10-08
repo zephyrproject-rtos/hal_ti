@@ -57,7 +57,9 @@ static inline unsigned int bswap_32(unsigned int v)
 // TI cc33xx compilation
 #ifdef CONFIG_TI_COMPILER
 #include <time.h>
-#define  __time_t_defined
+#if !defined(__time_t_defined)
+#define __time_t_defined
+#endif
 #define __BIG_ENDIAN 4321
 #define __LITTLE_ENDIAN 1234
 #ifdef __ARM_BIG_ENDIAN
@@ -626,7 +628,9 @@ void int_array_concat(int **res, const int *a);
 void int_array_sort_unique(int *a);
 void int_array_add_unique(int **res, int a);
 
+#if !defined(ARRAY_SIZE)
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+#endif
 
 void str_clear_free(char *str);
 void bin_clear_free(void *bin, size_t len);

@@ -10,6 +10,7 @@
 #ifndef __CONF_H__
 #define __CONF_H__
 
+#ifdef CONFIG_WIFI_TI_CC35XX
 struct cc33xx_conf_header {
 	uint32_t magic;
 	uint16_t fw_major_version;
@@ -937,5 +938,7 @@ struct cc33xx_conf_file {
 	struct cc33xx_extra_conf extra_conf;
 } __attribute__((__packed__));
 
+
+#endif /* CONFIG_WIFI_TI_CC35XX */
 
 #endif /* __CONF_H__ */

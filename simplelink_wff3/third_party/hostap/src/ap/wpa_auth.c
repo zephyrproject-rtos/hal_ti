@@ -1380,18 +1380,6 @@ continue_processing:
 		} else {
 			wpa_auth_logger(wpa_auth, sm->addr, LOGGER_INFO,
 					"received EAPOL-Key Request for GTK rekeying");
-#ifdef TI_IGNORE_STA_GTK_REKEY
-			/* TI Custom: Check if we should ignore GTK rekey requests from STAs */
-			if (wpa_auth->conf.ignore_sta_gtk_rekey) {
-				wpa_auth_logger(wpa_auth, sm->addr, LOGGER_INFO,
-						"TI Custom: Ignoring STA GTK rekey request");
-				wpa_printf(MSG_INFO,
-					   "TI Custom: AP ignoring GTK rekey request from STA " MACSTR
-					   " (ignore_sta_gtk_rekey=%d)",
-					   MAC2STR(sm->addr), wpa_auth->conf.ignore_sta_gtk_rekey);
-				return;
-			}
-#endif /* TI_IGNORE_STA_GTK_REKEY */
 			eloop_cancel_timeout(wpa_rekey_gtk, wpa_auth, NULL);
 			if (wpa_auth_gtk_rekey_in_process(wpa_auth))
 				wpa_auth_logger(wpa_auth, NULL, LOGGER_DEBUG,

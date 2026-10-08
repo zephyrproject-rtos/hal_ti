@@ -83,8 +83,6 @@
 #include "pmksa_cache.h"
 #include "wpa_i.h"
 
-extern bool open_at_cc35xx_debug(const char *text);
-
 
 // ============================================================================
 //		Modules private definitions
@@ -591,13 +589,6 @@ void cmeMngDeInitStaDB(void)
 
 int16_t LoadConnectionPolicy_GetFromFlash(BOOLEAN isInternal, BOOLEAN runFromInit)
 {
-    gCmeConnectionPolicyParams_ull.autoStart = 0;
-    gCmeConnectionPolicyParams_ull.shouldConnectToAnyP2P = 0;
-    gCmeConnectionPolicyParams_ull.shouldConnectToOpenAp = 0;
-    gCmeConnectionPolicyParams_ull.shouldUseFastConnect = 0;
-    gCmeConnectionPolicyParams_ull.fastPersistent = 0;
-    return 0;
-
     // TODO need implementation
 #if 0
     int8_t flashStatus;
@@ -675,12 +666,7 @@ int16_t LoadConnectionPolicy_GetFromFlash(BOOLEAN isInternal, BOOLEAN runFromIni
     if(!fConnPolicyFile)
     {
         CME_PRINT_REPORT_ERROR("\n\rERROR: Cannot Open/Find connection policy file\n\r");
-        gCmeConnectionPolicyParams_ull.autoStart = 0;
-        gCmeConnectionPolicyParams_ull.shouldConnectToAnyP2P = 0;
-        gCmeConnectionPolicyParams_ull.shouldConnectToOpenAp = 0;
-        gCmeConnectionPolicyParams_ull.shouldUseFastConnect = 0;
-        gCmeConnectionPolicyParams_ull.fastPersistent = 0;
-        return 0;
+        ASSERT_GENERAL(0);
     }
     else
     {
@@ -794,30 +780,6 @@ int16_t LoadPreferredNetworks_GetFromFlashToPointer(cmeProfileInfo_t *preferredN
 {
     HOOK(HOOK_IN_CME_CONNECTION_MNG);
 
-    int i;
-    uint32_t cmdSize = sizeof(cmeProfileInfo_t) * CME_SCAN_MAX_PROFILES;
-
-    (void)isInternal;
-
-    if (preferredNetworks == NULL)
-    {
-        return 1;
-    }
-
-    os_memset(preferredNetworks, 0, cmdSize);
-
-    for (i = 0; i < CME_SCAN_MAX_PROFILES; i++)
-    {
-        preferredNetworks[i].profile.id = CME_INVALID_PROFILE_ID;
-        preferredNetworks[i].uniqueProfileId = CME_INVALID_PROFILE_ID;
-        preferredNetworks[i].profile.passphrase = NULL;
-        preferredNetworks[i].profile.eap.eap_entProfileIndex = CME_INVALID_ENT_IDX;
-        preferredNetworks[i].pmkid_params.pmkid_set = 0;
-        gPreferredNetworksConnAttemptCnt_ull[i] = CONN_ATTEMPT_INVALID_CTR;
-    }
-
-    return 0;
-
     // TODO need implementation
 #if 0
     int8_t flashStatus;
@@ -879,7 +841,6 @@ int16_t LoadPreferredNetworks_GetFromFlashToPointer(cmeProfileInfo_t *preferredN
     return 1;
 #endif
 
-#if 0
     int i;
     FILE *fProfileFile = NULL;
     int retVal;
@@ -949,7 +910,6 @@ int16_t LoadPreferredNetworks_GetFromFlashToPointer(cmeProfileInfo_t *preferredN
 
     }
     return 0;
-#endif
     
 }
 
@@ -959,11 +919,6 @@ int16_t LoadPreferredNetworks_GetFromFlashToPointer(cmeProfileInfo_t *preferredN
 int16_t SetPreferredNetworks_SetToFlashFromPointer(cmeProfileInfo_t *preferredNetworks, BOOLEAN isInternal)
 {
     HOOK(HOOK_IN_CME_CONNECTION_MNG);
-
-    (void)preferredNetworks;
-    (void)isInternal;
-
-    return 0;
 
     // TODO need implementation
 #if 0
@@ -1006,7 +961,6 @@ int16_t SetPreferredNetworks_SetToFlashFromPointer(cmeProfileInfo_t *preferredNe
     }
 #endif
 
-#if 0
     FILE *fProfileFile = NULL;
     int retVal;
     uint32_t cmdSize = sizeof(cmeProfileInfo_t) * CME_SCAN_MAX_PROFILES;
@@ -1038,7 +992,6 @@ int16_t SetPreferredNetworks_SetToFlashFromPointer(cmeProfileInfo_t *preferredNe
     }
 
     return 0;
-#endif
 }
 
 //
@@ -5084,7 +5037,6 @@ void cmeProfileManagerConfigChange(int force_one_shot_profile_search, uint8_t ca
     HOOK(HOOK_IN_CME_CONNECTION_MNG);
 
     struct wpa_supplicant *wpa_s;
-    (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:config_change enter\r\n");
     GTRACE(GRP_CME,"cmeProfileManagerConfigChange: consider profile search");
 
 
@@ -5119,7 +5071,6 @@ void cmeProfileManagerConfigChange(int force_one_shot_profile_search, uint8_t ca
     if (cme_is_sta_role_like_activated())
 #endif
     {
-        (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:sta_like enter\r\n");
         CME_PRINT_PROFILE_REPORT("\r\nCME: cmeProfileManagerConfigChange: force_one_shot_profile_search=%d caller=%d",
                              force_one_shot_profile_search, caller);
         //indexing of the connecting profile - relevant for profile search only
@@ -5129,13 +5080,10 @@ void cmeProfileManagerConfigChange(int force_one_shot_profile_search, uint8_t ca
         gConnSecutiveScanCompletes_ull = 0;
 
         //read preferred network from FS now if not previously read
-        (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:read_pref enter\r\n");
         cmeMngReadPreferredNetworkFromFlash();
-        (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:read_pref done\r\n");
 
         GTRACE(GRP_CME,"cme_is_sta_role_like_activated");
         // Get STA/P2P CL role is valid and select the correct iface
-        (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:get_iface enter\r\n");
         if(drv_getStaIface(gpSupplicantGlobals, &wpa_s) == ROLE_TYPE_NONE)
         {
             GTRACE(GRP_CME,"drv_getStaIface is ROLE_TYPE_NONE");
@@ -5143,7 +5091,6 @@ void cmeProfileManagerConfigChange(int force_one_shot_profile_search, uint8_t ca
                                          "but drv_getStaIface returned ROLE_TYPE_NONE");
             return;
         }
-        (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:get_iface done\r\n");
 
         ASSERT_GENERAL(wpa_s!=NULL);
 //
@@ -5160,7 +5107,6 @@ void cmeProfileManagerConfigChange(int force_one_shot_profile_search, uint8_t ca
         //if ( (init_caller!=FALSE) && shouldUseFastConnect(&pSsid,&pFastCandidate) )
         if ( (CALLER1 == caller) && shouldUseFastConnect(&pSsid, &pFastCandidate, NULL, NULL, 0) )
         {
-            (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:fast_connect enter\r\n");
             ASSERT_GENERAL(NULL != pSsid);
             ASSERT_GENERAL(NULL != pFastCandidate);
 
@@ -5170,29 +5116,24 @@ void cmeProfileManagerConfigChange(int force_one_shot_profile_search, uint8_t ca
 
             //trigger fast connect attempt:
             cmeFastConnectAttempt(wpa_s, pSsid, 1);
-            (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:fast_connect done\r\n");
         }
         else
 #endif
         {
-            (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:no_fast_connect\r\n");
             if ( CmeStationFlowIsSMIdle() )
             {
-                (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:sm_idle\r\n");
 
                 GTRACE(GRP_CME,"CmeStationFlowIsSMIdle");
                 CME_PRINT_PROFILE_REPORT("\r\n ProfileManagerConfig: CmeStationFlow is IDLE, force_one_shot_profile_search=%d",
                                          force_one_shot_profile_search);                         
                 if((!gFwCrashOccurred) && isAutoStart(force_one_shot_profile_search))
                 {
-                    (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:network_search enter\r\n");
 
                     //
                     //only if STA is in idle state AND auto start policy is enabled we can issue network search request action on wlan connect user
                     //
 
                     cmeProfileManagerNetworkSearch();
-                    (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:network_search done\r\n");
                 }
 
             }
@@ -5258,7 +5199,6 @@ void cmeProfileManagerConfigChange(int force_one_shot_profile_search, uint8_t ca
         GTRACE(GRP_CME,"SimpleManager: Profile Changed although current role != STA and != P2P ");
     }
 
-    (void)open_at_cc35xx_debug("\r\nDBG_PROFILE:config_change done\r\n");
     HOOK(HOOK_IN_CME_CONNECTION_MNG);
 
 }

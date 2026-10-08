@@ -48,9 +48,6 @@ static void hostapd_wpa_auth_conf(struct hostapd_bss_config *conf,
 	wconf->wpa_group = conf->wpa_group;
 	wconf->wpa_group_rekey = conf->wpa_group_rekey;
 	wconf->wpa_strict_rekey = conf->wpa_strict_rekey;
-#ifdef TI_IGNORE_STA_GTK_REKEY
-	wconf->ignore_sta_gtk_rekey = conf->ignore_sta_gtk_rekey;
-#endif /* TI_IGNORE_STA_GTK_REKEY */
 	wconf->wpa_gmk_rekey = conf->wpa_gmk_rekey;
 	wconf->wpa_ptk_rekey = conf->wpa_ptk_rekey;
 	wconf->wpa_group_update_count = conf->wpa_group_update_count;

@@ -32,13 +32,6 @@
 
 #include <os.h>
 
-extern void open_at_cc35xx_debug(const char *text);
-
-static void eapol_dbg_marker(const char *text)
-{
-	open_at_cc35xx_debug(text);
-}
-
 
 #ifndef CONFIG_NO_CONFIG_BLOBS
 #if defined(IEEE8021X_EAPOL) || !defined(CONFIG_NO_WPA)
@@ -1183,13 +1176,11 @@ int wpa_supplicant_init_eapol(struct wpa_supplicant *wpa_s)
 {
 #ifdef IEEE8021X_EAPOL
 	struct eapol_ctx *ctx;
-	eapol_dbg_marker("\r\nDBG_EAPOL:init_eapol ctx alloc enter\r\n");
 	ctx = os_zalloc(sizeof(*ctx));
 	if (ctx == NULL) {
 		wpa_printf(MSG_ERROR, "Failed to allocate EAPOL context.");
 		return -1;
 	}
-	eapol_dbg_marker("\r\nDBG_EAPOL:init_eapol ctx alloc done\r\n");
 
 	ctx->ctx = wpa_s;
 	ctx->msg_ctx = wpa_s;
@@ -1225,9 +1216,7 @@ int wpa_supplicant_init_eapol(struct wpa_supplicant *wpa_s)
 	ctx->confirm_auth_cb = wpa_supplicant_eap_auth_start_cb;
 	ctx->set_anon_id = wpa_supplicant_set_anon_id;
 	ctx->cb_ctx = wpa_s;
-	eapol_dbg_marker("\r\nDBG_EAPOL:init_eapol sm_init enter\r\n");
 	wpa_s->eapol = eapol_sm_init(ctx);
-	eapol_dbg_marker("\r\nDBG_EAPOL:init_eapol sm_init done\r\n");
 	if (wpa_s->eapol == NULL) {
 		os_free(ctx);
 		wpa_printf(MSG_ERROR, "Failed to initialize EAPOL state "

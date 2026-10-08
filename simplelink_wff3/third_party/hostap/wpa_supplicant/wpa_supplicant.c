@@ -68,14 +68,6 @@
 #include "ap/ap_config.h"
 #include "ap/hostapd.h"
 #endif /* CONFIG_MESH */
-
-extern void open_at_cc35xx_debug(const char *text);
-
-static void wpas_dbg_marker(const char *text)
-{
-	open_at_cc35xx_debug(text);
-}
-
 // TI - cc33xx compilation
 #if 0
 const char *const wpa_supplicant_version =
@@ -6756,7 +6748,6 @@ static int wpa_supplicant_init_iface(struct wpa_supplicant *wpa_s,
 	int capa_res;
 	u8 dfs_domain;
 
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface enter\r\n");
 	wpa_printf(MSG_DEBUG, "Initializing interface '%s' conf '%s' driver "
 		   "'%s' ctrl_interface '%s' bridge '%s'", iface->ifname,
 		   iface->confname ? iface->confname : "N/A",
@@ -6778,9 +6769,7 @@ static int wpa_supplicant_init_iface(struct wpa_supplicant *wpa_s,
 #else /* CONFIG_BACKEND_FILE */
 		wpa_s->confname = os_strdup(iface->confname);
 #endif /* CONFIG_BACKEND_FILE */
-		wpas_dbg_marker("\r\nDBG_WPAS:init_iface config_read enter\r\n");
 		wpa_s->conf = wpa_config_read(wpa_s->confname, NULL);
-		wpas_dbg_marker("\r\nDBG_WPAS:init_iface config_read done\r\n");
 		if (wpa_s->conf == NULL) {
 			wpa_printf(MSG_ERROR, "Failed to read or parse "
 				   "configuration '%s'.", wpa_s->confname);
@@ -6858,15 +6847,11 @@ static int wpa_supplicant_init_iface(struct wpa_supplicant *wpa_s,
 	 * L2 receive handler so that association events are processed before
 	 * EAPOL-Key packets if both become available for the same select()
 	 * call. */
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface driver enter\r\n");
 	if (wpas_init_driver(wpa_s, iface) < 0)
 		return -1;
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface driver done\r\n");
 
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface init_wpa enter\r\n");
 	if (wpa_supplicant_init_wpa(wpa_s) < 0)
 		return -1;
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface init_wpa done\r\n");
 
 	wpa_sm_set_ifname(wpa_s->wpa, wpa_s->ifname,
 			  wpa_s->bridge_ifname[0] ? wpa_s->bridge_ifname :
@@ -6897,12 +6882,10 @@ static int wpa_supplicant_init_iface(struct wpa_supplicant *wpa_s,
 		return -1;
 	}
 
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface hw_feature enter\r\n");
 	wpa_s->hw.modes = wpa_drv_get_hw_feature_data(wpa_s,
 						      &wpa_s->hw.num_modes,
 						      &wpa_s->hw.flags,
 						      &dfs_domain);
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface hw_feature done\r\n");
 	if (wpa_s->hw.modes) {
 		u16 i;
 
@@ -6921,9 +6904,7 @@ static int wpa_supplicant_init_iface(struct wpa_supplicant *wpa_s,
 		}
 	}
 
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface get_capa enter\r\n");
 	capa_res = wpa_drv_get_capa(wpa_s, &capa);
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface get_capa done\r\n");
 	if (capa_res == 0) {
 		wpa_s->drv_capa_known = 1;
 		wpa_s->drv_flags = capa.flags;
@@ -6979,10 +6960,8 @@ static int wpa_supplicant_init_iface(struct wpa_supplicant *wpa_s,
 	if (wpa_s->num_multichan_concurrent == 0)
 		wpa_s->num_multichan_concurrent = 1;
 
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface supp_driver enter\r\n");
 	if (wpa_supplicant_driver_init(wpa_s) < 0)
 		return -1;
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface supp_driver done\r\n");
 
 #ifdef CONFIG_TDLS
 	if (!iface->p2p_mgmt && wpa_tdls_init(wpa_s->wpa))
@@ -7017,10 +6996,8 @@ static int wpa_supplicant_init_iface(struct wpa_supplicant *wpa_s,
 	}
 #endif /* CONFIG_FST */
 
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface wps enter\r\n");
 	if (wpas_wps_init(wpa_s))
 		return -1;
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface wps done\r\n");
 
 #ifdef CONFIG_GAS_SERVER
 	wpa_s->gas_server = gas_server_init(wpa_s, wpas_gas_server_tx);
@@ -7035,15 +7012,11 @@ static int wpa_supplicant_init_iface(struct wpa_supplicant *wpa_s,
 		return -1;
 #endif /* CONFIG_DPP */
 
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface eapol enter\r\n");
 	if (wpa_supplicant_init_eapol(wpa_s) < 0)
 		return -1;
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface eapol done\r\n");
 	wpa_sm_set_eapol(wpa_s->wpa, wpa_s->eapol);
 
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface ctrl enter\r\n");
 	wpa_s->ctrl_iface = wpa_supplicant_ctrl_iface_init(wpa_s);
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface ctrl done\r\n");
 	if (wpa_s->ctrl_iface == NULL) {
 		wpa_printf(MSG_ERROR,
 			   "Failed to initialize control interface '%s'.\n"
@@ -7057,27 +7030,21 @@ static int wpa_supplicant_init_iface(struct wpa_supplicant *wpa_s,
 		return -1;
 	}
 
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface gas enter\r\n");
 	wpa_s->gas = gas_query_init(wpa_s);
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface gas done\r\n");
 	if (wpa_s->gas == NULL) {
 		wpa_printf(MSG_ERROR, "Failed to initialize GAS query");
 		return -1;
 	}
 
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface p2p enter\r\n");
 	if ((!(wpa_s->drv_flags & WPA_DRIVER_FLAGS_DEDICATED_P2P_DEVICE) ||
 	     wpa_s->p2p_mgmt) &&
 	    wpas_p2p_init(wpa_s->global, wpa_s) < 0) {
 		wpa_msg(wpa_s, MSG_ERROR, "Failed to init P2P");
 		return -1;
 	}
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface p2p done\r\n");
 
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface bss enter\r\n");
 	if (wpa_bss_init(wpa_s) < 0)
 		return -1;
-	wpas_dbg_marker("\r\nDBG_WPAS:init_iface bss done\r\n");
 
 #ifdef CONFIG_PMKSA_CACHE_EXTERNAL
 #ifdef CONFIG_MESH
@@ -7149,16 +7116,14 @@ static void wpa_supplicant_deinit_iface(struct wpa_supplicant *wpa_s,
 	struct wpa_supplicant *iface, *prev;
 
 	if (wpa_s == wpa_s->parent) {
-#ifdef CONFIG_P2P
 		/* ti patch - to not delete aGO interface
 		 when removing STA like interface*/
 		if (wpa_s->p2p_group_interface !=
 			    NOT_P2P_GROUP_INTERFACE ||
 			    (wpa_s->current_ssid &&
-			     wpa_s->current_ssid->p2p_group)) {
+			     wpa_s->current_ssid->p2p_group)) { 
 			wpas_p2p_group_remove(wpa_s, "*");
 		}
-#endif
 	}
 
 	iface = global->ifaces;
@@ -7338,11 +7303,9 @@ struct wpa_supplicant * wpa_supplicant_add_iface(struct wpa_global *global,
 	if (global == NULL || iface == NULL)
 		return NULL;
 
-	wpas_dbg_marker("\r\nDBG_WPAS:add_iface alloc enter\r\n");
 	wpa_s = wpa_supplicant_alloc(parent);
 	if (wpa_s == NULL)
 		return NULL;
-	wpas_dbg_marker("\r\nDBG_WPAS:add_iface alloc done\r\n");
 
 	wpa_s->global = global;
 
@@ -7361,15 +7324,12 @@ struct wpa_supplicant * wpa_supplicant_add_iface(struct wpa_global *global,
 		t_iface.ctrl_interface =
 			global->params.override_ctrl_interface;
 	}
-	wpas_dbg_marker("\r\nDBG_WPAS:add_iface init_iface enter\r\n");
 	if (wpa_supplicant_init_iface(wpa_s, &t_iface)) {
-		wpas_dbg_marker("\r\nDBG_WPAS:add_iface init_iface fail\r\n");
 		wpa_printf(MSG_DEBUG, "Failed to add interface %s",
 			   iface->ifname);
 		wpa_supplicant_deinit_iface(wpa_s, 0, 0);
 		return NULL;
 	}
-	wpas_dbg_marker("\r\nDBG_WPAS:add_iface init_iface done\r\n");
 
 	if (iface->p2p_mgmt == 0) {
 		/* Notify the control interfaces about new iface */
@@ -7521,7 +7481,7 @@ static const char * wpa_supplicant_msg_ifname_cb(void *ctx)
 
 
 #ifndef WPA_SUPPLICANT_CLEANUP_INTERVAL
-#define WPA_SUPPLICANT_CLEANUP_INTERVAL 30
+#define WPA_SUPPLICANT_CLEANUP_INTERVAL 10
 #endif /* WPA_SUPPLICANT_CLEANUP_INTERVAL */
 
 /* Periodic cleanup tasks */

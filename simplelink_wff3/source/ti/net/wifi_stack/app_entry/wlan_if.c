@@ -65,8 +65,6 @@
 #include <upper_mac_versions.h>
 #include "csi.h"
 #include "fw_event_if.h"
-#include <stdbool.h>
-#include <stdio.h>
 
 //#define EVENT_TEST
 #ifdef EVENT_TEST
@@ -79,21 +77,6 @@ OsiSyncObj_t p2p_find_stopped_syncObj = NULL;
 #endif // CC35XX
 
 #define WLAN_PROTECTION
-
-extern bool open_at_cc35xx_debug(const char *text);
-
-static void wlan_debug(const char *text)
-{
-    (void)open_at_cc35xx_debug(text);
-}
-
-static void wlan_debug_ret(const char *tag, int32_t ret)
-{
-    char buf[80];
-
-    (void)snprintf(buf, sizeof(buf), "\r\nDBG_WLAN:%s ret=%d\r\n", tag, ret);
-    wlan_debug(buf);
-}
 
 extern StartRoleApps_t gRoleAppsParams;
 extern TFwEvent *gFwEvent;
@@ -863,9 +846,7 @@ int Wlan_Start(WlanEventHandlerCB_t eventHandlerCB)
 {
     int32_t ret = OSI_OK;
 
-    wlan_debug("\r\nDBG_WLAN:Wlan_Start:enter\r\n");
     ret = set_cond_in_process_wlan_start();
-    wlan_debug_ret("Wlan_Start:set_cond", ret);
     if(ret != OSI_OK)
     {
         CME_PRINT_REPORT("\n\r ---Wlan_Start-retry---");
@@ -889,22 +870,16 @@ int Wlan_Start(WlanEventHandlerCB_t eventHandlerCB)
     gRoleAppsParams.devicePowerSaveMode = WLAN_STATION_AUTO_PS_MODE;
     gRoleAppsParams.eventHandlerCB = eventHandlerCB;
 
-    wlan_debug("\r\nDBG_WLAN:Wlan_Start:l2_cfg_Init enter\r\n");
     l2_cfg_Init();
-    wlan_debug("\r\nDBG_WLAN:Wlan_Start:l2_cfg_Init done\r\n");
 
-    wlan_debug("\r\nDBG_WLAN:Wlan_Start:cme_init enter\r\n");
     ret = cme_init();
-    wlan_debug_ret("Wlan_Start:cme_init", ret);
     if(ret != OSI_OK)
     {
         ret = -1;
         ASSERT_GENERAL(0);
         goto fail;
     }
-    wlan_debug("\r\nDBG_WLAN:Wlan_Start:InitHostDriver enter\r\n");
     ret = InitHostDriver();
-    wlan_debug_ret("Wlan_Start:InitHostDriver", ret);
 
     if (ret < 0)
     {
@@ -920,9 +895,7 @@ int Wlan_Start(WlanEventHandlerCB_t eventHandlerCB)
 #endif
     {
         MemoryMap_t mem_map = {0};
-        wlan_debug("\r\nDBG_WLAN:Wlan_Start:GetMemMap enter\r\n");
         ret = ctrlCmdFw_GetMemMap(&mem_map);
-        wlan_debug_ret("Wlan_Start:GetMemMap", ret);
         if(ret < 0 )
         {
             Report("\n\rcouldn't Get mem map");
@@ -943,29 +916,22 @@ int Wlan_Start(WlanEventHandlerCB_t eventHandlerCB)
     }
 
 	set_finish_wlan_start();
-    wlan_debug("\r\nDBG_WLAN:Wlan_Start:finish set\r\n");
 
-    wlan_debug("\r\nDBG_WLAN:Wlan_Start:GetStaHe enter\r\n");
     ret = l2_cfg_GetStaHeSupport();
-    wlan_debug_ret("Wlan_Start:GetStaHe", ret);
     if (ret != WLAN_RET_CODE_OK)
     {
         return ret;
     }
 
-    wlan_debug("\r\nDBG_WLAN:Wlan_Start:set5G enter\r\n");
     ret = l2_cfg_setDevice5GhzSupport();
-    wlan_debug_ret("Wlan_Start:set5G", ret);
     if (ret != WLAN_RET_CODE_OK)
     {
         return ret;
     }
 
     gWlanState = TRUE;
-    wlan_debug("\r\nDBG_WLAN:Wlan_Start:done\r\n");
     return OSI_OK;
 fail:
-    wlan_debug_ret("Wlan_Start:fail", ret);
 	set_finish_wlan_start();
 	return ret;
 }
@@ -1292,9 +1258,7 @@ int32_t wlan_connect_internal(const signed char *pName, const int NameLen, const
 
     }
 
-    wlan_debug("\r\nDBG_WLAN:connect_internal:CME_WlanConnect enter\r\n");
     ret = CME_WlanConnect(cmeParams, cmeParamsEap,TRUE);
-    wlan_debug_ret("connect_internal:CME_WlanConnect", ret);
     if(cmeParams != NULL)
     {
          os_free(cmeParams);
@@ -1317,11 +1281,8 @@ int Wlan_Connect(const signed char *pName, const int NameLen, const unsigned cha
 {
     int ret = 0;
 
-    wlan_debug("\r\nDBG_WLAN:Wlan_Connect enter\r\n");
     HOOK(HOOK_WLAN_IF);
-    wlan_debug("\r\nDBG_WLAN:Wlan_Connect after hook\r\n");
     ret = set_cond_in_process_wlan_connect();
-    wlan_debug_ret("Wlan_Connect:set_cond", ret);
     if(ret != OSI_OK)
     {
         CME_PRINT_REPORT("\n\r ---Wlan_Connect retry---");
@@ -1334,10 +1295,8 @@ int Wlan_Connect(const signed char *pName, const int NameLen, const unsigned cha
 
     ret = wlan_connect_internal(pName, NameLen, pMacAddr,
             SecType, pPass, PassLen,flags, NULL);
-    wlan_debug_ret("Wlan_Connect:internal", ret);
 
 	set_finish_wlan_connect();
-    wlan_debug("\r\nDBG_WLAN:Wlan_Connect exit\r\n");
 	return ret;
 }
 
@@ -2650,7 +2609,6 @@ int roleUp_Inter(WlanRole_e roleType, void *params, unsigned long int timeout)
 #endif
 
     role_bitmap = CME_GetStartedRoleBitmap();
-    wlan_debug("\r\nDBG_WLAN:roleUp_Inter:get bitmap done\r\n");
 
     /* If transceiver role is active, don't allow starting any other role */
     if ((role_bitmap & BIT_x(ROLE_TRANSCEIVER)) > 0)
@@ -2668,21 +2626,16 @@ int roleUp_Inter(WlanRole_e roleType, void *params, unsigned long int timeout)
             /* Allow changes in reg domain only if no role is active */
             if (role_bitmap == 0x0)
             {
-                wlan_debug("\r\nDBG_WLAN:roleUp_Inter:regulatory enter\r\n");
                 ret = regulatoryDomain_Init(roleType, roleUpStaParams->countryDomain, 0);
-                wlan_debug_ret("roleUp_Inter:regulatory", ret);
                 if (ret < 0)
                 {
                     return ret;
                 }
             }
-            wlan_debug("\r\nDBG_WLAN:roleUp_Inter:SetStaParams enter\r\n");
             CME_SetStaParams(params);
-            wlan_debug("\r\nDBG_WLAN:roleUp_Inter:SetStaParams done\r\n");
         }
 
         role_bitmap |= (uint32_t)BIT_x(ROLE_STA);
-        wlan_debug("\r\nDBG_WLAN:roleUp_Inter:STA bitmap set\r\n");
     }
     else if (ROLE_IS_TYPE_AP(roleType))
     {
@@ -2802,7 +2755,6 @@ int roleUp_Inter(WlanRole_e roleType, void *params, unsigned long int timeout)
 
     if (!ROLE_IS_TYPE_TRANSCEIVER(roleType))
     {
-        wlan_debug("\r\nDBG_WLAN:roleUp_Inter:CME_WlanSetMode enter\r\n");
         ret = CME_WlanSetMode(0, role_bitmap, (uint32_t)timeout, 0);
         if (ret < 0)
         {
