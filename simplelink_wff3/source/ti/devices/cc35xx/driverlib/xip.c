@@ -46,7 +46,7 @@
 #define XIP_UDMA_JOB_CONFIGURED    HOST_XIP_UDSSTA_JSTA
 #define XIP_UDMA_NO_JOB_CONFIGURED 0
 
-#define XIP_OTFDE_DISABLE_M HOST_XIP_OTSTA_ACTIVESTA_M | HOST_XIP_OTSTA_TASKSUS
+#define XIP_OTFDE_DISABLE_M (HOST_XIP_OTSTA_ACTIVESTA_M | HOST_XIP_OTSTA_TASKSUS)
 #define XIP_OTFDE_DISABLE   0
 
 //*****************************************************************************
@@ -193,5 +193,6 @@ void __attribute__((noinline, section(".TI.ramfunc"))) XIPEnableOTFDE(void)
 
     HWREG(HOST_XIP_REGS_BASE + HOST_XIP_O_OTSWCTL0) = HOST_XIP_OTSWCTL0_ENREQ;
 
-    while ((HWREG(HOST_XIP_REGS_BASE + HOST_XIP_O_OTSTA) & XIP_OTFDE_DISABLE_M) == XIP_OTFDE_DISABLE) {};
+    while ((HWREG(HOST_XIP_REGS_BASE + HOST_XIP_O_OTSTA) & XIP_OTFDE_DISABLE_M) ==
+           XIP_OTFDE_DISABLE) {};
 }
