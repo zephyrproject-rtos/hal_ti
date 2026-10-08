@@ -126,7 +126,7 @@ typedef enum {
 #define IS_WSOC_COMPONENT(componentID)                            ( componentID == WSOC_OR_RFTool_Slot_1 || componentID == WSOC_OR_RFTool_Slot_2 )
 #define UPDATE_COMPONENT_INFO_AND_RETURN_ERROR(state, error)        update_ComponentInfo(component, state, error); \
                                                                     return error;
-extern uint32_t _Boot_report_address;
+extern uint8_t _Boot_report_address[];
 #define BOOT_REPORT_ADDR ((uint32_t) (&_Boot_report_address))
 
 /*****************************************************************************/
@@ -182,10 +182,10 @@ typedef struct
 /*                           Global parameters                               */
 /*****************************************************************************/
 PSA_FWU_Magic_t gGPEMagicNumber[MAX_COMPONENT_TYPES] = {
-    0x690c47c2 ,  /* BL2          */
-    0x690c47c2 ,  /* WSOC_OR_RFTool */
-    0x690c47c2 ,  /* Vendor_Image */
-    0x690c47c2    /* Vendor_BL3   */
+    {0x690c47c2},  /* BL2          */
+    {0x690c47c2},  /* WSOC_OR_RFTool */
+    {0x690c47c2},  /* Vendor_Image */
+    {0x690c47c2}  /* Vendor_BL3   */
 };
 
 PSA_FWU_Slot_Address_t gSlotAddress[MAX_COMPONENT_ID];
@@ -272,7 +272,7 @@ void         initialize_slot_addresses(void);
 psa_status_t is_manifest_integrity_valid(uint32_t *manifest)
 {
     uint8_t Index;
-    
+
     for (Index = 0; Index < MANIFEST_INTEGRITY_SIZE_IN_WORDS; Index++)
     {
         if (manifest[Index] != 0xFFFFFFFF)
@@ -286,8 +286,6 @@ psa_status_t is_manifest_integrity_valid(uint32_t *manifest)
 
 psa_status_t is_GPE_magic_number_valid(psa_fwu_component_t component, PSA_FWU_Magic_t *GPE_magic_number)
 {
-    uint8_t Index;
-    
     if (GPE_magic_number->Magic_Number != gGPEMagicNumber[component >> 1].Magic_Number)
     {
         return PSA_ERROR_INVALID_ARGUMENT;
@@ -340,7 +338,7 @@ uint32_t read_component_state_from_flash(psa_fwu_component_t component, int8_t *
     {
         *state = PSA_FWU_REJECTED;
     }
-    else 
+    else
     {
         for (*state = 7; *state > 0; (*state)--)
         {
@@ -387,7 +385,7 @@ psa_status_t validation_check(psa_fwu_component_t component, uint8_t state)
 {
     if (!(IS_VALID_COMPONENT_ID(component)))
     {
-        UPDATE_COMPONENT_INFO_AND_RETURN_ERROR(state ,PSA_ERROR_DOES_NOT_EXIST)
+        return PSA_ERROR_DOES_NOT_EXIST;
     }
 
     if (IS_COMPONENT_ID_PRIMARY(component))
@@ -478,7 +476,7 @@ uint8_t Magic_validation_and_coping_version(psa_fwu_component_t component)
 
 {
     int_fast16_t retXMEM;
-    PSA_FWU_GPESlot_t GPE_Manifest; 
+    PSA_FWU_GPESlot_t GPE_Manifest;
 
     retXMEM = XMEMWFF3_read(gImageStore[component].XMEMhandle, SECTOR_SIZE - TI_FWU_MAGIC_NUMBER_SIZE, &(GPE_Manifest.Manifest.GPE_Header.ih_magic.Magic_Number), TI_FWU_MAGIC_NUMBER_SIZE, XMEM_READ_STIG);
     if (retXMEM == XMEM_STATUS_SUCCESS)
@@ -492,9 +490,9 @@ uint8_t Magic_validation_and_coping_version(psa_fwu_component_t component)
                 {
                     return MAGIC_MISSING;
                 }
-                else 
+                else
                 {
-                    os_memcpy(&(gImageStore[component].ComponentInfo.version), &(GPE_Manifest.Manifest.GPE_Version), sizeof(PSA_FWU_GPEVersion_t));    
+                    os_memcpy(&(gImageStore[component].ComponentInfo.version), &(GPE_Manifest.Manifest.GPE_Version), sizeof(PSA_FWU_GPEVersion_t));
                     return MAGIC_EXISTS;
                 }
             }
@@ -538,7 +536,7 @@ void update_ComponentGPEState(psa_fwu_component_t component, uint8_t state)
 void update_ComponentInfo(psa_fwu_component_t component, uint8_t state, psa_status_t error)
 {
     gImageStore[component].ComponentInfo.error = error;
-    
+
     if (error == PSA_SUCCESS)
     {
         gImageStore[component].ComponentInfo.state = state;
@@ -557,11 +555,11 @@ uint32_t Read_report_and_update_status(psa_fwu_component_t component)
 
     psa_fwu_component_info_t *info = &(gImageStore[component].ComponentInfo);
 
-    
+
     info->impl.request_type = gOTAReport[component>>1].Logical_Slot_Address.FIELD.REQ_TYPE;
     info->impl.extended_report_status = gOTAReport[component>>1].Image_Select_Report;
 
-    uint8_t magic_exists = Magic_validation_and_coping_version(component);
+    (void)Magic_validation_and_coping_version(component);
     readStateRetVal = read_component_state_from_flash(component, &flash_state, &reset_state);
     info->state = flash_state;
     info->impl.running_status = ACTIVE;
@@ -570,12 +568,12 @@ uint32_t Read_report_and_update_status(psa_fwu_component_t component)
     if (gOTAReport[component>>1].Logical_Slot_Address.FIELD.REQ_TYPE == NO_OTA)
     {
         if ( (info->impl.extended_report_status & AUTH_ERROR) ||
-             (info->impl.extended_report_status & NO_VALID_MAIN) || 
+             (info->impl.extended_report_status & NO_VALID_MAIN) ||
              (info->impl.extended_report_status & BOTH_SLOTS_INVALID) )
         {
             info->error = PSA_ERROR_DATA_INVALID;
         }
-        else 
+        else
         {
             info->error = PSA_SUCCESS;
         }
@@ -639,7 +637,7 @@ uint32_t Read_report_and_update_status(psa_fwu_component_t component)
             info->state = PSA_FWU_UPDATED;
             info->error = PSA_SUCCESS;
         }
-        else 
+        else
         {
             info->error = PSA_ERROR_DOES_NOT_EXIST;
             info->impl.Primary = NOT_PRIMARY;
@@ -648,7 +646,7 @@ uint32_t Read_report_and_update_status(psa_fwu_component_t component)
     else
     {
         //Think more
-        if (gOTAReport[component>>1].Logical_Slot_Address.FIELD.REQ_STATUS == SECURITY_FAILURE) 
+        if (gOTAReport[component>>1].Logical_Slot_Address.FIELD.REQ_STATUS == SECURITY_FAILURE)
         {
             info->error = PSA_ERROR_INVALID_SIGNATURE;
         }
@@ -670,19 +668,18 @@ uint32_t Read_report_and_update_status(psa_fwu_component_t component)
 
 void update_component_loaded_state(psa_fwu_component_t component, uint32_t readReportStatus)
 {
-    psa_status_t retVal = PSA_SUCCESS;
     uint8_t state;
     uint8_t magic_exists;
     int8_t flash_state;
     int8_t reset_state;
     uint32_t readStateRetVal;
-    
+
     gImageStore[component].ComponentInfo.impl.running_status = LOADED;
     gImageStore[component].ComponentInfo.impl.Primary = NOT_PRIMARY;
 
     magic_exists = Magic_validation_and_coping_version(component);
     readStateRetVal = read_component_state_from_flash(component, &flash_state, &reset_state);
-    
+
     gImageStore[component].ComponentInfo.state = flash_state;
 
     if ( (readStateRetVal == COMPONENT_READ_STATUS_EMPTY) && (magic_exists == MAGIC_EXISTS) )
@@ -695,7 +692,7 @@ void update_component_loaded_state(psa_fwu_component_t component, uint32_t readR
     }
     else if (readStateRetVal == COMPONENT_READ_STATUS_OK)
     {
-        if (magic_exists == MAGIC_EXISTS) 
+        if (magic_exists == MAGIC_EXISTS)
         {
             update_ComponentGPEState(component, flash_state);
             if (readReportStatus == READ_STATUS_NO_OTA)
@@ -725,7 +722,7 @@ void update_component_loaded_state(psa_fwu_component_t component, uint32_t readR
                 {
                     gImageStore[component].ComponentInfo.impl.Primary = PRIMARY;
                 }
-                else 
+                else
                 {
                     if (flow_check(component^0x01, PSA_FWU_UPDATED))
                     {
@@ -736,8 +733,8 @@ void update_component_loaded_state(psa_fwu_component_t component, uint32_t readR
                 }
             }
             return;
-        } 
-        else 
+        }
+        else
         {
             if (!flow_check(component, PSA_FWU_READY))
             {
@@ -746,7 +743,7 @@ void update_component_loaded_state(psa_fwu_component_t component, uint32_t readR
             }
         }
     }
-    
+
     if (flow_check(component, PSA_FWU_READY))
     {
         gImageStore[component].ComponentInfo.impl.GPE_state = GPE_ERASED;
@@ -754,13 +751,13 @@ void update_component_loaded_state(psa_fwu_component_t component, uint32_t readR
         gImageStore[component].ComponentInfo.state = PSA_FWU_READY;
         return;
     }
- 
+
     write_component_state_in_flash(component, PSA_FWU_REJECTED);
     update_ComponentInfo(component, PSA_FWU_FAILED, PSA_SUCCESS);
     return;
 }
 
-void initialize_slot_addresses(void) 
+void initialize_slot_addresses(void)
 {
     // BL2 Slot 1
     gSlotAddress[0].Physical_Slot_Address = bl2_physical_slot_1_address;
@@ -832,12 +829,12 @@ psa_status_t psa_fwu_query(psa_fwu_component_t component,
     {
         return PSA_ERROR_DOES_NOT_EXIST;
     }
- 
+
     os_memcpy(info, &(gImageStore[component].ComponentInfo), sizeof(psa_fwu_component_info_t));
 
     return PSA_SUCCESS;
 }
-                           
+
 psa_status_t psa_fwu_start(psa_fwu_component_t component,
                            const void *manifest,
                            size_t manifest_size)
@@ -847,6 +844,11 @@ psa_status_t psa_fwu_start(psa_fwu_component_t component,
     PSA_FWU_GPESlot_t *Manifest = (PSA_FWU_GPESlot_t *)manifest;
     uint8_t Index;
     psa_status_t retVal;
+
+    if (!IS_VALID_COMPONENT_ID(component))
+    {
+        return PSA_ERROR_DOES_NOT_EXIST;
+    }
 
     retVal = validation_check(component, gImageStore[component].ComponentInfo.state);
     if (retVal != PSA_SUCCESS)
@@ -859,7 +861,7 @@ psa_status_t psa_fwu_start(psa_fwu_component_t component,
     {
         UPDATE_COMPONENT_INFO_AND_RETURN_ERROR(PSA_FWU_READY ,PSA_ERROR_BAD_STATE)
     }
-    
+
     retVal =  is_manifest_integrity_valid((uint32_t*)Manifest);
     if (retVal != PSA_SUCCESS)
     {
@@ -913,9 +915,9 @@ psa_status_t psa_fwu_start(psa_fwu_component_t component,
     {
         otfdeDriver_Config(2, (const uint8_t*)Manifest->Manifest_Integrity.Manifest_Integrity, TI_FWU_MANIFEST_INTEGRITY_SIZE);
     }
-    
+
     /* Write manifest without ih_magic */
-    retXMEM = XMEMWFF3_write(gImageStore[component].XMEMhandle, SECTOR_SIZE, (void *)(uint8 *)Manifest + TI_FWU_MANIFEST_INTEGRITY_SIZE + TI_FWU_MAGIC_NUMBER_SIZE, manifest_size  - TI_FWU_MAGIC_NUMBER_SIZE - TI_FWU_MANIFEST_INTEGRITY_SIZE, 0);
+    retXMEM = XMEMWFF3_write(gImageStore[component].XMEMhandle, SECTOR_SIZE, (uint8_t *)Manifest + TI_FWU_MANIFEST_INTEGRITY_SIZE + TI_FWU_MAGIC_NUMBER_SIZE, manifest_size  - TI_FWU_MAGIC_NUMBER_SIZE - TI_FWU_MANIFEST_INTEGRITY_SIZE, 0);
 
     if (retXMEM != XMEM_STATUS_SUCCESS)
     {
@@ -1025,6 +1027,11 @@ psa_status_t psa_fwu_cancel(psa_fwu_component_t component)
     PSA_FWU_Magic_t Emptymagic = {0};
     psa_status_t retVal;
 
+    if (!IS_VALID_COMPONENT_ID(component))
+    {
+        return PSA_ERROR_DOES_NOT_EXIST;
+    }
+
     retVal = validation_check(component, gImageStore[component].ComponentInfo.state);
     if (retVal != PSA_SUCCESS)
     {
@@ -1032,7 +1039,7 @@ psa_status_t psa_fwu_cancel(psa_fwu_component_t component)
     }
 
     /* Check that this function is called after the component is in PSA_FWU_WRITING state */
-    if ( (!flow_check(component, PSA_FWU_WRITING)) && 
+    if ( (!flow_check(component, PSA_FWU_WRITING)) &&
          (!flow_check(component, PSA_FWU_CANDIDATE)) )
     {
         UPDATE_COMPONENT_INFO_AND_RETURN_ERROR(gImageStore[component].ComponentInfo.state ,PSA_ERROR_BAD_STATE)
@@ -1059,6 +1066,11 @@ psa_status_t psa_fwu_clean(psa_fwu_component_t component)
 {
     psa_status_t retVal;
 
+    if (!IS_VALID_COMPONENT_ID(component))
+    {
+        return PSA_ERROR_DOES_NOT_EXIST;
+    }
+
     retVal = validation_check(component, gImageStore[component].ComponentInfo.state);
     if (retVal != PSA_SUCCESS)
     {
@@ -1066,7 +1078,7 @@ psa_status_t psa_fwu_clean(psa_fwu_component_t component)
     }
 
     /* Previous state must be REJECTED or FAILED before cleaning */
-    if ( (!flow_check(component, PSA_FWU_UPDATED)) && 
+    if ( (!flow_check(component, PSA_FWU_UPDATED)) &&
          (!flow_check(component, PSA_FWU_FAILED)) )
     {
         UPDATE_COMPONENT_INFO_AND_RETURN_ERROR(gImageStore[component].ComponentInfo.state ,PSA_ERROR_BAD_STATE)
@@ -1093,16 +1105,16 @@ psa_status_t psa_fwu_install(void)
 
     for (component = 0; component < MAX_COMPONENT_ID; component++ )
     {
-        if ( (flow_check(component, PSA_FWU_STAGED)) || 
+        if ( (flow_check(component, PSA_FWU_STAGED)) ||
              (flow_check(component, PSA_FWU_TRIAL))  ||
              (flow_check(component, PSA_FWU_REJECTED)) )
         {
             return PSA_ERROR_BAD_STATE;
         }
-    } 
+    }
 
     for (component = 0; component < MAX_COMPONENT_ID;)
-    {        
+    {
         Request_type[component>>1] = 0;
 
         for (slotIndex = 0; slotIndex < 2; component++, slotIndex++)
@@ -1187,7 +1199,6 @@ void psa_fwu_init(void)
     psa_fwu_component_t loaded_component;
     uint32_t readStatus;
     uint32_t readReportStatus;
-    uint8_t magic_exists = MAGIC_MISSING;
 
     if (!isInitialized)
     {
@@ -1307,4 +1318,3 @@ psa_status_t psa_fwu_accept(void)
 
     return PSA_SUCCESS;
 }
-
