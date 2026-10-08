@@ -13,12 +13,25 @@ function(ti_mbedtls_configure_target target)
 endfunction()
 
 add_subdirectory(source/ti/devices)
+if(CONFIG_WIFI_TI_CC35XX)
+  add_subdirectory(source/ti/drivers/net/wifi/wifi_host_driver)
+  add_subdirectory(source/ti/drivers/net/wifi/wifi_platform/cc35xx)
+  add_subdirectory(third_party/hostap)
+  if(NOT CONFIG_WIFI_TI_CC35XX_USE_ZEPHYR_MBEDTLS)
+    add_subdirectory(third_party/mbedtls)
+  endif()
+  add_subdirectory(source/ti/net/wifi_stack)
+  add_subdirectory(source/ti/net/ble_interface)
+endif()
 
 if(CONFIG_HAS_CC35XX_SDK)
   if(CONFIG_SOC_SERIES_CC35XXE)
     zephyr_compile_definitions(DeviceFamily_CC35XX ${COMPILER})
     zephyr_compile_definitions(CC35XX)
     zephyr_compile_definitions(CONFIG_DYNAMIC_DPL_OBJECTS)
+    if(CONFIG_WIFI_TI_CC35XX_TX_CTRL_BLK_NUM)
+      zephyr_compile_definitions(CTRL_BLK_ENTRIES_NUM=${CONFIG_WIFI_TI_CC35XX_TX_CTRL_BLK_NUM})
+    endif()
     zephyr_include_directories(
       .
       source
@@ -27,6 +40,15 @@ if(CONFIG_HAS_CC35XX_SDK)
       source/ti/drivers/cryptoutils/cryptokey
       third_party/hsmddk/include/Kit/Log/incl/
     )
+    if(CONFIG_WIFI_TI_CC35XX)
+      zephyr_include_directories(
+        # shared between host driver and hostap
+        source/ti/drivers/net/wifi/wifi_host_driver
+        source/ti/drivers/net/wifi/wifi_host_driver/inc_common
+        source/ti/drivers/net/wifi/wifi_host_driver/inc_adapt
+        source/ti/drivers/net/wifi/wifi_host_driver/trnspt_layer
+      )
+    endif()
 
     zephyr_library()
     zephyr_library_compile_definitions(${COMPILER})
@@ -210,6 +232,12 @@ if(CONFIG_HAS_CC35XX_SDK)
       zephyr_library_sources(
         kernel/zephyr/dpl/osi_dpl.c
       )
+      if(CONFIG_WIFI_TI_CC35XX)
+        zephyr_library_sources(
+          kernel/zephyr/dpl/osi_filesystem.c
+          kernel/zephyr/dpl/osi_term.c
+        )
+      endif()
     endif()
   endif()
 endif()
