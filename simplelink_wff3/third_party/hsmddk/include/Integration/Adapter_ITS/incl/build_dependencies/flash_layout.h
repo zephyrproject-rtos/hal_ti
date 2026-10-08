@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2026, Texas Instruments Incorporated
+ * Copyright (c) 2024, Texas Instruments Incorporated
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@
 #define PROGRAM_UNIT 1
 
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
     #include DeviceFamily_constructPath(inc/hw_device.h)
     #define BASE 0x0
     #define SIZE FLASH_MAIN_SW_SIZE /* FLASH_MAIN_SIZE - HSM_FW_SIZE in driverlib */
@@ -42,8 +42,6 @@
     #define BASE key_storage_physical_slot_address /* XMEM KeyStore Region physical address base */
     #define SIZE key_storage_region_size /* Size of KeyStore's XMEM region */
     #define SECTOR_SIZE 0x1000 /* 4 KB */
-#else
-    #error "Device family not currently supported"
 #endif
 
 #define FLASH0_BASE_S        (BASE)
@@ -57,7 +55,7 @@
 #define FLASH_TOTAL_SIZE             FLASH0_SIZE
 
 /* Internal Trusted Storage (ITS) Service definitions */
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
 #if ((defined (__GNUC__) && !defined (__clang__)))
     #define FLASH_ITS_AREA_ADDR ((FLASH_TOTAL_SIZE - FLASH_ITS_AREA_SIZE) + FLASH0_BASE_S)
 #else
@@ -66,7 +64,7 @@
 #endif
     /* This represents the size of the ITS area specifically.
      * For CC35XX, the ITS area is the only flash region known
-     * to ITS. For CC27XX and CC23X1, the ITS area is calculated relative
+     * to ITS. For CC27XX, the ITS area is calculated relative
      * to the whole flash available on the device.
      */
     extern const size_t FLASH_ITS_SIZE;
@@ -80,8 +78,6 @@
      */
     #define FLASH_ITS_AREA_ADDR (FLASH0_BASE_S)
     #define FLASH_ITS_AREA_LOGICAL_ADDR (key_storage_logical_slot_address) /* XMEM KeyStore Region logical address base */
-#else
-    #error "Device family not currently supported"
 #endif
 
 /*

@@ -102,6 +102,22 @@ if(CONFIG_HAS_CC35XX_SDK)
         source/ti/drivers/trng/TRNGXXF3HSM.c
         source/ti/drivers/sha3/SHA3XXF3HSM.c
       )
+      if(CONFIG_TI_CC35XX_HSM_ITS)
+        zephyr_library_sources(
+          kernel/zephyr/dpl/ti_its_init.c
+          kernel/zephyr/dpl/ti_psa_key_config.c
+          third_party/hsmddk/include/Integration/Adapter_ITS/src/Driver_Flash.c
+          third_party/hsmddk/include/Integration/Adapter_ITS/src/its_flash.c
+          third_party/hsmddk/include/Integration/Adapter_ITS/src/its_flash_fs.c
+          third_party/hsmddk/include/Integration/Adapter_ITS/src/its_flash_fs_dblock.c
+          third_party/hsmddk/include/Integration/Adapter_ITS/src/its_flash_fs_mblock.c
+          third_party/hsmddk/include/Integration/Adapter_ITS/src/its_flash_nor.c
+          third_party/hsmddk/include/Integration/Adapter_ITS/src/its_utils.c
+          third_party/hsmddk/include/Integration/Adapter_ITS/src/tfm_hal_its.c
+          third_party/hsmddk/include/Integration/Adapter_ITS/src/tfm_internal_trusted_storage.c
+          third_party/hsmddk/include/Integration/Adapter_ITS/src/tfm_its_local_api.c
+        )
+      endif()
     endif()
     if(CONFIG_CRYPTO_TI_CC35XX)
       zephyr_library_sources(
