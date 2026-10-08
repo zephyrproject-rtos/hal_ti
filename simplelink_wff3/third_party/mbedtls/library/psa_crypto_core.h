@@ -527,11 +527,11 @@ psa_status_t psa_verify_message_builtin(
  * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
  * \retval #PSA_ERROR_INSUFFICIENT_ENTROPY \emptydescription
  */
-// static psa_status_t psa_sign_hash_builtin(
-//     const psa_key_attributes_t *attributes,
-//     const uint8_t *key_buffer, size_t key_buffer_size,
-//     psa_algorithm_t alg, const uint8_t *hash, size_t hash_length,
-//     uint8_t *signature, size_t signature_size, size_t *signature_length);
+psa_status_t psa_sign_hash_builtin(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg, const uint8_t *hash, size_t hash_length,
+    uint8_t *signature, size_t signature_size, size_t *signature_length);
 
 /* TI-MBEDTLS: Comment out declaration, since the function has been made static
  * in ti_psa_crypto_wrapper
@@ -565,11 +565,11 @@ psa_status_t psa_verify_message_builtin(
  * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
  * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
  */
-// static psa_status_t psa_verify_hash_builtin(
-//     const psa_key_attributes_t *attributes,
-//     const uint8_t *key_buffer, size_t key_buffer_size,
-//     psa_algorithm_t alg, const uint8_t *hash, size_t hash_length,
-//     const uint8_t *signature, size_t signature_length);
+psa_status_t psa_verify_hash_builtin(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg, const uint8_t *hash, size_t hash_length,
+    const uint8_t *signature, size_t signature_length);
 
 /**
  * \brief Validate the key bit size for unstructured keys.

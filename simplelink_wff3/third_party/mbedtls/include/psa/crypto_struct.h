@@ -337,11 +337,19 @@ struct psa_key_attributes_s {
 // #else
 // #define PSA_KEY_ATTRIBUTES_MAYBE_SLOT_NUMBER
 // #endif
+#if defined(__ZEPHYR__)
+#define PSA_KEY_ATTRIBUTES_INIT (psa_key_attributes_t) {               \
+                                      PSA_KEY_TYPE_NONE, 0,            \
+                                      PSA_KEY_LIFETIME_VOLATILE,       \
+                                      PSA_KEY_POLICY_INIT,             \
+                                      MBEDTLS_SVC_KEY_ID_INIT }
+#else
 #define PSA_KEY_ATTRIBUTES_INIT (psa_key_attributes_t) {               \
                                       PSA_KEY_TYPE_NONE, 0,            \
                                       PSA_KEY_LIFETIME_ASSET_STORE,    \
                                       PSA_KEY_POLICY_INIT,             \
                                       MBEDTLS_SVC_KEY_ID_INIT }
+#endif
 
 static inline struct psa_key_attributes_s psa_key_attributes_init(void)
 {
