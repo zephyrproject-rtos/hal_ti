@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2026, Texas Instruments Incorporated
+# Copyright (c) 2022-2025, Texas Instruments Incorporated
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@ cmake_minimum_required(VERSION ${TI_MIN_CMAKE_VERSION})
 
 include(${CMAKE_CURRENT_LIST_DIR}/CMakeSources_common.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/CMakeSources_cc27xx.cmake)
-include(${CMAKE_CURRENT_LIST_DIR}/CMakeSources_cc23x1.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/CMakeSources_cc35xx.cmake)
 
 # Regular expressions used to split SUPPORTED_PLATFORMS into a per-family list.
@@ -87,30 +86,6 @@ if(LPF3_PLATFORMS)
             elseif (${TI_TOOLCHAIN_NAME} MATCHES "iar")
                 target_compile_options(hsmddk_${TI_PLATFORM}_its PRIVATE --cmse)
             endif()
-
-        elseif(${TI_PLATFORM} STREQUAL "cc23x1r10")
-            ti_add_package_dependency(DriverlibCC23X1R10)
-            ti_add_package_dependency(DriversLPF3)
-
-            ti_add_library(
-                hsmddk_${TI_PLATFORM}
-                OUTPUT_NAME hsmddk_${TI_PLATFORM}
-                SOURCES ${SOURCES_CC23X1}
-                ARCH m0p
-                ADD_SDK_INCLUDE_PATH source
-                LINK_PUBLIC Drivers::drivers_${TI_PLATFORM} CMakeCommon::${TI_TOOLCHAIN_NAME}_${ARCH_${TI_PLATFORM}}
-                Driverlib::${TI_PLATFORM}
-            )
-
-            ti_add_library(
-                hsmddk_${TI_PLATFORM}_its
-                OUTPUT_NAME hsmddk_${TI_PLATFORM}_its
-                SOURCES ${SOURCES_ITS_CC23X1}
-                ARCH m0p
-                ADD_SDK_INCLUDE_PATH source
-                LINK_PUBLIC Drivers::drivers_${TI_PLATFORM} CMakeCommon::${TI_TOOLCHAIN_NAME}_${ARCH_${TI_PLATFORM}}
-                Driverlib::${TI_PLATFORM}
-            )
 
         endif()
     endforeach()

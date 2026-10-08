@@ -61,6 +61,74 @@ if(CONFIG_HAS_CC35XX_SDK)
       source/ti/drivers/utils/RingBuf.c
       source/ti/drivers/utils/List.c
     )
+    if(CONFIG_TI_CC35XX_HSM)
+      # TI HSM sources are provided by the SDK and are not warning-clean with -Werror.
+      zephyr_library_compile_options(-Wno-error)
+      zephyr_library_include_directories(
+        third_party/mbedtls/include
+        third_party/mbedtls/ti/configs
+      )
+      zephyr_library_compile_definitions(ENABLE_KEY_STORAGE=1)
+      if(NOT CONFIG_PSA_CRYPTO_DRIVER_CC35XX AND
+         NOT CONFIG_MBEDTLS_PSA_CRYPTO_C)
+        zephyr_library_compile_definitions(
+          MBEDTLS_CONFIG_FILE="mbedtls_ti_config.h"
+        )
+      endif()
+
+      zephyr_library_sources(
+        source/ti/drivers/cryptoutils/hsm/HSMXXF3.c
+        source/ti/drivers/cryptoutils/sharedresources/HSMResourceXXF3.c
+        source/ti/drivers/cryptoutils/sharedresources/CommonResourceXXF3.c
+        kernel/zephyr/dpl/ti_hsm_bounce_buffers.c
+        third_party/hsmddk/include/Integration/HSMSAL/HSMSAL.c
+        third_party/hsmddk/include/Integration/Adapter_DriverInit/Driver/src/adapter_init.c
+        third_party/hsmddk/include/Integration/Adapter_DriverInit/Driver/src/adapter_driver_init.c
+        third_party/hsmddk/include/Integration/Adapter_VEX/src/adapter_vex_init.c
+        third_party/hsmddk/include/Integration/Adapter_VEX/src/adapter_vex_device.c
+        third_party/hsmddk/include/Integration/Adapter_VEX/src/adapter_vex_physicaltoken.c
+        third_party/hsmddk/include/Integration/Adapter_VEX/src/adapter_vex_identity.c
+        third_party/hsmddk/include/Integration/Adapter_VEX/src/adapter_vex_mailbox.c
+        third_party/hsmddk/include/Integration/Adapter_Generic/src/adapter_interrupts.c
+        third_party/hsmddk/include/Integration/DriverFramework/src/device_generic.c
+        third_party/hsmddk/include/Integration/DriverFramework/src/hwpal_device_mb.c
+        third_party/hsmddk/include/Kit/EIP130/DomainHelper/src/eip130_domain_ecc_getcurve.c
+        third_party/hsmddk/include/Kit/EIP130/MailboxControl/src/eip130.c
+        third_party/hsmddk/include/Kit/EIP130/TokenHelper/src/eip130_token_common.c
+        third_party/hsmddk/include/Kit/EIP201/src/eip201.c
+        third_party/hsmddk/include/Kit/Log/src/log.c
+        source/ti/drivers/TRNG.c
+        source/ti/drivers/SHA3.c
+        source/ti/drivers/trng/TRNGXXF3HSM.c
+        source/ti/drivers/sha3/SHA3XXF3HSM.c
+      )
+    endif()
+    if(CONFIG_CRYPTO_TI_CC35XX)
+      zephyr_library_sources(
+        source/ti/drivers/aesecb/AESECBXXF3.c
+        source/ti/drivers/aesccm/AESCCMXXF3.c
+        source/ti/drivers/aesctr/AESCTRXXF3.c
+      )
+    endif()
+    if(CONFIG_PSA_CRYPTO_DRIVER_CC35XX)
+      zephyr_library_sources(
+        source/ti/drivers/AESGCM.c
+        source/ti/drivers/ECDH.c
+        source/ti/drivers/ECDSA.c
+        source/ti/drivers/SHA2.c
+        source/ti/drivers/SHA3.c
+        source/ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintext.c
+        source/ti/drivers/cryptoutils/hsm/HSMXXF3Utility.c
+        source/ti/drivers/aesccm/AESCCMXXF3.c
+        source/ti/drivers/aesctr/AESCTRXXF3.c
+        source/ti/drivers/aesecb/AESECBXXF3.c
+        source/ti/drivers/aesgcm/AESGCMXXF3HSM.c
+        source/ti/drivers/ecdh/ECDHXXF3HSM.c
+        source/ti/drivers/ecdsa/ECDSAXXF3HSM.c
+        source/ti/drivers/sha2/SHA2XXF3HSM.c
+        source/ti/drivers/sha3/SHA3XXF3HSM.c
+      )
+    endif()
   endif()
 endif()
 
