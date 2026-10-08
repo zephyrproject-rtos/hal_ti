@@ -129,6 +129,37 @@ if(CONFIG_HAS_CC35XX_SDK)
         source/ti/drivers/sha3/SHA3XXF3HSM.c
       )
     endif()
+    if(CONFIG_TI_CC35XX_HSM_ITS OR CONFIG_WIFI_TI_CC35XX OR CONFIG_CC35XXE_FWU)
+      set(ti_flash_map_config_source kernel/zephyr/dpl/ti_flash_map_config.c)
+      set(ti_flash_map_config_target)
+
+      if(CONFIG_CC35XXE_GENERATE_FLASH_MAP_CONFIG)
+        get_property(ti_flash_map_config_source GLOBAL PROPERTY
+                     CC35XXE_FLASH_MAP_CONFIG_SOURCE)
+        if(NOT ti_flash_map_config_source)
+          set(ti_flash_map_config_source "${ZEPHYR_BINARY_DIR}/ti_flash_map_config.c")
+        endif()
+        get_property(ti_flash_map_config_target GLOBAL PROPERTY
+                     CC35XXE_FLASH_MAP_CONFIG_TARGET)
+        set_source_files_properties(${ti_flash_map_config_source}
+                                    PROPERTIES GENERATED TRUE)
+      endif()
+
+      zephyr_include_directories(
+        kernel/zephyr/dpl
+      )
+      zephyr_library_sources(
+        ${ti_flash_map_config_source}
+      )
+      if(ti_flash_map_config_target)
+        add_dependencies(${ZEPHYR_CURRENT_LIBRARY} ${ti_flash_map_config_target})
+      endif()
+    endif()
+    if(CONFIG_WIFI_TI_CC35XX OR CONFIG_CC35XXE_FWU)
+      zephyr_library_sources(
+        kernel/zephyr/dpl/osi_dpl.c
+      )
+    endif()
   endif()
 endif()
 
