@@ -3732,10 +3732,10 @@ static char* prepare_enable_role_buff (tiwdrv_if_mode_e role_type, char *binDirP
 			wpa_printf(MSG_ERROR,"Couldn't open file: %s: %d", wrk, rc);
 			close(fd);
 		}
-		//wpa_printf(MSG_ERROR, "In %s: 4 Alloc len - %d ",__func__, buf1.st_size + sizeof(tiwdrv_if_mode_e));
+//		wpa_printf(MSG_ERROR, "In %s: 4 Alloc len - %d ",__func__, buf1.st_size + sizeof(tiwdrv_if_mode_e));
 		buf = os_malloc(buf1.st_size + sizeof(tiwdrv_if_mode_e));
 		size_read = read(fd, buf + sizeof(tiwdrv_if_mode_e), buf1.st_size);
-		//wpa_printf(MSG_ERROR,"prepare_enable_role_buff: File size -- %d",buf1.st_size);
+//		wpa_printf(MSG_ERROR,"prepare_enable_role_buff: File size -- %d",buf1.st_size);
 		close(fd);
 
 		break;
@@ -3748,10 +3748,10 @@ static char* prepare_enable_role_buff (tiwdrv_if_mode_e role_type, char *binDirP
 			wpa_printf(MSG_ERROR,"Couldn't open file: %s: %d", wrk, rc);
 			close(fd);
 		}
-		//wpa_printf(MSG_ERROR, "In %s: 4 Alloc len - %d ",__func__, buf1.st_size + sizeof(tiwdrv_if_mode_e));
+//		wpa_printf(MSG_ERROR, "In %s: 4 Alloc len - %d ",__func__, buf1.st_size + sizeof(tiwdrv_if_mode_e));
 		buf = os_malloc(buf1.st_size + sizeof(tiwdrv_if_mode_e));
 		size_read = read(fd, buf + sizeof(tiwdrv_if_mode_e), buf1.st_size);
-		//wpa_printf(MSG_ERROR,"prepare_enable_role_buff: File size -- %d",buf1.st_size);
+//		wpa_printf(MSG_ERROR,"prepare_enable_role_buff: File size -- %d",buf1.st_size);
 		close(fd);
 
 		break;
@@ -3763,10 +3763,10 @@ static char* prepare_enable_role_buff (tiwdrv_if_mode_e role_type, char *binDirP
 			wpa_printf(MSG_ERROR,"Couldn't open file: %s: %d", wrk, rc);
 			close(fd);
 		}
-		//wpa_printf(MSG_ERROR, "In %s: 4 Alloc len - %d ",__func__, buf1.st_size + sizeof(tiwdrv_if_mode_e));
+//		wpa_printf(MSG_ERROR, "In %s: 4 Alloc len - %d ",__func__, buf1.st_size + sizeof(tiwdrv_if_mode_e));
 		buf = os_malloc(buf1.st_size + sizeof(tiwdrv_if_mode_e));
 		size_read = read(fd, buf + sizeof(tiwdrv_if_mode_e), buf1.st_size);
-		//wpa_printf(MSG_ERROR,"prepare_enable_role_buff: File size -- %d",buf1.st_size);
+//		wpa_printf(MSG_ERROR,"prepare_enable_role_buff: File size -- %d",buf1.st_size);
 		close(fd);
 
 		break;

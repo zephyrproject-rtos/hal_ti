@@ -372,10 +372,6 @@ struct hostapd_bss_config {
 	int wpa_group_rekey;
 	int wpa_group_rekey_set;
 	int wpa_strict_rekey;
-#ifdef TI_IGNORE_STA_GTK_REKEY
-	/* TI Custom: Ignore GTK rekey requests from connected STAs */
-	int ignore_sta_gtk_rekey;
-#endif /* TI_IGNORE_STA_GTK_REKEY */
 	int wpa_gmk_rekey;
 	int wpa_ptk_rekey;
 	enum ptk0_rekey_handling wpa_deny_ptk0_rekey;

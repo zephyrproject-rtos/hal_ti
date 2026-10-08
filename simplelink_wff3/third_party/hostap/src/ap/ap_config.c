@@ -69,10 +69,6 @@ void hostapd_config_defaults_bss(struct hostapd_bss_config *bss)
 
 	bss->wpa_group_rekey = 600;
 	bss->wpa_gmk_rekey = 86400;
-#ifdef TI_IGNORE_STA_GTK_REKEY
-	/* TI Custom: By default, ignore GTK rekey requests from STAs */
-	bss->ignore_sta_gtk_rekey = 1;
-#endif /* TI_IGNORE_STA_GTK_REKEY */
 	bss->wpa_deny_ptk0_rekey = PTK0_REKEY_ALLOW_ALWAYS;
 	bss->wpa_group_update_count = 4;
 	bss->wpa_pairwise_update_count = 4;

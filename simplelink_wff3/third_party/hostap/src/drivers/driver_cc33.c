@@ -1937,7 +1937,7 @@ void cc33drv_handleScanStoppedEvent(void *apDrv)
 	GTRACE(GRP_DRIVER_CC33, "Scheduled scan was stopped");
 	wpa_supplicant_event(pDrv->ctx, EVENT_SCHED_SCAN_STOPPED, NULL);
 
-	//force supplicant inactive state as state machine will not be invoked anymore
+	// Nov 23 2015 - force supplicant inactive state as state machine will not be invoked anymore
 	wpa_supplicant_set_state(pDrv->wpa_s, WPA_INACTIVE);
 }
 
@@ -2631,9 +2631,19 @@ Bool32 cc33drv_stopConnectionScans(struct wpa_supplicant *wpa_s)
         if (0 == wpa_s->sched_scanning)
         {
             // One shot connection scan - get the scan type
+
             // Only one type of connection scan is allowed, ASSERT_GENERAL otherwise
             //ASSERT_GENERAL(FALSE == (ONE_SHOT_OS_SCAN_ACTIVE(pDrv) & ONE_SHOT_APP_SCAN_ACTIVE(pDrv)));
             scanType = SCAN_REQUEST_ONE_SHOT;
+//
+//            if (ONE_SHOT_OS_SCAN_ACTIVE(pDrv))
+//            {
+//                scanType = SCAN_REQUEST_CONNECT_ONE_SHOT_OS_SCAN;
+//            }
+//            else if (ONE_SHOT_APP_SCAN_ACTIVE(pDrv))
+//            {
+//                scanType = SCAN_REQUEST_CONNECT_ONE_SHOT_APP_SCAN;
+//            }
         }
 
         // If scan is running, stop it.

@@ -29,13 +29,6 @@
 #include "eap_i.h"
 #include "eap_config.h"
 
-extern void open_at_cc35xx_debug(const char *text);
-
-static void eap_dbg_marker(const char *text)
-{
-	open_at_cc35xx_debug(text);
-}
-
 #define STATE_MACHINE_DATA struct eap_sm
 #define STATE_MACHINE_DEBUG_PREFIX "EAP"
 
@@ -2180,11 +2173,9 @@ struct eap_sm * eap_peer_sm_init(void *eapol_ctx,
 	struct eap_sm *sm;
 	struct tls_config tlsconf;
 
-	eap_dbg_marker("\r\nDBG_EAP:peer_init alloc enter\r\n");
 	sm = os_zalloc(sizeof(*sm));
 	if (sm == NULL)
 		return NULL;
-	eap_dbg_marker("\r\nDBG_EAP:peer_init alloc done\r\n");
 	sm->eapol_ctx = eapol_ctx;
 	sm->eapol_cb = eapol_cb;
 	sm->msg_ctx = msg_ctx;
@@ -2203,10 +2194,7 @@ struct eap_sm * eap_peer_sm_init(void *eapol_ctx,
 	tlsconf.event_cb = eap_peer_sm_tls_event;
 	tlsconf.cb_ctx = sm;
 	tlsconf.cert_in_cb = conf->cert_in_cb;
-#if 0
-	eap_dbg_marker("\r\nDBG_EAP:peer_init tls1 enter\r\n");
 	sm->ssl_ctx = tls_init(&tlsconf);
-	eap_dbg_marker("\r\nDBG_EAP:peer_init tls1 done\r\n");
 	if (sm->ssl_ctx == NULL) {
 		wpa_printf(MSG_WARNING, "SSL: Failed to initialize TLS "
 			   "context.");
@@ -2214,18 +2202,12 @@ struct eap_sm * eap_peer_sm_init(void *eapol_ctx,
 		return NULL;
 	}
 
-	eap_dbg_marker("\r\nDBG_EAP:peer_init tls2 enter\r\n");
 	sm->ssl_ctx2 = tls_init(&tlsconf);
-	eap_dbg_marker("\r\nDBG_EAP:peer_init tls2 done\r\n");
 	if (sm->ssl_ctx2 == NULL) {
 		wpa_printf(MSG_INFO, "SSL: Failed to initialize TLS "
 			   "context (2).");
 		/* Run without separate TLS context within TLS tunnel */
 	}
-#else
-	(void)tlsconf;
-	eap_dbg_marker("\r\nDBG_EAP:peer_init tls skipped\r\n");
-#endif
 
 	return sm;
 }

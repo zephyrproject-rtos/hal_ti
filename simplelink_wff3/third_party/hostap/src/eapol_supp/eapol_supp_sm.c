@@ -20,13 +20,6 @@
 #include "eap_peer/eap_proxy.h"
 #include "eapol_supp_sm.h"
 
-extern void open_at_cc35xx_debug(const char *text);
-
-static void eapol_sm_dbg_marker(const char *text)
-{
-	open_at_cc35xx_debug(text);
-}
-
 // TI - cc33xx compilation - added  get function for wpas_wps_eapol_cb()
 
 #define STATE_MACHINE_DATA struct eapol_sm
@@ -2126,11 +2119,9 @@ struct eapol_sm *eapol_sm_init(struct eapol_ctx *ctx)
 {
 	struct eapol_sm *sm;
 	struct eap_config conf;
-	eapol_sm_dbg_marker("\r\nDBG_EAPOL:sm_init alloc enter\r\n");
 	sm = os_zalloc(sizeof(*sm));
 	if (sm == NULL)
 		return NULL;
-	eapol_sm_dbg_marker("\r\nDBG_EAPOL:sm_init alloc done\r\n");
 	sm->ctx = ctx;
 
 	sm->portControl = Auto;
@@ -2151,9 +2142,7 @@ struct eapol_sm *eapol_sm_init(struct eapol_ctx *ctx)
 	conf.wps = ctx->wps;
 	conf.cert_in_cb = ctx->cert_in_cb;
 
-	eapol_sm_dbg_marker("\r\nDBG_EAPOL:sm_init eap_peer enter\r\n");
 	sm->eap = eap_peer_sm_init(sm, &eapol_cb, sm->ctx->msg_ctx, &conf);
-	eapol_sm_dbg_marker("\r\nDBG_EAPOL:sm_init eap_peer done\r\n");
 	if (sm->eap == NULL) {
 		os_free(sm);
 		return NULL;
@@ -2170,23 +2159,17 @@ struct eapol_sm *eapol_sm_init(struct eapol_ctx *ctx)
 	/* Initialize EAPOL state machines */
 	sm->force_authorized_update = true;
 	sm->initialize = true;
-	eapol_sm_dbg_marker("\r\nDBG_EAPOL:sm_init step1 enter\r\n");
 	eapol_sm_step(sm);
-	eapol_sm_dbg_marker("\r\nDBG_EAPOL:sm_init step1 done\r\n");
 	sm->initialize = false;
-	eapol_sm_dbg_marker("\r\nDBG_EAPOL:sm_init step2 enter\r\n");
 	eapol_sm_step(sm);
-	eapol_sm_dbg_marker("\r\nDBG_EAPOL:sm_init step2 done\r\n");
 
 	// TI - cc33xx compilation - Was after timer_tick_enabled in the previous supplicant
 	wpa_printf(MSG_DEBUG, "eapol sm init: set timeout to 1 second !!!!");
 
-	eapol_sm_dbg_marker("\r\nDBG_EAPOL:sm_init timeout enter\r\n");
 	if (eloop_register_timeout(1, 0, eapol_port_timers_tick, NULL, sm) == 0)
 	{
         sm->timer_tick_enabled = 1;
     }
-	eapol_sm_dbg_marker("\r\nDBG_EAPOL:sm_init timeout done\r\n");
 
 	return sm;
 }
@@ -2313,3 +2296,4 @@ void * eapol_sm_get_priv_method(struct eapol_sm *sm){
     }
     return ret;
 }
+
