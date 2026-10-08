@@ -136,8 +136,8 @@ typedef struct psa_fwu_image_version_t {
  * @brief The implementation-specific data in the component information
  *        structure.
  */
-typedef struct 
-{ 
+typedef struct
+{
     /// @brief State if the component is Primary or Secondary.
     uint8_t Primary;
     /// @brief State if the component is Loaded or Active.
