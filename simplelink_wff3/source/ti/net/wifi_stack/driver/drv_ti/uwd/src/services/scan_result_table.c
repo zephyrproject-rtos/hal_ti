@@ -47,60 +47,68 @@
 #include "cme_internal_api.h"
 #include "ie_parser_util.h"
 
-//#define MILISECONDS(seconds)                            (seconds * 1000)
-//#define UPDATE_LOCAL_TIMESTAMP(pSite)                   pSite->localTimeStamp = osi_GetTimeMS();
+#if 0
+#define MILISECONDS(seconds)                            (seconds * 1000)
+#define UPDATE_LOCAL_TIMESTAMP(pSite)                   pSite->localTimeStamp = osi_GetTimeMS();
+
+#define UPDATE_BSSID(pSite, pFrame)                     MAC_COPY((pSite)->bssid, *((pFrame)->tBssId))
+#define UPDATE_BAND(pSite, pFrame)                      (pSite)->eBand = (pFrame)->eBand
+#define UPDATE_BEACON_INTERVAL(pSite, pFrame)           pSite->beaconInterval = (pFrame)->pParsedIEs->beaconInterval
+#define UPDATE_CAPABILITIES(pSite, pFrame)              pSite->capabilities = (pFrame)->pParsedIEs->capabilities
+#define UPDATE_PRIVACY(pSite, pFrame)                   pSite->privacy = (((pFrame)->pParsedIEs->capabilities >> CAP_PRIVACY_SHIFT) & CAP_PRIVACY_MASK) ? TI_TRUE : TI_FALSE
+#define UPDATE_AGILITY(pSite, pFrame)                   pSite->agility = (((pFrame)->pParsedIEs->capabilities >> CAP_AGILE_SHIFT) & CAP_AGILE_MASK) ? TI_TRUE : TI_FALSE
+#define UPDATE_SLOT_TIME(pSite, pFrame)                 pSite->newSlotTime = (((pFrame)->pParsedIEs->capabilities >> CAP_SLOT_TIME_SHIFT) & CAP_SLOT_TIME_MASK) ? PHY_SLOT_TIME_SHORT : PHY_SLOT_TIME_LONG
+#define UPDATE_PROTECTION(pSite, pFrame)                pSite->useProtection = ((pFrame)->pParsedIEs->useProtection)
+#define UPDATE_CHANNEL(pSite, pFrame, rxChannel)        if ((pFrame)->pParsedIEs->dsParams.hdr.eleLen == 0) \
+                                                            pSite->channel = rxChannel; \
+                                                        else \
+                                                            pSite->channel = (pFrame)->pParsedIEs->dsParams.currChannel;
+#define UPDATE_DTIM_PERIOD(pSite, pFrame)               if ((pFrame)->pParsedIEs->tim.hdr.eleLen != 0) \
+                                                            pSite->dtimPeriod = (pFrame)->pParsedIEs->tim.dtimPeriod
+#define UPDATE_ATIM_WINDOW(pSite, pFrame)               if ((pFrame)->pParsedIEs->ibssParams.hdr.eleLen != 0) \
+                                                            pSite->atimWindow = (pFrame)->pParsedIEs->ibssParams.atimWindow
+#define UPDATE_AP_TX_POWER(pSite, pFrame)               if ((pFrame)->pParsedIEs->TPCReport.hdr.eleLen != 0) \
+                                                            pSite->APTxPower = (pFrame)->pParsedIEs->TPCReport.transmitPower
+#define UPDATE_BSS_TYPE(pSite, pFrame)                  pSite->bssType = (((pFrame)->pParsedIEs->capabilities >> CAP_ESS_SHIFT) & CAP_ESS_MASK) ? BSS_INFRASTRUCTURE : BSS_INDEPENDENT
+
+/* Updated from beacons */
+#define UPDATE_BEACON_MODULATION(pSite, pFrame)         pSite->beaconModulation = (((pFrame)->pParsedIEs->capabilities >> CAP_PBCC_SHIFT) & CAP_PBCC_MASK) ? DRV_MODULATION_PBCC : DRV_MODULATION_CCK
+#define UPDATE_BEACON_RECV(pSite)                       pSite->beaconRecv = TI_TRUE
+
+/* Updated from probes */
+#define UPDATE_PROBE_MODULATION(pSite, pFrame)          pSite->probeModulation = (((pFrame)->pParsedIEs->capabilities >> CAP_PBCC_SHIFT) & CAP_PBCC_MASK) ? DRV_MODULATION_PBCC : DRV_MODULATION_CCK
+#define UPDATE_PROBE_RECV(pSite)                        pSite->probeRecv = TI_TRUE
+#define UPDATE_APSD(pSite, pFrame)                      if ((pFrame)->pParsedIEs->WMEParams.hdr.eleLen == 0) \
+                                                                (pSite)->APSDSupport = ((((pFrame)->pParsedIEs->capabilities >> CAP_APSD_SHIFT) & CAP_APSD_MASK) ? TI_TRUE : TI_FALSE); \
+                                                        else \
+                                                            pSite->APSDSupport = (((((pFrame)->pParsedIEs->capabilities >> CAP_APSD_SHIFT) & CAP_APSD_MASK) ? TI_TRUE : TI_FALSE) || \
+                                                                                  ((((pFrame)->pParsedIEs->WMEParams.ACInfoField >> AP_QOS_INFO_UAPSD_SHIFT) & AP_QOS_INFO_UAPSD_MASK) ? TI_TRUE : TI_FALSE));
+#endif
+
+#if 0
+#define UPDATE_PREAMBLE(pSite, pFrame)                  { (pSite)->currentPreambleType = (((pFrame)->pParsedIEs->capabilities >> CAP_PREAMBLE_SHIFT) & CAP_PREAMBLE_MASK) ? PREAMBLE_SHORT : PREAMBLE_LONG; \
+                                                          (pSite)->barkerPreambleType = (pFrame)->pParsedIEs->barkerPreambleMode; }
+#endif
+
+#if 0
+#define UPDATE_QOS(pSite, pFrame)                       if ( ((pFrame)->pParsedIEs->WMEParams.hdr.eleLen != 0) && \
+                                                             (((((pFrame)->pParsedIEs->WMEParams.ACInfoField) & dot11_WME_ACINFO_MASK) != pSite->lastWMEParameterCnt) || (!pSite->WMESupported)) ) \
+                                                            pSite->WMESupported = TI_TRUE; \
+                                                        else \
+                                                            pSite->WMESupported = TI_FALSE;
+#endif
 //
-//#define UPDATE_BSSID(pSite, pFrame)                     MAC_COPY((pSite)->bssid, *((pFrame)->tBssId))
-////#define UPDATE_BAND(pSite, pFrame)                      (pSite)->eBand = (pFrame)->eBand
-//#define UPDATE_BEACON_INTERVAL(pSite, pFrame)           pSite->beaconInterval = (pFrame)->pParsedIEs->beaconInterval
-//#define UPDATE_CAPABILITIES(pSite, pFrame)              pSite->capabilities = (pFrame)->pParsedIEs->capabilities
-//#define UPDATE_PRIVACY(pSite, pFrame)                   pSite->privacy = (((pFrame)->pParsedIEs->capabilities >> CAP_PRIVACY_SHIFT) & CAP_PRIVACY_MASK) ? TI_TRUE : TI_FALSE
-//#define UPDATE_AGILITY(pSite, pFrame)                   pSite->agility = (((pFrame)->pParsedIEs->capabilities >> CAP_AGILE_SHIFT) & CAP_AGILE_MASK) ? TI_TRUE : TI_FALSE
-////#define UPDATE_SLOT_TIME(pSite, pFrame)                 pSite->newSlotTime = (((pFrame)->pParsedIEs->capabilities >> CAP_SLOT_TIME_SHIFT) & CAP_SLOT_TIME_MASK) ? PHY_SLOT_TIME_SHORT : PHY_SLOT_TIME_LONG
-//#define UPDATE_PROTECTION(pSite, pFrame)                pSite->useProtection = ((pFrame)->pParsedIEs->useProtection)
-//#define UPDATE_CHANNEL(pSite, pFrame, rxChannel)        if ((pFrame)->pParsedIEs->dsParams.hdr.eleLen == 0) \
-//                                                            pSite->channel = rxChannel; \
-//                                                        else \
-//                                                            pSite->channel = (pFrame)->pParsedIEs->dsParams.currChannel;
-//#define UPDATE_DTIM_PERIOD(pSite, pFrame)               if ((pFrame)->pParsedIEs->tim.hdr.eleLen != 0) \
-//                                                            pSite->dtimPeriod = (pFrame)->pParsedIEs->tim.dtimPeriod
-//#define UPDATE_ATIM_WINDOW(pSite, pFrame)               if ((pFrame)->pParsedIEs->ibssParams.hdr.eleLen != 0) \
-//                                                            pSite->atimWindow = (pFrame)->pParsedIEs->ibssParams.atimWindow
-//#define UPDATE_AP_TX_POWER(pSite, pFrame)               if ((pFrame)->pParsedIEs->TPCReport.hdr.eleLen != 0) \
-//                                                            pSite->APTxPower = (pFrame)->pParsedIEs->TPCReport.transmitPower
-//#define UPDATE_BSS_TYPE(pSite, pFrame)                  pSite->bssType = (((pFrame)->pParsedIEs->capabilities >> CAP_ESS_SHIFT) & CAP_ESS_MASK) ? BSS_INFRASTRUCTURE : BSS_INDEPENDENT
-//
-///* Updated from beacons */
-////#define UPDATE_BEACON_MODULATION(pSite, pFrame)         pSite->beaconModulation = (((pFrame)->pParsedIEs->capabilities >> CAP_PBCC_SHIFT) & CAP_PBCC_MASK) ? DRV_MODULATION_PBCC : DRV_MODULATION_CCK
-//#define UPDATE_BEACON_RECV(pSite)                       pSite->beaconRecv = TI_TRUE
-//
-///* Updated from probes */
-////#define UPDATE_PROBE_MODULATION(pSite, pFrame)          pSite->probeModulation = (((pFrame)->pParsedIEs->capabilities >> CAP_PBCC_SHIFT) & CAP_PBCC_MASK) ? DRV_MODULATION_PBCC : DRV_MODULATION_CCK
-//#define UPDATE_PROBE_RECV(pSite)                        pSite->probeRecv = TI_TRUE
-//#define UPDATE_APSD(pSite, pFrame)                      if ((pFrame)->pParsedIEs->WMEParams.hdr.eleLen == 0) \
-//                                                                (pSite)->APSDSupport = ((((pFrame)->pParsedIEs->capabilities >> CAP_APSD_SHIFT) & CAP_APSD_MASK) ? TI_TRUE : TI_FALSE); \
-//                                                        else \
-//                                                            pSite->APSDSupport = (((((pFrame)->pParsedIEs->capabilities >> CAP_APSD_SHIFT) & CAP_APSD_MASK) ? TI_TRUE : TI_FALSE) || \
-//                                                                                  ((((pFrame)->pParsedIEs->WMEParams.ACInfoField >> AP_QOS_INFO_UAPSD_SHIFT) & AP_QOS_INFO_UAPSD_MASK) ? TI_TRUE : TI_FALSE));
-//
-////#define UPDATE_PREAMBLE(pSite, pFrame)                  { (pSite)->currentPreambleType = (((pFrame)->pParsedIEs->capabilities >> CAP_PREAMBLE_SHIFT) & CAP_PREAMBLE_MASK) ? PREAMBLE_SHORT : PREAMBLE_LONG; \
-////                                                          (pSite)->barkerPreambleType = (pFrame)->pParsedIEs->barkerPreambleMode; }
-////
-//#define UPDATE_QOS(pSite, pFrame)                       if ( ((pFrame)->pParsedIEs->WMEParams.hdr.eleLen != 0) && \
-//                                                             (((((pFrame)->pParsedIEs->WMEParams.ACInfoField) & dot11_WME_ACINFO_MASK) != pSite->lastWMEParameterCnt) || (!pSite->WMESupported)) ) \
-//                                                            pSite->WMESupported = TI_TRUE; \
-//                                                        else \
-//                                                            pSite->WMESupported = TI_FALSE;
-//
-//#define UPDATE_RSSI(pSite, pFrame)                      (pSite)->rssi = (pFrame)->iRssi;
-//#define UPDATE_SNR(pSite, pFrame)                       (pSite)->snr = (pFrame)->iSnr;
-////#define UPDATE_RATE(pSite, pFrame)                      if ((TIW_DRV_RATE_1M <= (pFrame)->eRate) && (TIW_DRV_RATE_54M >= (pFrame)->eRate)) \
-////                                                            (pSite)->rxRate = (pFrame)->eRate;
-////#define UPDATE_MOBILITY_DOMAIN(pSite, pFrame)           if (pFrame->pParsedIEs->tMobilityDomain.hdr.eleLen > 0) { \
-////                                                            pSite->mobilityDomain.bMdValid = TI_TRUE; \
-////                                                            pSite->mobilityDomain.mdId = pFrame->pParsedIEs->tMobilityDomain.mdId; \
-////                                                            pSite->mobilityDomain.ftCapaAndPolicy = pFrame->pParsedIEs->tMobilityDomain.ftCapaAndPolicy; } \
-////                                                        else pSite->mobilityDomain.bMdValid = TI_FALSE;
+#if 0
+#define UPDATE_RSSI(pSite, pFrame)                      (pSite)->rssi = (pFrame)->iRssi;
+#define UPDATE_SNR(pSite, pFrame)                       (pSite)->snr = (pFrame)->iSnr;
+#define UPDATE_RATE(pSite, pFrame)                      if ((TIW_DRV_RATE_1M <= (pFrame)->eRate) && (TIW_DRV_RATE_54M >= (pFrame)->eRate)) \
+                                                            (pSite)->rxRate = (pFrame)->eRate;
+#define UPDATE_MOBILITY_DOMAIN(pSite, pFrame)           if (pFrame->pParsedIEs->tMobilityDomain.hdr.eleLen > 0) { \
+                                                            pSite->mobilityDomain.bMdValid = TI_TRUE; \
+                                                            pSite->mobilityDomain.mdId = pFrame->pParsedIEs->tMobilityDomain.mdId; \
+                                                            pSite->mobilityDomain.ftCapaAndPolicy = pFrame->pParsedIEs->tMobilityDomain.ftCapaAndPolicy; } \
+                                                        else pSite->mobilityDomain.bMdValid = TI_FALSE;
+#endif
 
 
 // scan_result weights indexes
@@ -485,7 +493,6 @@ cmeScanCandidateDesc_t* scanCandidateTable_GetBySsidBssidPair (char *pSsid, uint
 void*  scanDigestTable_GetBySsidBssidPair (char *pSsid, uint32_t ssidLen, const uint8_t *pBssid)
 {
     uint32_t                  uIndex;
-    uint16_t  ScanMemSize;
     cmeScanSharedInfo_t *pCmeScanDb = scanResultTable_GetCmeScanDbPointer();
 
     if (TRUE == pCmeScanDb->extendedScanResults)
@@ -848,7 +855,6 @@ void scanDigestTable_SaveResult(TScanFrameInfo*            pFrame,
 
 {
     uint32_t secType;
-    uint16_t ieLen;
     //update channel;
     pEntry->result.mChannel = pFrame->pParsedIEs->dsParams.currChannel;
 
@@ -2711,7 +2717,7 @@ uint32_t scan_result_calc_weighted_score(TScanFrameInfo* scanInfo, EScanRequestT
 {
     uint32_t      total_score  = 0;
     uint32_t      par_id = 0;
-    uint16_t      priority_score, par_score;
+    uint16_t      priority_score = 0, par_score;
 
     HOOK(HOOK_IN_SCAN_RESULT_TABLE);
 

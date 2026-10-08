@@ -39,7 +39,9 @@
 #define _ETHERNET_H_
 
 #define MAC_ADDR_SIZE              6
+#ifndef MAC_ADDR_LEN
 #define MAC_ADDR_LEN               6
+#endif
 #define IP_V4_ADDR_LEN             4
 typedef uint8_t                    TMacAddr[MAC_ADDR_SIZE];
 typedef uint8_t                    TIpAddr [IP_V4_ADDR_LEN];

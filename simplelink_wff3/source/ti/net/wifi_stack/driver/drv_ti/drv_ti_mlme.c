@@ -268,7 +268,6 @@ int32_t ti_drv_txAuthResPacket(ti_driver_ifData_t *apDrv, uint8_t* destAddr, uin
     uint16_t        fc;
 
     dot11_mgmtHeader_t  *pDot11Header;
-    NAB_tx_header_t     *pNabTxHeader;
     uint8_t             authMsg[MAX_AUTH_MSG_LEN] = {0};
 
     authMsg_t           *pAuthMsg;
@@ -364,7 +363,7 @@ int32_t ti_drv_txAssocReqPacket(ti_driver_ifData_t *apDrv,
     struct ieee80211_mgmt  *pMngPack;
     uint8_t  ratesBuf[DOT11_MAX_SUPPORTED_RATES];
     uint8_t   *pPack;
-    uint32_t  len,payloadSize,total_len;
+    uint32_t  len,total_len;
     uint32_t  actualSize = 0, extraHThdr;
     uint8_t   fixedFieldsLen = 0;
     uint32_t  taggedFieldsLen = 0;
@@ -381,8 +380,6 @@ int32_t ti_drv_txAssocReqPacket(ti_driver_ifData_t *apDrv,
     // Added for correct rates configuration
     Channel_e apChannel;
     uint8_t apBand_temp;
-    int32_t connect_ch = -1;
-    int32_t band24 = -1;
 
     uint8_t band_cfg = l2_GetPhyConfig();
 
@@ -428,7 +425,7 @@ int32_t ti_drv_txAssocReqPacket(ti_driver_ifData_t *apDrv,
             /* copy header */
             os_memcpy(pkt->header, (void*)(pDesc->address), pDesc->uHeaderLen-extraHThdr);
             /* copy payload */
-            os_memcpy(pkt->payload, (void*)(pDesc->address + pDesc->uHeaderLen), pDesc->uPayloadLen);
+            os_memcpy(pkt->payload, (uint8_t *)pDesc->address + pDesc->uHeaderLen, pDesc->uPayloadLen);
 
             pkt->flags |= PKTF_EXTERNAL_CONTEXT;
             pkt->fTxCompleteCb = (TMgmtPacketCb)CME_TxResult;
@@ -942,7 +939,6 @@ int32_t ti_drv_txDeauthDisassocPacket(ti_driver_ifData_t *apDrv,
     uint32_t            payloadSize,total_len,extraHThdr;
     uint16_t            fc;
     dot11_mgmtHeader_t  *pDot11Header;
-    uint8_t             authMsg[MAX_AUTH_MSG_LEN] = {0};
     OsiReturnVal_e      osiRetVal;
     char macStrSA[MAC_STR_LEN], macStrDA[MAC_STR_LEN];
     uint8_t             SecureHdrLength = 0;
@@ -963,7 +959,7 @@ int32_t ti_drv_txDeauthDisassocPacket(ti_driver_ifData_t *apDrv,
 
     if (INVALID_LINK == link)
     {
-        MLME_REPORT_PRINT_ERROR("\n\rERROR ti_drv_txDeauthDisassocPacket: ERROR unsupported link id %d \n\r", pkt->link);
+        MLME_REPORT_PRINT_ERROR("\n\rERROR ti_drv_txDeauthDisassocPacket: ERROR unsupported link id %d \n\r", link);
         GTRACE(GRP_DRIVER_CC33, "ti_drv_txDeauthDisassocPacket: ERROR No valid hlid was found!  NetifId = %d", link);
         return NOK;
     }
@@ -1280,7 +1276,9 @@ rxMngPackNextOperation_e ti_drv_rxAssocResponsePacket(
 {
     char macSender[MAC_STR_LEN];
     uint8_t   *pIes;
+#if 0
     uint8_t   secType = 0;
+#endif
     uint16_t  status_code;
     uint32_t  minLen = WLAN_HDR_LEN + sizeof(apMngPack->u.assoc_resp);
     struct ieee802_11_elems parsedElems;
@@ -1906,8 +1904,8 @@ int32_t getWmmConfig(struct ieee802_11_elems *apParsedElems,    // IN  - points 
         GTRACE(GRP_DRIVER_CC33, "WMM IE OUI is OK, checking WME params");
 
         if( ( (*(uint8_t *)(pWmmData+3)) == dot11_WME_OUI_TYPE ) &&
-            ( (*(uint8_t *)(pWmmData+4)) == dot11_WME_OUI_SUB_TYPE_PARAMS_IE ) ||
-            ( (*(uint8_t *)(pWmmData+4)) == dot11_WME_OUI_SUB_TYPE_IE  ) )
+            ( ( (*(uint8_t *)(pWmmData+4)) == dot11_WME_OUI_SUB_TYPE_PARAMS_IE ) ||
+              ( (*(uint8_t *)(pWmmData+4)) == dot11_WME_OUI_SUB_TYPE_IE  ) ) )
         {
 
             GTRACE(GRP_DRIVER_CC33, "WME OUI type & sub type are OK, checking WME params");
@@ -1980,6 +1978,3 @@ void markDisconnected(ti_driver_ifData_t *apDrv, uint32_t aCaller)
 	apDrv->associated = FALSE;
 	IRQ_UtilZeroMacAddress(apDrv->currBssid);
 }
-
-
-

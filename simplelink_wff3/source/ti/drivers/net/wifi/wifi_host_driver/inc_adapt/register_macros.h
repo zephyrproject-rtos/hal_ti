@@ -281,34 +281,35 @@ typedef volatile uint32* RegTypePtr_t;
 // it doesn't do what you'd expect.
 // in order to write to registers, do SET_FIELD on register name
 //set write only field
-//#define SET_WRITE_ONLY_FIELD(_field, _val)	\
-//	( \
-//		(VERIFY_ARGUMENT_IS_A_REGISTER_OR_FIELD(_field)), \
-//		(VERIFY_WRITABLE(_field)),\
-//		( \
-//			((REG_PARSE_FLDCNT(_field) == 1) || ((REG_PARSE_FROMBIT(_field) == 0) && (REG_PARSE_TOBIT_RAW(_field) == 0))) ? \
-//				 ( \
-//				 (REG_PARSE_SIZE(_field) == REG_SIZE_32BITS) ? \
-//				 		set_32_bits(REG_PARSE_ADDR(_field), FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
-//				 	: \
-//				 	(REG_PARSE_SIZE(_field) == REG_SIZE_16BITS) ? \
-//				 		set_16_bits(REG_PARSE_ADDR(_field), FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
-//				 	: \
-//				 		set_8_bits_only(REG_PARSE_ADDR(_field), FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
-//				 ) \
-//		 	: \
-//				 ( \
-//				 	(REG_PARSE_SIZE(_field) == REG_SIZE_32BITS) ? \
-//				 		set_32_bits(REG_PARSE_ADDR(_field), GENERATE_FIELD_MASK_32(REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field)) | FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
-//				 	: \
-//				 	(REG_PARSE_SIZE(_field) == REG_SIZE_16BITS) ? \
-//				 		set_16_bits(REG_PARSE_ADDR(_field), GENERATE_FIELD_MASK_32(REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field)) | FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
-//				 	: \
-//				 		set_8_bits_only(REG_PARSE_ADDR(_field), GENERATE_FIELD_MASK_32(REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field)) | FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
-//				 ) \
-//		) \
-//	)
-//
+#if 0
+#define SET_WRITE_ONLY_FIELD(_field, _val)	\
+	( \
+		(VERIFY_ARGUMENT_IS_A_REGISTER_OR_FIELD(_field)), \
+		(VERIFY_WRITABLE(_field)),\
+		( \
+			((REG_PARSE_FLDCNT(_field) == 1) || ((REG_PARSE_FROMBIT(_field) == 0) && (REG_PARSE_TOBIT_RAW(_field) == 0))) ? \
+				 ( \
+				 (REG_PARSE_SIZE(_field) == REG_SIZE_32BITS) ? \
+						set_32_bits(REG_PARSE_ADDR(_field), FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
+					: \
+					(REG_PARSE_SIZE(_field) == REG_SIZE_16BITS) ? \
+						set_16_bits(REG_PARSE_ADDR(_field), FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
+					: \
+						set_8_bits_only(REG_PARSE_ADDR(_field), FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
+				 ) \
+			: \
+				 ( \
+					(REG_PARSE_SIZE(_field) == REG_SIZE_32BITS) ? \
+						set_32_bits(REG_PARSE_ADDR(_field), GENERATE_FIELD_MASK_32(REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field)) | FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
+					: \
+					(REG_PARSE_SIZE(_field) == REG_SIZE_16BITS) ? \
+						set_16_bits(REG_PARSE_ADDR(_field), GENERATE_FIELD_MASK_32(REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field)) | FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
+					: \
+						set_8_bits_only(REG_PARSE_ADDR(_field), GENERATE_FIELD_MASK_32(REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field)) | FORMAT_FIELD_32((_val), REG_PARSE_FROMBIT(_field), REG_PARSE_FLDLEN(_field))) \
+				 ) \
+		) \
+	)
+#endif
 //----------------------------------------------------------------------------------
 
 // CC33xx        - if register is in a variable (say lut or inputted parameter)
@@ -647,5 +648,3 @@ typedef volatile uint32* RegTypePtr_t;
 
 
 #endif
-
-

@@ -960,27 +960,6 @@ int32_t ti_drv_txDeauthDisassocPacket(ti_driver_ifData_t *apDrv,
                                     uint16_t aReason);
 
 
-/* ----------------------------------------------------------------------------
- sendEventDeauthDisassoc
-    Send deauthentication event to supplicant (based on driver_nl80211.c, mlme_event_deauth_disassoc)
-    This API may be activated in response to reception of disconnection packet
-    or when we're sending a disconnection packet.
-    Packet originator (local/remote) is detected using BSSID comparison, set
-    on locally_generated field in the event sturcture.
-
- Parameters:    apDrv - pointer to driver instance
-                aType - deauth/disassoc
-                apMngPack - pointer to received/transmitted packet header
-                aPackLen - number of bytes in packet, including 80211 header
-
- Return code:   none
----------------------------------------------------------------------------- */
-static void sendEventDeauthDisassoc(ti_driver_ifData_t  *apDrv,
-                             uint32_t                aType,
-                             struct ieee80211_mgmt *apMngPack,
-                             uint32_t                aPackLen);
-
-
 // ============================================================================
 //	Management packets reception
 // ============================================================================

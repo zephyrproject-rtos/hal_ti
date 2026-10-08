@@ -184,14 +184,14 @@ typedef enum
     NUM_OF_LINKS,
     INVALID_LINK = 0xFF
 }linkId_e;
-//#define  MAX_NUM_LINKS                       (                                    \
-//                                                     MAX_NUM_BSS_STA_LINKS        \
-//                                                 +   MAX_NUM_AP_UNICAST_LINKS     \
-//                                                 +   MAX_NUM_AP_GLOBAL_LINKS      \
-//                                                 +   MAX_NUM_AP_BROADCAST_LINKS   \
-//                                                 +   MAX_NUM_SYSTEM_LINK  )
-//
-//
+#if 0
+#define  MAX_NUM_LINKS                       (                                    \
+                                                    MAX_NUM_BSS_STA_LINKS        \
+                                                +   MAX_NUM_AP_UNICAST_LINKS     \
+                                                +   MAX_NUM_AP_GLOBAL_LINKS      \
+                                                +   MAX_NUM_AP_BROADCAST_LINKS   \
+                                                +   MAX_NUM_SYSTEM_LINK  )
+#endif
 #define  MAX_NUM_LINKS  (NUM_OF_LINKS)
 
 #else /*************** This is FW ONLY section (data reduction for debug) ****************/
@@ -239,4 +239,3 @@ typedef enum
 #define RX_FILTER_MAGIC_NUMBER   0xABADABAD
 
 #endif /* PUBLIC_DEFINES_H */
-

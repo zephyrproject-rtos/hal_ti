@@ -163,13 +163,10 @@ TTxHwQueue *gTxHwQueueCB;
 int32_t txHwQueue_PrepareDescForFw(TTxCtrlBlk *pPktCtrlBlk, uint16_t uLifeTime)
 {
     txCtrl_t *pTxCtrl = gTxCtrlCB;
-    TTxHwQueue *pTxHwQueue = gTxHwQueueCB;
-    uint32_t tx_NumMaxTxDescriptor;
 #ifdef REMOVE_TX_CODE //TODO TX_CODE_WAS_REMOVED
     uint32_t uPktStartTime = pPktCtrlBlk->tTxDescriptor.startTime;  /* Contains host start time */
 #endif
     uint32_t i;
-    int32_t ret = TXN_STATUS_OK;
 
 #ifdef REMOVE_TX_CODE //TODO TX_CODE_WAS_REMOVED
     /* Save host packet handling time until this point (for statistics) */
@@ -212,7 +209,6 @@ void txHwQueue_FreeDescForFw(TTxCtrlBlk *pPktCtrlBlk)
 
 int32_t txHwQueue_VerifyDescriptorValid(uint32_t desc_id)
 {
-    txCtrl_t *pTxCtrl = gTxCtrlCB;
     TTxHwQueue *pTxHwQueue = gTxHwQueueCB;
     uint32_t tx_NumMaxTxDescriptor;
 
@@ -552,9 +548,9 @@ void txHwQueue_GetTxFlowControlLinkBitmaps(uint32_t *pSuspendBitmap, uint32_t *p
 {
     TTxHwQueue *pTxHwQueue = gTxHwQueueCB;
 
-    *pSuspendBitmap = gTxHwQueueCB->uLinkSuspendedFwBitmap;
-    *pFastBitmap    = gTxHwQueueCB->uLinkPrioFwBitmap;
-    *pPsBitmap      = gTxHwQueueCB->uLinkPsFwBitmap;
+    *pSuspendBitmap = pTxHwQueue->uLinkSuspendedFwBitmap;
+    *pFastBitmap    = pTxHwQueue->uLinkPrioFwBitmap;
+    *pPsBitmap      = pTxHwQueue->uLinkPsFwBitmap;
 }
 
 /****************************************************************************

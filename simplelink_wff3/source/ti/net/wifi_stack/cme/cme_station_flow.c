@@ -435,7 +435,9 @@ void CmeStationDisconnectReq(Cme_Users_e __user)
 {
     HOOK(HOOK_IN_CME_STATION_FLOW);
 
+#if 0
     int RetVal;
+#endif
 // TODO need to implement
     if ((gCmeStationFlowState_ull == CME_STA_DISCONNECTING_STATE) || (gCmeStationFlowState_ull == CME_STA_DISCONNECT_PEND_DHCP_REL_STATE))
     {
@@ -883,4 +885,3 @@ void cmeStaSendDisConnectedEventToApp(int16_t reason_code)
 
     os_free(pArgs);
 }
-

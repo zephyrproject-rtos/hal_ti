@@ -159,12 +159,14 @@ static void wmm_ac_del_req(struct wpa_supplicant *wpa_s, int failed)
 static void wmm_ac_addts_req_timeout(void *eloop_ctx, void *timeout_ctx)
 {
 	struct wpa_supplicant *wpa_s = eloop_ctx;
+#ifndef CONFIG_NO_STDOUT_DEBUG
 	struct wmm_ac_addts_request *addts_req = timeout_ctx;
 
 	wpa_printf(MSG_DEBUG,
 		   "Timeout getting ADDTS response (tsid=%d up=%d)",
 		   wmm_ac_get_tsid(&addts_req->tspec),
 		   wmm_ac_get_user_priority(&addts_req->tspec));
+#endif /* CONFIG_NO_STDOUT_DEBUG */
 
 	wmm_ac_del_req(wpa_s, 1);
 }

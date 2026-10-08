@@ -84,7 +84,6 @@ extern int32_t DeHwInit(void);
 /******************************************************************************
                                     FUNCTION 
 ******************************************************************************/
-static void SetMacAddress(uint32_t mac1, uint32_t mac2);
 void UploadFW(FILE *DeviceFileHandle);
 extern int32_t cc3xxx_set_defaults();
 extern uint32_t drv_getDriverLink(uint32_t uNetIfId, uint8_t* dst);
@@ -105,9 +104,7 @@ extern OsiLockObj_t extAppLockObj;
 ******************************************************************************/
 int32_t InitHostDriver(void)
 {
-    uint32_t config;
     int32_t ret;
-    FwStatus_t stat;
     const TPartition aPartition[] = {{0,0xF0000},{0,0},{0,0},{0,0}};
     uint32_t TrnsptThrdPrior;
 
@@ -444,7 +441,6 @@ void host_resetCounters(WlanRole_e roleType,dbg_cntr_trnspt_t *counters)
 void host_getCounters(WlanRole_e roleType, dbg_cntr_trnspt_t *counters)
 {
     uint32_t link,uNetIfId;
-    ti_driver_ifData_t *pDrv;
 
     if(WLAN_ROLE_STA == (uint32_t)roleType)
     {

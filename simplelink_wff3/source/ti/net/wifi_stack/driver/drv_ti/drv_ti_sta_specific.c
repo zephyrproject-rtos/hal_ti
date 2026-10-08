@@ -1423,8 +1423,6 @@ void setPeerHeCapabilities(uint8_t                        *pHeCapabilitiesPos,
 {
 
        int currAc;
-       uint8_t * pCurrtAcPos;
-
     HOOK(HOOK_DRV_TI_STA_SPECIFIC);
 
         // If local supports HE, set peer capabilities
@@ -1533,18 +1531,13 @@ void ti_drv_setApInfo(ti_driver_ifData_t    *apDrv,
     uint16_t capabilities = 0;
     Bool32 shortBarkerPreamble = FALSE;
     Bool_e shortBPreambleSupported;
-    uint32_t  minLen = WLAN_HDR_LEN + sizeof(apMngPack->u.assoc_resp);
-
     dot11_WME_PARAM_t wmeParamIE;
     dot11_WSC_t       wscIE;
 
     int32_t rc;
 
     // Post association configuration param
-    uint32_t   basicRatesBM, supportedRatesBM;
-    uint32_t   localSupportedRates;
-    uint8_t *pIes = apMngPack->u.assoc_resp.variable;
-    uint8_t *muEcdaPos;
+    uint8_t *muEcdaPos = NULL;
     heBssCap_t heBssCap = {0};
 
     apDrv->link = 0;
@@ -1651,7 +1644,6 @@ void ti_drv_setApInfo(ti_driver_ifData_t    *apDrv,
 //after associate and connect
 void ti_drv_setApAssocInfo(ti_driver_ifData_t    *apDrv)
 {
-    uint32_t   basicRatesBM, supportedRatesBM;
     uint32_t   supportedRates;
 
     supportedRates = apDrv->apRate.remotePeerSupportedRatesBM;

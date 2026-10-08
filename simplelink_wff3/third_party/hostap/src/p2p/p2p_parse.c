@@ -39,6 +39,7 @@ static int p2p_parse_attribute(u8 id, const u8 *data, u16 len,
 	const u8 *pos;
 	u16 nlen;
 	char devtype[WPS_DEV_TYPE_BUFSIZE];
+	(void)devtype;
 
 	switch (id) {
 	case P2P_ATTR_CAPABILITY:
@@ -478,6 +479,7 @@ static int p2p_parse_wps_ie(const struct wpabuf *buf, struct p2p_message *msg)
 	}
 	if (attr.primary_dev_type) {
 		char devtype[WPS_DEV_TYPE_BUFSIZE];
+		(void)devtype;
 		msg->wps_pri_dev_type = attr.primary_dev_type;
 		wpa_printf(MSG_DEBUG, "P2P: Primary Device Type (WPS): %s",
 			   wps_dev_type_bin2str(msg->wps_pri_dev_type, devtype,

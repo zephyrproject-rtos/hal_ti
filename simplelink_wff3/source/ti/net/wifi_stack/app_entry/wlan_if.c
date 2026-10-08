@@ -724,10 +724,8 @@ int Wlan_EtherPacketSend(WlanRole_e roleType, uint8_t *inbuf, uint32_t inbuf_len
 {
     TTxCtrlBlk *pPktCtrlBlk;
     uint32_t uNetIfId;
-    uint8_t *internalFrame;
     int status;
-    uint64_t current_sample, diff;
-    uint32_t current_data, dataLen,total_len;
+    uint32_t dataLen,total_len;
     TEthernetHeader* pEthHead = NULL;
     uint32_t    uHlid;
 
@@ -1023,7 +1021,6 @@ int  Wlan_Stop(uint32_t flags)
 int Wlan_RoleUp(WlanRole_e roleType, void *params, unsigned long int timeout)
 {
     int ret = 0;
-    uint32_t role_bitmap;
 
 #ifndef TI_STA_ONLY_BUILD
     if(roleType == WLAN_ROLE_AP)
@@ -1060,7 +1057,6 @@ int Wlan_RoleUp(WlanRole_e roleType, void *params, unsigned long int timeout)
 
 int Wlan_RoleDown(WlanRole_e roleType, unsigned long int timeout)
 {
-    uint32_t role_bitmap;
     int32_t ret = 0;
 
     HOOK(HOOK_WLAN_IF);
@@ -1652,9 +1648,8 @@ int Wlan_Get(WlanGet_e wlanGetType, void *params)
 		break;	
     }
 
-    end:
-        set_finish_wlan_get(wlanGetType);
-        return ret;
+    set_finish_wlan_get(wlanGetType);
+    return ret;
 }
 
 int Wlan_Set(WlanSet_e wlanSetType, void *params)
@@ -1697,28 +1692,28 @@ int Wlan_Set(WlanSet_e wlanSetType, void *params)
             }
 
             if(WLAN_ROLE_STA == pMacParams->roleType &&
-                    1 == (role_bitmap & BIT_x(ROLE_STA)))
+                    0 != (role_bitmap & BIT_x(ROLE_STA)))
             {
                 ret = WlanError(WLAN_ERROR_SEVERITY__LOW, WLAN_ERROR_MODULE__COMMANDS, WLAN_ERROR_TYPE__SET_MAC_ROLE_STA);
                 break;
             }
 
             else if(WLAN_ROLE_AP == pMacParams->roleType &&
-                    1 == (role_bitmap & BIT_x(ROLE_AP)))
+                    0 != (role_bitmap & BIT_x(ROLE_AP)))
             {
                 ret = WlanError(WLAN_ERROR_SEVERITY__LOW, WLAN_ERROR_MODULE__COMMANDS, WLAN_ERROR_TYPE__SET_MAC_ROLE_AP);
                 break;
             }
 
             else if(WLAN_ROLE_P2P_GO == pMacParams->roleType &&
-                    1 == (role_bitmap & BIT_x(ROLE_P2P_GO))) 
+                    0 != (role_bitmap & BIT_x(ROLE_P2P_GO)))
             {
                 ret = WlanError(WLAN_ERROR_SEVERITY__LOW, WLAN_ERROR_MODULE__COMMANDS, WLAN_ERROR_TYPE__SET_MAC_ROLE_P2P);
                 break;
             }
 
-            else if(ROLE_DEVICE == pMacParams->roleType &&
-                    1 == (role_bitmap & BIT_x(ROLE_DEVICE)))
+            else if(WLAN_ROLE_DEVICE == pMacParams->roleType &&
+                    0 != (role_bitmap & BIT_x(ROLE_DEVICE)))
             {
                 ret = WlanError(WLAN_ERROR_SEVERITY__LOW, WLAN_ERROR_MODULE__COMMANDS, WLAN_ERROR_TYPE__SET_MAC_ROLE_DEVICE);
                 break;
@@ -1783,9 +1778,6 @@ int Wlan_Set(WlanSet_e wlanSetType, void *params)
         case WLAN_SET_VENDOR_IE:
         {
             wlanSetVendorInfo_t *VendorInfo = (wlanSetVendorInfo_t *)params;
-            int roleId;
-            ti_driver_ifData_t * pDrv;
-            uint8_t * pVendorElements;
             RoleType_e RoleType;
             //for STA: vendor IE will appear on ASSoc-request
             //For AP : BEACON + PROBE_RESP +ASSOCI response
@@ -2170,7 +2162,6 @@ int Wlan_Set(WlanSet_e wlanSetType, void *params)
             break;
     }
 
-end:
     set_finish_wlan_set(wlanSetType);
     return ret;
 
@@ -2180,7 +2171,7 @@ int Wlan_ProfileAdd(const signed char *pName, const int NameLen, const unsigned 
                      const WlanSecParams_t* pSecParams, const WlanSecParamsExt_t* pSecExtParams,
                      const uint32_t Priority, const uint8_t Hidden, const uint32_t Options)
 {
-    int ret;
+    int ret = -1;
     int alloc_size = 0;
     CMEWlanAddGetProfile_t *params;
     uint8_t PassLen = 0;

@@ -105,7 +105,6 @@ int bus_sendInitCommand(uint32_t config, uint8_t fbrw)
  {
      uint32_t actualLengthRead = 0;
      int32_t  ret;
-     FwStatus_t buf;
 #ifndef REMOVE_HIF_READ_DELAY
      volatile int32_t tmp_cnt = 0;
 #endif

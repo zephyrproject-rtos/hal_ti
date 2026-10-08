@@ -225,8 +225,6 @@ Device_Initialize(
 void
 Device_UnInitialize(void)
 {
-    uint32_t DevCount = Device_Internal_Count_Get();
-    Device_Admin_t ** DevAdmin_pp = Device_Internal_Admin_Get();
     Device_Global_Admin_t * DevGlobalAdmin_p =
                         Device_Internal_Admin_Global_Get();
 

@@ -268,6 +268,7 @@ static void wpa_supplicant_aborted_cached(void *ctx)
 }
 
 
+#ifndef CONFIG_NO_STDOUT_DEBUG
 static const char * result_str(enum eapol_supp_result result)
 {
 	switch (result) {
@@ -280,6 +281,7 @@ static const char * result_str(enum eapol_supp_result result)
 	}
 	return "?";
 }
+#endif /* CONFIG_NO_STDOUT_DEBUG */
 
 
 static void wpa_supplicant_eapol_cb(struct eapol_sm *eapol,

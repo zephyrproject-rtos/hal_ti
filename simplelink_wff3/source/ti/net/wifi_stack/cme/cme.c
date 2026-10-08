@@ -553,6 +553,7 @@ static Bool32 isRxMgmtFrameSafeToFilter (void *descriptor);
 int32_t cmeMsgQueueCleanup (void);
 int32_t cmeMsgQueueCleanupAll (void);
 static int32_t validateWlanConnectParams(CMEWlanConnectCommon_t *apCmd);
+#if CC35XX_ADD_SUPPORT_ENT_PROFILE
 static int32_t cme_validate_eap_connection_params(uint8_t  SsidLen,
                                                   uint8_t  PasswordLen,
                                                   uint8_t  UserLen,
@@ -560,17 +561,18 @@ static int32_t cme_validate_eap_connection_params(uint8_t  SsidLen,
                                                   uint8_t  CertIndex,
                                                   uint32_t EapBitmask,
                                                   uint8_t  do_validate_role);
+#endif
 
 static BOOLEAN isSameConnectParamsInProgress(CMEWlanConnectCommon_t *pCmdbuffer, CMEEapWlanConnect_t *pConnectEapCmd);
 
 
-static cmePrivateIeCB_t* getPrivateIeWorkingCopy(void);
-static void freePrivateIeWorkingCopy(cmePrivateIeCB_t* pWorkingCopy);
 void CME_supplicantPeriodicTimerKick(void);
 void CME_supplicantPeriodicActivities(void);
 void CME_MsgFree(cmeMsg_t *apMsg);
-static void cme_debug_print_cME_queue_content();
+#ifdef CME_MSG_QUEUE_DEBUG
+static void cme_debug_print_cME_queue_content(cmeMsg_t *apMsg);
 static void debug_print_msg_type_subtype(cmeMsg_t* msg);
+#endif /* CME_MSG_QUEUE_DEBUG */
 int32_t cme_update_ap_beacon_tx_power(ti_driver_ifData_t *pDrv, uint32_t roleId, int8_t tx_power);
 int32_t cme_get_role_channel(WlanRole_e role, uint16_t *channelNum, uint32_t *roleId);
 
@@ -763,12 +765,10 @@ int32_t cme_get_role_channel(WlanRole_e role, uint16_t *channelNum, uint32_t *ro
 
 int32_t CME_GetTxPower(WlanTxPowerGet_t *params)
 {
-    struct wpa_supplicant *wpa_s;
     WlanTxPowerGet_t *txPowerGet = params;
     ti_driver_ifData_t *pDrv;
     uint32_t roleId;
     int32_t ret;
-    RoleType_e roleType;
     uint32_t role_bitmap = CME_GetStartedRoleBitmap();
 
     /* Check if role is up */
@@ -1059,8 +1059,7 @@ int32_t CME_GetScanResults(uint32_t aIndex, uint32_t aCount, uint8_t aGetInterna
 int32_t CME_WlanExtP2pProcessProvDiscActionMsg(WlanActionParam_t* actionBuff, uint8_t requestByHost)
 {
     cmeMsg_t msg;
-    int32_t    status;
-    BOOLEAN  isProfileConnection = FALSE;
+    int32_t status = WLAN_RET_CODE_OK;
 
     if(!isextP2P())
     {
@@ -2171,7 +2170,6 @@ int32_t CME_AddProfile(CMEWlanAddGetProfile_t* new_profile)
     cmeMsg_t   msg;
     int32_t    status;
     int16_t    index;
-    BOOLEAN    isProfileConnection = TRUE;
     const CMEWlanAddGetProfile_t *cme_wlan_add_profile_args = new_profile;
     uint32_t keyMgmtType;    
 
@@ -2503,8 +2501,6 @@ int32_t CME_setPeerAgingTimeout(uint32_t agingTimeOut)
     HOOK(HOOK_IN_CME);
 
     cmeMsg_t msg;
-    uint8_t* pVendorIE = NULL;
-    int32 ret;
 
     msg.msgId = CME_MESSAGE_ID_CONFIGURE_PEER_AGING_TIMEOUT ;
     msg.un.peerAgingTimeout = agingTimeOut;
@@ -2605,7 +2601,7 @@ int32_t CME_EapolTxResult(void *desc)
 int32_t CME_TxResult(void *desc)
 {
     cmeMsg_t msg;
-    volatile CmeTxDesc_t *pDesc;
+    volatile CmeTxDesc_t *pDesc = NULL;
     struct MgmtPktDesc* pRecDesc;
     TMgmtPktReport* pMgmDesc =  (TMgmtPktReport*)desc;
     struct ieee80211_mgmt *pMngPack;
@@ -3097,8 +3093,6 @@ void cme_Thread(void* apParam)
 {
     HOOK(HOOK_IN_CME);
 
-    uint32_t requested_active_role  = 0;
-    
     int32_t            eloopTimeout;
     uint32_t           timeoutMs = 0xFFFFFFFF;
     cmeMsg_t           msg;
@@ -3106,7 +3100,6 @@ void cme_Thread(void* apParam)
     int role_switch_rc;
     volatile BOOLEAN running;
 
-    int32_t peerStatus;
     BOOLEAN sendInternalEvent = FALSE;
     BOOLEAN bRemovePeerNeeded = FALSE;
 
@@ -3859,8 +3852,6 @@ void cme_Thread(void* apParam)
                         //     in one shot scans initiated by the supplicant mNumProfiles might be equal to zero,
                         //     so in case we get here when supplicant initiated scan is in progress - 
                         //     check if this is the current scan or a periodic scan that runs in parallel.
-                        cmeScanSharedInfo_t*    pCmeScanDB = (cmeScanSharedInfo_t*)scanResultTable_GetCmeScanDbPointer();
-
                         numOfSSID = msg.un.postScanInfo.pSharedInfo->mOneShotProfiles.mNumProfiles;
                         if ((numOfSSID == 0)
                             && (msg.un.postScanInfo.scanType == SCAN_REQUEST_ONE_SHOT)
@@ -4441,7 +4432,6 @@ void cme_Thread(void* apParam)
                         uint8_t *bssidAddr  = pDrv->currBssid;
 
                         WlanEventConnecting_t*  pArgs;
-                        uint8_t band;
 
                         //update the newly connected bssid
                         os_memcpy(gCmeLastConnectedBssId, bssidAddr, MAC_ADDR_LEN);
@@ -5169,7 +5159,6 @@ void cme_Thread(void* apParam)
     }
 
     } //while(gContRunThrdLoopCme)
-exit:
     CME_PRINT_REPORT("\n\r cme_Thread: exit from thread loop !!");
     if (OSI_OK!=osi_SyncObjSignal(&gThrdLoopStoppedCmeSync))
     {
@@ -6249,6 +6238,7 @@ int16 CME_WlanApRemovePeer(CMEWlanApRemovePeer_t *pCmdRemovePeer)
     return status;
 }
 
+#ifdef CME_MSG_QUEUE_DEBUG
 static void debug_print_msg_type_subtype(cmeMsg_t* msg)
 {
     if(msg->msgId == CME_MESSAGE_ID_RX_MNG_PACK)
@@ -6270,8 +6260,9 @@ static void debug_print_msg_type_subtype(cmeMsg_t* msg)
     }
 }
 
-static void cme_debug_print_cME_queue_content()
+static void cme_debug_print_cME_queue_content(cmeMsg_t *apMsg)
 {
+    (void)apMsg;
     //for debug purpose, this is left open, will be undef later on
     //the code shouldn't come into this place, we need to drop packet that are not relevant
     //before
@@ -6320,3 +6311,4 @@ static void cme_debug_print_cME_queue_content()
         }
     }//for
 }
+#endif /* CME_MSG_QUEUE_DEBUG */

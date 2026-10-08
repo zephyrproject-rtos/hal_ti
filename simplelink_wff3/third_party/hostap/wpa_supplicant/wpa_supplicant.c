@@ -8455,6 +8455,7 @@ void dump_freq_data(struct wpa_supplicant *wpa_s, const char *title,
 		    struct wpa_used_freq_data *freqs_data,
 		    unsigned int len)
 {
+#ifndef CONFIG_NO_STDOUT_DEBUG
 	unsigned int i;
 
 	wpa_dbg(wpa_s, MSG_DEBUG, "Shared frequencies (len=%u): %s",
@@ -8464,6 +8465,7 @@ void dump_freq_data(struct wpa_supplicant *wpa_s, const char *title,
 		wpa_dbg(wpa_s, MSG_DEBUG, "freq[%u]: %d, flags=0x%X",
 			i, cur->freq, cur->flags);
 	}
+#endif /* CONFIG_NO_STDOUT_DEBUG */
 }
 
 
@@ -8929,7 +8931,9 @@ wpa_drv_get_scan_results2(struct wpa_supplicant *wpa_s)
 bool wpas_ap_supports_rsn_overriding(struct wpa_supplicant *wpa_s,
 				     struct wpa_bss *bss)
 {
+#if 0
 	int i;
+#endif
 
 	if (!bss)
 		return false;
@@ -8937,19 +8941,21 @@ bool wpas_ap_supports_rsn_overriding(struct wpa_supplicant *wpa_s,
 	    wpa_bss_get_vendor_ie(bss, RSNE_OVERRIDE_2_IE_VENDOR_TYPE))
 		return true;
 
-	// if (!wpa_s->valid_links)
-	// 	return false;
+#if 0
+	if (!wpa_s->valid_links)
+		return false;
 
-	// for (i = 0; i < MAX_NUM_MLD_LINKS; i++) {
-	// 	if (!(wpa_s->valid_links & BIT(i)))
-	// 		continue;
-	// 	if (wpa_s->links[i].bss &&
-	// 	    (wpa_bss_get_vendor_ie(wpa_s->links[i].bss,
-	// 				   RSNE_OVERRIDE_IE_VENDOR_TYPE) ||
-	// 	     wpa_bss_get_vendor_ie(wpa_s->links[i].bss,
-	// 				   RSNE_OVERRIDE_2_IE_VENDOR_TYPE)))
-	// 		return true;
-	// }
+	for (i = 0; i < MAX_NUM_MLD_LINKS; i++) {
+		if (!(wpa_s->valid_links & BIT(i)))
+			continue;
+		if (wpa_s->links[i].bss &&
+		    (wpa_bss_get_vendor_ie(wpa_s->links[i].bss,
+					   RSNE_OVERRIDE_IE_VENDOR_TYPE) ||
+		     wpa_bss_get_vendor_ie(wpa_s->links[i].bss,
+					   RSNE_OVERRIDE_2_IE_VENDOR_TYPE)))
+			return true;
+	}
+#endif
 
 	return false;
 }
@@ -8958,24 +8964,28 @@ bool wpas_ap_supports_rsn_overriding(struct wpa_supplicant *wpa_s,
 bool wpas_ap_supports_rsn_overriding_2(struct wpa_supplicant *wpa_s,
 				       struct wpa_bss *bss)
 {
+#if 0
 	int i;
+#endif
 
 	if (!bss)
 		return false;
 	if (wpa_bss_get_vendor_ie(bss, RSNE_OVERRIDE_2_IE_VENDOR_TYPE))
 		return true;
 
-	// if (!wpa_s->valid_links)
-	// 	return false;
+#if 0
+	if (!wpa_s->valid_links)
+		return false;
 
-	// for (i = 0; i < MAX_NUM_MLD_LINKS; i++) {
-	// 	if (!(wpa_s->valid_links & BIT(i)))
-	// 		continue;
-	// 	if (wpa_s->links[i].bss &&
-	// 	    wpa_bss_get_vendor_ie(wpa_s->links[i].bss,
-	// 				  RSNE_OVERRIDE_2_IE_VENDOR_TYPE))
-	// 		return true;
-	// }
+	for (i = 0; i < MAX_NUM_MLD_LINKS; i++) {
+		if (!(wpa_s->valid_links & BIT(i)))
+			continue;
+		if (wpa_s->links[i].bss &&
+		    wpa_bss_get_vendor_ie(wpa_s->links[i].bss,
+					  RSNE_OVERRIDE_2_IE_VENDOR_TYPE))
+			return true;
+	}
+#endif
 
 	return false;
 }

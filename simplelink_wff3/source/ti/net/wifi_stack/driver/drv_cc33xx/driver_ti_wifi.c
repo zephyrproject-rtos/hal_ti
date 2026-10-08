@@ -2246,7 +2246,6 @@ int ti_driver_ext_set_CROC(uint8_t calledFromCmeThread,uint32_t is_croc_performe
 {
     int32_t roleId, ret= 0;
     struct wpa_supplicant *wpa_s;
-    uint8_t roleid = ROLE_DEVICE;
 
     CME_PRINT_REPORT("\r\nti_driver_ext_set_CROC , calledFromCmeThread :%d\r\n",calledFromCmeThread);
 
@@ -2454,12 +2453,7 @@ int ti_driver_ext_tx_send_action(
     ti_driver_ifData_t     *pDrv;
     struct wpa_supplicant *wpa_s = NULL;
     uint32_t roleId;
-    struct ieee80211_mgmt  mgmt;
-    uint8_t *apSrc;
-    int32_t freq;
-    uint32_t aWaitTime ;//ms
     int32_t ret = 0;
-    uint8_t* apBssid;
 
 
     osi_LockObjLock(&extAppLockObj, OSI_WAIT_FOREVER);
@@ -3041,8 +3035,6 @@ int ti_driver_cancel_remain_on_channel(void *apPriv)
 {
     HOOK(HOOK_IN_DRIVER_TI_WIFI);
     ti_driver_ifData_t *pDrv = (ti_driver_ifData_t *)apPriv;
-    Channel_e chan;
-    uint8_t/*RadioBand_e*/ band;
 
     //wpa_printf(MSG_ERROR, "ti_driver: lock3");
     osi_LockObjLock(&g_offChannelDev.p_remain_channel_mutex , OSI_WAIT_FOREVER);
@@ -3127,6 +3119,7 @@ int ti_driver_if_add(void *apPriv, enum wpa_driver_if_type type,
                     const char *bridge, int use_existing, int setup_ap)
 {
     ti_driver_ifData_t *pDrv = (ti_driver_ifData_t *)apPriv;
+    (void)pDrv;
     uint8_t pAddress[6] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
     CME_PRINT_REPORT("\n\rti_driver: Add new interface: type = %d, ifname=%s, force_ifname: %s, drvRoleid=%d",
                 type, ifname, force_ifname, pDrv->roleId);
@@ -3192,7 +3185,7 @@ int ti_send_mgmt_frame(void *apPriv,
 
     ti_driver_ifData_t *pDrv = (ti_driver_ifData_t *)apPriv;
     TMgmtPktDesc        *pMgmtPkt;
-    uint32_t            dataLen,total_len, total_len_aligned,extraHThdr;
+    uint32_t            dataLen,total_len,extraHThdr;
     dot11_mgmtHeader_t* pDot11Header;
     uint8_t*            dst_addr;
     uint32_t            uNetIfId = 0;
@@ -4127,7 +4120,7 @@ static void sendEventDeauthDisassoc(ti_driver_ifData_t *apDrv, uint32_t aType,
     char macStr[MAC_STR_LEN];
     union wpa_event_data event;
     uint32  minLen = WLAN_HDR_LEN + sizeof(apMngPack->u.deauth);
-    uint16 reason_code;
+    uint16 reason_code = 0;
     enum wpa_event_type   type;
 
     GET_MAC_STR(apMngPack->bssid, macStr);
@@ -4221,7 +4214,7 @@ static void sendEventUnprotDeauthDisassoc(ti_driver_ifData_t *apDrv, uint32_t aT
     char macStr[MAC_STR_LEN];
     union wpa_event_data event;
     uint32  minLen = WLAN_HDR_LEN + sizeof(apMngPack->u.deauth);
-    uint16 reason_code;
+    uint16 reason_code = 0;
     enum wpa_event_type  type;
 
     GET_MAC_STR(apMngPack->bssid, macStr);
@@ -4623,6 +4616,7 @@ void drv_handleRxMngPacket(void *descriptor)
     type =  WLAN_FC_GET_TYPE(fc); // Frame Type - MGMT(0), CTRL (1), DATA (2)
     stype = WLAN_FC_GET_STYPE(fc);
 
+#ifndef CONFIG_NO_STDOUT_DEBUG
     if((stype != WLAN_FC_STYPE_PROBE_REQ) && (stype != WLAN_FC_STYPE_REASSOC_RESP)//reduce amount of log prints
        && (stype != WLAN_FC_STYPE_BEACON))
     {
@@ -4633,6 +4627,7 @@ void drv_handleRxMngPacket(void *descriptor)
         //wpa_printf(MSG_INFO, "ti_driver: 0ff channel is not allowed! pDrv->freq:%d",pDrv->freq);
 
     }
+#endif
     if (IS_WEP_ON(fc) != 0)
     {
         extraHdr = RSN_SEC_LEN;
@@ -4789,7 +4784,6 @@ void drv_handleRxMngPacket(void *descriptor)
             dot11_POWER_CONSTRAINT_t *pPowerConstraintIE;
             dot11_CELL_TP_t *pDtpcIE;
             dot11HeMuEdcaAcParams_t *pHeMuEdcaParamsIE = NULL;
-            dot11_ACParameters_t *pAcParameters = NULL;
             dot11_WME_PARAM_t *pWmmParamIE = NULL;
             uint32_t* pIE_addr_table = NULL;
             uint32_t* pIE_extension_addr_table = NULL;
@@ -4841,7 +4835,6 @@ void drv_handleRxMngPacket(void *descriptor)
             if(pHeMuEdcaParamsIE && (pDrv->connected))
             {
                 int ac;
-                int changed = 0 ;
                 for(ac = 0; ac < NUM_ACCESS_CATEGORIES; ac++)
                 {
                     if (os_memcmp(pDrv->apHeMuEdcaAcParams[ac]._byte, pHeMuEdcaParamsIE->heMuEdcaAcParamsIe[ac]._byte,HE_MU_EDCA_FIELD_BYTES) != 0)
@@ -4863,7 +4856,6 @@ void drv_handleRxMngPacket(void *descriptor)
             if(pWmmParamIE && (pDrv->connected))
             {
                 int ac;
-                int changed = 0 ;
                 if(os_memcmp(&(pDrv->apAcParameters), &(pWmmParamIE->WME_ACParameteres), sizeof(dot11_ACParameters_t)) != 0)
                 {
                     setWmeSiteParams(pWmmParamIE, &pDrv->assocParams);
@@ -5028,7 +5020,6 @@ void drv_handleRxMngPacket(void *descriptor)
 
                 case WLAN_ACTION_SPECTRUM_MGMT:
                 {
-                    uint8_t* pChannelSwitchIEstart;
                     if (pMngPack->u.action.u.chan_switch.action_code != DOT11_CHANNEL_SWITCH_ACTION_CODE)
                     {
                         GTRACE(GRP_DRIVER_CC33,
@@ -5330,7 +5321,6 @@ void drv_handleUnprotRxDeauth (void *descriptor, uint32 roleId)
         GTRACE(GRP_MGMT_PROTECTION,"MPF: Deassoc to Supplicant");
         wpa_supplicant_event(pDrv->ctx, EVENT_UNPROT_DISASSOC, &eventData);
     }
-fail:
     RxBufFree(desc);
     HOOK(HOOK_IN_DRIVER_TI_WIFI);
 
@@ -5403,7 +5393,7 @@ void drv_handleRxEapol(void *aDesc)
     HOOK(HOOK_IN_DRIVER_TI_WIFI);
 
     RxIfDescriptor_t *desc = (RxIfDescriptor_t *)aDesc;
-    ti_driver_ifData_t     *pDrv;
+    ti_driver_ifData_t     *pDrv = NULL;
     uint8_t netif = TIWDRV_NETIF_NUM;
     tiwdrv_if_mode_e netifMode = TIWDRV_IF_MODE_UNKNOWN;
     uint32_t roleId = 0;
@@ -5413,7 +5403,6 @@ void drv_handleRxEapol(void *aDesc)
     union wpa_event_data eventData;
 	TEthernetHeader *pHdr;
     uint32_t headerSize = 0;
-    uint8_t  headerAlignment = 0;
 
 
     /* Get the mac header location in the packet Buffer */
@@ -5878,9 +5867,6 @@ void ti_driver_p2p_dev_found(struct wpa_supplicant *wpa_s, const uint8_t *peer_a
 void ti_driver_go_neg_completed(struct wpa_supplicant *wpa_s,
                                 struct p2p_go_neg_results *res)
 {
-    ti_driver_ifData_t *pDrv = (ti_driver_ifData_t *)wpa_s->drv_priv;
-    uint32_t roleId;
-
     CME_PRINT_REPORT("\n\rP2P neg completed status=%d  isGO=%d peer=" MACSTR, res->status, res->role_go, MAC2STR(res->peer_device_addr));
     GTRACE(GRP_DRIVER_CC33, "ti_driver_go_neg_completed: res.ssid=%s status:%d  isGO=%d peer=" MACSTR, 
             res->ssid, res->status, res->role_go, MAC2STR(res->peer_device_addr));
@@ -5952,7 +5938,6 @@ void ti_driver_p2p_find_stopped(struct wpa_supplicant *wpa_s)
 void ti_driver_p2p_group_formation_failure(struct wpa_supplicant *wpa_s)
 {
     ti_driver_ifData_t *pDrv = (ti_driver_ifData_t *)wpa_s->drv_priv;
-    uint32_t roleId;
 
     //clean bit. connection stopped with failure
     CME_PRINT_REPORT("\n\r ti_driver : P2P Group Formation FAILED roleid=%d, roleType = %d, if_name = %s",

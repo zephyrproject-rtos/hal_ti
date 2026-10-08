@@ -30,6 +30,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <zephyr/random/random.h>
 #include "utils/common.h"
 #include <mbedtls/version.h>
 #include <mbedtls/entropy.h>
@@ -37,7 +38,6 @@
 #include <mbedtls/platform_util.h> /* mbedtls_platform_zeroize() */
 #include <mbedtls/asn1.h>
 #include <mbedtls/asn1write.h>
-#include <zephyr/random/random.h>
 #if defined(TI_WIFI_CRYPTO_BACKEND_ZEPHYR_PSA) || \
     defined(TI_WIFI_CRYPTO_BACKEND_ZEPHYR_MBEDTLS)
 #define TI_WIFI_CRYPTO_BACKEND_ZEPHYR
@@ -2625,7 +2625,7 @@ static mbedtls_ecp_group_id crypto_mbedtls_ecp_group_id_from_ike_id(int group)
 }
 
 #ifdef CRYPTO_MBEDTLS_CRYPTO_EC
-static int crypto_mbedtls_ike_id_from_ecp_group_id(mbedtls_ecp_group_id grp_id)
+static int __maybe_unused crypto_mbedtls_ike_id_from_ecp_group_id(mbedtls_ecp_group_id grp_id)
 {
     /* https://www.iana.org/assignments/ikev2-parameters/ikev2-parameters.xhtml */
     /*(for crypto_ec_key_group())*/
@@ -3565,6 +3565,7 @@ const struct crypto_bignum *crypto_ec_get_a(struct crypto_ec *e)
        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
        0x00,0x00,0x00,0x00,0xff,0xff,0xff,0xff,
        0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xfc};
+#ifdef MBEDTLS_ECP_DP_SECP384R1_ENABLED
     static const uint8_t secp384r1_a[] =
       {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
        0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
@@ -3572,6 +3573,8 @@ const struct crypto_bignum *crypto_ec_get_a(struct crypto_ec *e)
        0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xfe,
        0xff,0xff,0xff,0xff,0x00,0x00,0x00,0x00,
        0x00,0x00,0x00,0x00,0xff,0xff,0xff,0xfc};
+#endif
+#ifdef MBEDTLS_ECP_DP_SECP521R1_ENABLED
     static const uint8_t secp521r1_a[] =
       {0x01,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
        0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
@@ -3582,15 +3585,20 @@ const struct crypto_bignum *crypto_ec_get_a(struct crypto_ec *e)
        0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
        0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
        0xff,0xfc};
+#endif
+#ifdef MBEDTLS_ECP_DP_SECP192R1_ENABLED
     static const uint8_t secp192r1_a[] =
       {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
        0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xfe,
        0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xfc};
+#endif
+#ifdef MBEDTLS_ECP_DP_SECP224R1_ENABLED
     static const uint8_t secp224r1_a[] =
       {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
        0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xfe,
        0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
        0xff,0xff,0xff,0xfe};
+#endif
 
     const uint8_t *bin = NULL;
     size_t len = 0;
@@ -5112,6 +5120,7 @@ int rc4_skip(const u8 *key, size_t keylen, size_t skip,
 
 /* duplicated in tls_mbedtls.c:tls_mbedtls_readfile()*/
 
+#if defined(CRYPTO_MBEDTLS_CRYPTO_RSA) && defined(MBEDTLS_RSA_C)
 static int crypto_mbedtls_readfile(const char *path, u8 **buf, size_t *n)
 {
   #if 0 /* #ifdef MBEDTLS_FS_IO */
@@ -5141,7 +5150,7 @@ static int crypto_mbedtls_readfile(const char *path, u8 **buf, size_t *n)
   #endif
     return 0;
 }
-
+#endif
 
 #ifdef CRYPTO_MBEDTLS_CRYPTO_RSA
 #ifdef MBEDTLS_RSA_C

@@ -231,7 +231,6 @@ static void ResetInactivityTimer(uint8_t uTid, uint8_t uHlid)
 void InactivityTimer_handler(Bool_e bTwdInitOccured)
 {
     rxData_t *pRxData = gRxDataCB;
-    uint32_t key;
 
     /* Request switch to driver context for handling timer events */
     trnspt_RequestSchedule (pRxData->uInactivityTimeoutContextId,FALSE);//perform InactivityTimerExpire_task
@@ -978,7 +977,6 @@ static uint32_t RxQueue_PassPacket(uint32_t eStatus, void *pBuffer)
     if (eStatus == OK)
     {
         //dot11_header_t *pMacHdr;
-        RxIfDescriptor_t *pRxParams = (RxIfDescriptor_t*)pBuffer;
         Bool_e pnReplyAttackDetected = RxQueue_CheckPnReplyAttack(pBuffer);
 
 
@@ -990,9 +988,6 @@ static uint32_t RxQueue_PassPacket(uint32_t eStatus, void *pBuffer)
     }
     else
     {
-        RxIfDescriptor_t *pRxParams = (RxIfDescriptor_t*)pBuffer;
-
-
         if (eStatus == (uint32_t)RX_DESC_HOST_UNWANTED_SEQUENCE_NUMBER)
         {
             /* Packet with unwanted sequence number (either frame sequence number already passed or lower than expected sequence number) */
@@ -1700,8 +1695,6 @@ void RxQueue_ReceivePacket(uint8_t * pBuffer, uint32_t len)
                 /* BA already established , the initiator can update the timeout*/
                 if (IsBaSessionEstablished(uFrameTid, uControlledLink))
                 {
-                    uint32_t          uFormerIncativityTimeoutMs;
-
                     BLOCK_ACK_PRINT_REPORT_ERROR ("\r\nRxQueue_ReceivePacket: Received ADDBA frame for Hlid: %d, uControlledLink: %d, Tid %d. uBAParameterField: 0x%x Session already established.\r\n",
                             uFrameHlid, uControlledLink, uFrameTid, uBAParameterField);
                     RxQueue_SendDELBA(DOT11_DELBA_REASON_CODE_UNSPECIFIED, uFrameTid, uControlledLink);
@@ -1944,7 +1937,6 @@ static Bool_e SendQueuedPackets(uint8_t uTid, uint8_t uHlid)
 void rxData_ExpiryMissingPktTimeout_handler (void* hCbHndl)
 {
     rxData_t *pRxData = gRxDataCB;
-    uint32_t key;
 
     /* Request switch to driver context for handling timer events */
     trnspt_RequestSchedule (pRxData->uMissingPktTimeoutContextId,FALSE);//perform rxData_MissingPktTimeout_task

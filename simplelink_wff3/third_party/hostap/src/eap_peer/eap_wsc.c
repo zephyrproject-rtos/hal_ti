@@ -35,6 +35,7 @@ struct wps_data* eap_wsc_get_wps_data(void *priv){
 
 }
 
+#ifndef CONFIG_NO_STDOUT_DEBUG
 static const char * eap_wsc_state_txt(int state)
 {
 	switch (state) {
@@ -50,6 +51,7 @@ static const char * eap_wsc_state_txt(int state)
 		return "?";
 	}
 }
+#endif /* CONFIG_NO_STDOUT_DEBUG */
 
 
 static void eap_wsc_state(struct eap_wsc_data *data, int state)

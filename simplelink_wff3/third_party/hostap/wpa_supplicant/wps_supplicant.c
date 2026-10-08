@@ -97,8 +97,9 @@ int wpas_wps_eapol_cb(struct wpa_supplicant *wpa_s)
     }
     /***********************************************/
 
-    if (wpas_p2p_wps_eapol_cb(wpa_s) > 0)
+    if (wpas_p2p_wps_eapol_cb(wpa_s) > 0) {
         return 1;
+    }
 
 	if (!wpa_s->wps_success &&
 	    wpa_s->current_ssid &&
@@ -2930,6 +2931,7 @@ out:
 
 static void wpas_wps_dump_ap_info(struct wpa_supplicant *wpa_s)
 {
+#ifndef CONFIG_NO_STDOUT_DEBUG
 	size_t i;
 	struct os_reltime now;
 
@@ -2953,6 +2955,7 @@ static void wpas_wps_dump_ap_info(struct wpa_supplicant *wpa_s)
 			   (int) now.sec - (int) ap->last_attempt.sec : -1,
 			   e ? e->count : 0);
 	}
+#endif /* CONFIG_NO_STDOUT_DEBUG */
 }
 
 

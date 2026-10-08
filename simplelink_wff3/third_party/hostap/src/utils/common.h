@@ -142,10 +142,12 @@ typedef signed  char s8;
 #endif
 
 #ifndef bswap_32
-// #define bswap_32(a) ((((u32) (a) << 24) & 0xff000000) | \
-// 		     (((u32) (a) << 8) & 0xff0000) | \
-//      		     (((u32) (a) >> 8) & 0xff00) | \
-//      		     (((u32) (a) >> 24) & 0xff))
+#if 0
+#define bswap_32(a) ((((u32) (a) << 24) & 0xff000000) | \
+		     (((u32) (a) << 8) & 0xff0000) | \
+		     (((u32) (a) >> 8) & 0xff00) | \
+		     (((u32) (a) >> 24) & 0xff))
+#endif
 #define bswap_32(a) __builtin_bswap32(a)				 
 #endif
 

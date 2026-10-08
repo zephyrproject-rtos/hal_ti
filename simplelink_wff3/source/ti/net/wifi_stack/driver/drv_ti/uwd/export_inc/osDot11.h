@@ -50,13 +50,13 @@
 //
 //#define OS_802_11_SSID_FIRST_VALID_CHAR             32
 //
-//#define OS_802_11_SSID_JUNK(str,len)                   \
-//        ((len) > 2 &&                                  \
-//         (unsigned char)(str)[0] < OS_802_11_SSID_FIRST_VALID_CHAR && \
-//         (unsigned char)(str)[1] < OS_802_11_SSID_FIRST_VALID_CHAR && \
-//         (unsigned char)(str)[2] < OS_802_11_SSID_FIRST_VALID_CHAR)
-//
-//
+#if 0
+#define OS_802_11_SSID_JUNK(str,len)                   \
+        ((len) > 2 &&                                  \
+         (unsigned char)(str)[0] < OS_802_11_SSID_FIRST_VALID_CHAR && \
+         (unsigned char)(str)[1] < OS_802_11_SSID_FIRST_VALID_CHAR && \
+         (unsigned char)(str)[2] < OS_802_11_SSID_FIRST_VALID_CHAR)
+#endif
 ///**/
 ///*  Per-packet information for Ieee8021QInfo.*/
 ///**/
@@ -666,4 +666,3 @@ typedef uint8_t OS_802_11_RATES_EX[16];
 //#define     OS_802_11_OPTION_ENABLE_ALL                 0x00000003
 
 #endif
-
