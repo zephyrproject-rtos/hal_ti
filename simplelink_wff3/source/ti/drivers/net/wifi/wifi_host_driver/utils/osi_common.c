@@ -35,6 +35,9 @@
 #include <ctype.h>
 #include "osi_kernel.h"
 #include <stdlib.h>
+#if defined(__ZEPHYR__)
+#include <zephyr/random/random.h>
+#endif
 
 void os_sleep(os_time_t sec, os_time_t usec)
 {
@@ -87,6 +90,9 @@ void os_daemonize_terminate(const char *pid_file)
 
 int os_get_random(unsigned char *buf, size_t len)
 {
+#if defined(__ZEPHYR__)
+    return sys_csrand_get(buf, len);
+#else
     size_t i;
 
     for (i=0 ; i<len ; ++i)
@@ -95,6 +101,7 @@ int os_get_random(unsigned char *buf, size_t len)
     }
 
     return 0;
+#endif
 }
 
 unsigned long os_random(void)
@@ -197,7 +204,6 @@ int os_memcmp_const(const void *a, const void *b, size_t len)
 
     return res;
 }
-
 
 
 

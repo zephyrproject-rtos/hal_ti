@@ -337,6 +337,7 @@ int inet_ntop6(const unsigned char *src, char *dst, size_t size)
     return 1;
 }
 
+#if !defined(__ZEPHYR__)
 int inet_ntop(int af, const void *src, void *dst, size_t size)
 {
     switch ( af )
@@ -349,3 +350,4 @@ int inet_ntop(int af, const void *src, void *dst, size_t size)
             return 0;
     }
 }
+#endif
