@@ -1,0 +1,8 @@
+//arch = zynq; split = false; format = BIN
+the_ROM_image:
+{
+	[bootloader] ./bsp/fsbl.elf
+	./bsp/bitstream.bit
+	regress.elf
+}
+
