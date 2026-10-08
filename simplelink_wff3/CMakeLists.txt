@@ -17,6 +17,14 @@ if(CONFIG_HAS_CC35XX_SDK)
     zephyr_library()
     zephyr_library_compile_definitions(${COMPILER})
     zephyr_library_sources(
+      kernel/zephyr/dpl/ClockP_zephyr.c
+      kernel/zephyr/dpl/HwiP_zephyr.c
+      kernel/zephyr/dpl/MessageQueueP_zephyr.c
+      kernel/zephyr/dpl/SwiP_zephyr.c
+      kernel/zephyr/dpl/SemaphoreP_zephyr.c
+      kernel/zephyr/dpl/TaskP_zephyr.c
+      kernel/zephyr/dpl/QueueP_zephyr.c
+      kernel/zephyr/dpl/MutexP_zephyr.c
 
       source/ti/drivers/UART2.c
       source/ti/drivers/uart2/UART2WFF3.c
