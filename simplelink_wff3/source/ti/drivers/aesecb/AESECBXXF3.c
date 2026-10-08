@@ -142,9 +142,10 @@ static int_fast16_t AESECBXXF3HSM_finalize(AESECB_Handle handle, AESECB_Operatio
 
 #endif
 
+static int_fast16_t AESECBXXF3HSM_freeAllAssets(AESECB_Handle handle);
+
 #if (ENABLE_KEY_STORAGE == 1)
 static void AESECBXXF3HSM_keyUsageFromOperationType(KeyStore_PSA_KeyUsage *usage, AESECB_OperationType operationType);
-static int_fast16_t AESECBXXF3HSM_freeAllAssets(AESECB_Handle handle);
 
 /*
  *  ======== AESECBXXF3HSM_keyUsageFromOperationType ========
@@ -162,12 +163,14 @@ static void AESECBXXF3HSM_keyUsageFromOperationType(KeyStore_PSA_KeyUsage *usage
         *usage = KEYSTORE_PSA_KEY_USAGE_DECRYPT;
     }
 }
+#endif
 
 /*
  *  ======== AESECBXXF3HSM_freeAllAssets ========
  */
 static int_fast16_t AESECBXXF3HSM_freeAllAssets(AESECB_Handle handle)
 {
+#if (ENABLE_KEY_STORAGE == 1)
     AESECBXXF3_Object *object = (AESECBXXF3_Object *)handle->object;
     int_fast16_t status       = AESECB_STATUS_SUCCESS;
     KeyStore_PSA_KeyFileId keyID;
@@ -194,8 +197,12 @@ static int_fast16_t AESECBXXF3HSM_freeAllAssets(AESECB_Handle handle)
     }
 
     return status;
-}
+#else
+    (void)handle;
+
+    return AESECB_STATUS_SUCCESS;
 #endif
+}
 
 /*
  *  ======== AESECBXXF3_getObject ========

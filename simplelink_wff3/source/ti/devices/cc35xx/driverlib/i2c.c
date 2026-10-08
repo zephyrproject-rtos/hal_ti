@@ -42,9 +42,9 @@
 //*****************************************************************************
 extern void I2CControllerInit(uint32_t base, uint32_t config, uint32_t mode)
 {
-    uint32_t functionalClockDivider;
-    uint32_t tprVal;
-    uint32_t gfctlVal;
+    uint32_t functionalClockDivider = I2C_FCLKDIV_FCLKDIV_BY_20;
+    uint32_t tprVal                 = 0x03;
+    uint32_t gfctlVal               = I2C_GFCTL_GFSEL_DIS;
 
     // Check the arguments.
     ASSERT(I2CIsBaseValid(base));

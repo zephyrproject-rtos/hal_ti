@@ -553,7 +553,7 @@ int_fast16_t XMEMWFF3_read(XMEM_Handle handle, size_t offset, void *buffer, size
                         headBytes = remainingBytes;
                     }
                     memcpy(buffer, (void *)psramAddr, headBytes);
-                    buffer += headBytes;
+                    buffer = (uint8_t *)buffer + headBytes;
                     psramAddr += headBytes;
                     remainingBytes -= headBytes;
                 }
@@ -572,7 +572,7 @@ int_fast16_t XMEMWFF3_read(XMEM_Handle handle, size_t offset, void *buffer, size
 
                     HwiP_restore(readCacheKey);
 
-                    buffer += dmaBytes;
+                    buffer = (uint8_t *)buffer + dmaBytes;
                     psramAddr += dmaBytes;
                     remainingBytes -= dmaBytes;
                 }
@@ -610,9 +610,9 @@ int_fast16_t XMEMWFF3_read(XMEM_Handle handle, size_t offset, void *buffer, size
                 HwiP_restore(readCacheKey);
 
                 /* Copy data to user buffer */
-                memcpy(buffer, xmemDataToReadBuf + alignment, READ_SIZE_IN_BYTES - alignment);
+                memcpy(buffer, (uint8_t *)xmemDataToReadBuf + alignment, READ_SIZE_IN_BYTES - alignment);
 
-                buffer += READ_SIZE_IN_BYTES - alignment;
+                buffer = (uint8_t *)buffer + READ_SIZE_IN_BYTES - alignment;
                 remainingBytes -= (READ_SIZE_IN_BYTES - alignment);
                 offset += READ_SIZE_IN_BYTES - alignment;
                 alignment = 0;
@@ -636,7 +636,7 @@ int_fast16_t XMEMWFF3_read(XMEM_Handle handle, size_t offset, void *buffer, size
                     size_t firstReadSize = READ_SIZE_IN_BYTES - alignment;
 
                     FlashRead((uint32_t *)psramlogicAddr, (uint32_t *)xmemDataToReadBuf, READ_SIZE_IN_BYTES);
-                    memcpy(buffer, xmemDataToReadBuf + alignment, firstReadSize);
+                    memcpy(buffer, (uint8_t *)xmemDataToReadBuf + alignment, firstReadSize);
 
                     uint8_t *nextBuffer = (uint8_t *)buffer + firstReadSize;
                     size_t nextSize     = remainingBytes - firstReadSize;
@@ -648,7 +648,7 @@ int_fast16_t XMEMWFF3_read(XMEM_Handle handle, size_t offset, void *buffer, size
                 else
                 {
                     FlashRead((uint32_t *)psramlogicAddr, (uint32_t *)xmemDataToReadBuf, READ_SIZE_IN_BYTES);
-                    memcpy(buffer, xmemDataToReadBuf + alignment, remainingBytes);
+                    memcpy(buffer, (uint8_t *)xmemDataToReadBuf + alignment, remainingBytes);
                 }
                 HwiP_restore(readCacheKey);
             }
@@ -678,10 +678,10 @@ int_fast16_t XMEMWFF3_read(XMEM_Handle handle, size_t offset, void *buffer, size
 
             /* Copy data to buffer.
              * If offset is not aligned, we need to align the src address and read size*/
-            memcpy(buffer, xmemDataToReadBuf + alignment, READ_SIZE_IN_BYTES - alignment);
+            memcpy(buffer, (uint8_t *)xmemDataToReadBuf + alignment, READ_SIZE_IN_BYTES - alignment);
 
             /* Advance buffer, subtract remain size, Advance offset */
-            buffer += READ_SIZE_IN_BYTES - alignment;
+            buffer = (uint8_t *)buffer + READ_SIZE_IN_BYTES - alignment;
             remainingBytes -= (READ_SIZE_IN_BYTES - alignment);
             offset += READ_SIZE_IN_BYTES - alignment;
 
@@ -714,7 +714,7 @@ int_fast16_t XMEMWFF3_read(XMEM_Handle handle, size_t offset, void *buffer, size
                 /* First read operation */
                 FlashRead((uint32_t *)flashlogicAddr, (uint32_t *)xmemDataToReadBuf, READ_SIZE_IN_BYTES);
 
-                memcpy(buffer, xmemDataToReadBuf + alignment, firstReadSize);
+                memcpy(buffer, (uint8_t *)xmemDataToReadBuf + alignment, firstReadSize);
 
                 /* Second read operation for remaining bytes */
                 uint8_t *nextBuffer = (uint8_t *)buffer + firstReadSize;
@@ -735,7 +735,7 @@ int_fast16_t XMEMWFF3_read(XMEM_Handle handle, size_t offset, void *buffer, size
                 /* Copy data to buffer.
                  * If offset is not aligned, we need to align the src address and read size
                  */
-                memcpy(buffer, xmemDataToReadBuf + alignment, remainingBytes);
+                memcpy(buffer, (uint8_t *)xmemDataToReadBuf + alignment, remainingBytes);
             }
         }
 
@@ -958,7 +958,7 @@ int_fast16_t XMEMWFF3_write(XMEM_Handle handle, size_t offset, void *buffer, siz
                     }
                     /* memcpy can be used for small sizes */
                     memcpy((void *)psramAddr, buffer, headBytes);
-                    buffer += headBytes;
+                    buffer = (uint8_t *)buffer + headBytes;
                     psramAddr += headBytes;
                     remainingBytes -= headBytes;
                 }
@@ -977,7 +977,7 @@ int_fast16_t XMEMWFF3_write(XMEM_Handle handle, size_t offset, void *buffer, siz
                     XMEM_CACHE_INVALIDATE_IF_PSRAM(object);
                     HwiP_restore(cacheKey);
 
-                    buffer += dmaBytes;
+                    buffer = (uint8_t *)buffer + dmaBytes;
                     psramAddr += dmaBytes;
                     remainingBytes -= dmaBytes;
                 }
@@ -1017,7 +1017,7 @@ int_fast16_t XMEMWFF3_write(XMEM_Handle handle, size_t offset, void *buffer, siz
                 XMEM_CACHE_INVALIDATE_IF_PSRAM(object);
                 HwiP_restore(readCacheKey);
 
-                buffer += READ_SIZE_IN_BYTES - alignment;
+                buffer = (uint8_t *)buffer + READ_SIZE_IN_BYTES - alignment;
                 remainingBytes -= (READ_SIZE_IN_BYTES - alignment);
                 offset += READ_SIZE_IN_BYTES - alignment;
                 alignment = 0;
@@ -1098,7 +1098,7 @@ int_fast16_t XMEMWFF3_write(XMEM_Handle handle, size_t offset, void *buffer, siz
             FlashWrite((uint32_t *)srcBuf, (uint32_t *)dstBuf, WRITE_SIZE_IN_BYTES);
 
             /* Advance buffer, subtract remain size, Advance offset */
-            buffer += READ_SIZE_IN_BYTES - alignment;
+            buffer = (uint8_t *)buffer + READ_SIZE_IN_BYTES - alignment;
             remainingBytes -= (READ_SIZE_IN_BYTES - alignment);
             offset += READ_SIZE_IN_BYTES - alignment;
 
