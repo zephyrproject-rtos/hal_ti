@@ -54,10 +54,8 @@
 
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     #include <third_party/hsmddk/include/Config/cc35xx/cs_hwpal_mb.h>
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
-    #include <third_party/hsmddk/include/Config/cc27xx/cs_hwpal_mb.h>
 #else
-    #error "Device family not currently supported"
+    #include <third_party/hsmddk/include/Config/cc27xx/cs_hwpal_mb.h>
 #endif
 
 // Enables strict argument checking for input parameters
@@ -101,12 +99,11 @@
 //#define HWPAL_DEVICE_COUNT      1
 
 // Address where the device list is mapped in the MMIO
+
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     #define HWPAL_DEVICE_MEM_ADDR   HSM_BASE
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
-    #define HWPAL_DEVICE_MEM_ADDR   HSMCRYPTO_BASE
 #else
-    #error "Device family not currently supported"
+    #define HWPAL_DEVICE_MEM_ADDR   HSMCRYPTO_BASE
 #endif
 
 /* end of file c_hwpal_device_mb.h */

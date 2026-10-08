@@ -15,7 +15,7 @@
  *  limitations under the License.
  */
 
-/* This file is currently not used in mbedTLS 3.6.6, so its contents do not need to be
+/* This file is currently not used in mbedTLS 3.6.3, so its contents do not need to be
  * built into the DDK library. The file will remain for reference, but likely can be
  * removed at some point in the future.
  */

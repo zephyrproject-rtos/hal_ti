@@ -15,6 +15,8 @@
 #include <third_party/hsmddk/include/Integration/Adapter_ITS/incl/tfm_internal_trusted_storage.h>
 #include <third_party/hsmddk/include/Integration/Adapter_ITS/incl/utilities.h>
 
+#include "ti_its_init.h"
+
 #include <stdint.h>
 
 #if TFM_ENABLED
@@ -31,12 +33,30 @@ static uint8_t *data;
 
 psa_status_t psa_its_remove(psa_storage_uid_t uid)
 {
-    return tfm_its_remove(CLIENT_ID, uid);
+    psa_status_t status = ti_cc35xx_its_lock();
+
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    status = tfm_its_remove(CLIENT_ID, uid);
+    ti_cc35xx_its_unlock();
+
+    return status;
 }
 
 psa_status_t psa_its_get_info(psa_storage_uid_t uid, struct psa_storage_info_t *p_info)
 {
-    return tfm_its_get_info(CLIENT_ID, uid, p_info);
+    psa_status_t status = ti_cc35xx_its_lock();
+
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    status = tfm_its_get_info(CLIENT_ID, uid, p_info);
+    ti_cc35xx_its_unlock();
+
+    return status;
 }
 
 psa_status_t psa_its_get(psa_storage_uid_t uid,
@@ -45,9 +65,18 @@ psa_status_t psa_its_get(psa_storage_uid_t uid,
                          void *p_data,
                          size_t *p_data_length)
 {
+    psa_status_t status = ti_cc35xx_its_lock();
+
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
     data = (uint8_t *)p_data;
 
-    return tfm_its_get(CLIENT_ID, uid, data_offset, data_size, p_data_length);
+    status = tfm_its_get(CLIENT_ID, uid, data_offset, data_size, p_data_length);
+    ti_cc35xx_its_unlock();
+
+    return status;
 }
 
 psa_status_t psa_its_set(psa_storage_uid_t uid,
@@ -55,9 +84,18 @@ psa_status_t psa_its_set(psa_storage_uid_t uid,
                          const void *p_data,
                          psa_storage_create_flags_t create_flags)
 {
+    psa_status_t status = ti_cc35xx_its_lock();
+
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
     data = (uint8_t *)p_data;
 
-    return tfm_its_set(CLIENT_ID, uid, data_length, create_flags);
+    status = tfm_its_set(CLIENT_ID, uid, data_length, create_flags);
+    ti_cc35xx_its_unlock();
+
+    return status;
 }
 
 size_t its_req_mngr_read(uint8_t *buf, size_t num_bytes)

@@ -56,10 +56,8 @@
 // Host hardware platform specific extensions
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     #include <third_party/hsmddk/include/Config/cc35xx/cs_hwpal_ext.h>
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
-    #include <third_party/hsmddk/include/Config/cc27xx/cs_hwpal_ext.h>
 #else
-    #error "Device family not currently supported"
+    #include <third_party/hsmddk/include/Config/cc27xx/cs_hwpal_ext.h>
 #endif
 
 // Engine specific extensions

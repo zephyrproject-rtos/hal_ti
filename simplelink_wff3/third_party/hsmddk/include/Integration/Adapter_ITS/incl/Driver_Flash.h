@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2013-2017 ARM Limited. All rights reserved.
- * Copyright (c) 2025-2026, Texas Instruments Incorporated
+ * Copyright (c) 2025, Texas Instruments Incorporated
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -71,12 +71,10 @@ typedef struct _ARM_FLASH_SECTOR {
 */
 typedef struct _ARM_FLASH_INFO {
   ARM_FLASH_SECTOR *sector_info;        ///< Sector layout information (NULL=Uniform sectors)
-  #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+  #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
   const uint32_t          sector_count;       ///< Number of sectors
   #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
   uint32_t                sector_count;       ///< Number of sectors - must be set at runtime for CC35XX
-  #else
-    #error "Device family not currently supported"
   #endif
   const uint32_t          sector_size;        ///< Uniform sector size in bytes (0=sector_info used)
   const uint32_t          page_size;          ///< Optimal programming page size in bytes

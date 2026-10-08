@@ -6,7 +6,7 @@
  */
 
 /*
- * Copyright (c) 2024-2026 Texas Instruments Incorporated
+ * Copyright (c) 2024-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -94,85 +94,10 @@
 #include <inttypes.h>
 #endif
 
-#include <DeviceFamily.h>
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-    #include <ti/drivers/xmem/XMEMWFF3.h>
-    #include <ti/devices/cc35xx/inc/hw_memmap.h>
-#endif
-
 static const uint8_t gl_PSA_ADLabelKeyblob[] = PSA_AS_KEYBLOB_ADLABEL;
 
 static Eip130Token_Command_t commandToken;
 static Eip130Token_Result_t resultToken;
-/*
- * CC35XX PSRAM bounce-buffer infrastructure
- *
- * On CC35XX the HSM can only access internal SRAM. Callers may supply buffers
- * located in PSRAM, so each function that passes a user pointer directly to an
- * HSM token must stage the data through an internal-RAM bounce buffer first.
- *
- * Two bounce buffers are used:
- *   gl_assetLoadBounce  - for plaintext asset data (max PSA_ASSET_SIZE_MAX bytes).
- *   gl_keyBlobBounce    - for key blobs and salt (max PSA_KEYBLOB_SIZE(PSA_ASSET_SIZE_MAX) bytes).
- *
- * Both buffers are sized to the maximum the PSA_STRICT_ARGS checks allow
- * through; no separate size check is needed in the PSRAM path.
- *
- * Both buffers are placed in .internalRAM.bss so they are reachable by the HSM.
- * They are safe to use as statics because CommonResourceXXF3 is always held for
- * the duration of each function that uses them.
- *
- * psaInt_xmemRead / psaInt_xmemWrite use the XMEM driver to transfer data
- * between PSRAM and the bounce buffers. The XMEM handle is opened lazily on
- * the first call; this is safe because the HSM lock is always held at that
- * point.
- */
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-static uint8_t gl_assetLoadBounce[PSA_ASSET_SIZE_MAX] __attribute__((section(".internalRAM.bss"), aligned(4)));
-static uint8_t gl_keyBlobBounce[PSA_KEYBLOB_ADDITIONAL_BYTES + PSA_ASSET_SIZE_MAX] __attribute__((section(".internalRAM.bss"), aligned(4)));
-static XMEM_Handle gl_psramHandle = NULL;
-
-static psa_status_t psaInt_xmemEnsureHandle(void)
-{
-    if (gl_psramHandle == NULL)
-    {
-        XMEM_Params p;
-        XMEMWFF3_init();
-        p.regionBase      = 0U;
-        p.regionStartAddr = EXT_PSRAM_BASE;
-        p.regionSize      = XMEM_MAX_PSRAM_SIZE;
-        p.deviceNum       = XMEM_MEM_PSRAM;
-        gl_psramHandle    = XMEMWFF3_open(&p);
-    }
-    return (gl_psramHandle != NULL) ? PSA_SUCCESS : PSA_ERROR_HARDWARE_FAILURE;
-}
-
-static psa_status_t psaInt_xmemRead(const void *src, void *dst, size_t len)
-{
-    if (psaInt_xmemEnsureHandle() != PSA_SUCCESS)
-    {
-        return PSA_ERROR_HARDWARE_FAILURE;
-    }
-    if (XMEMWFF3_read(gl_psramHandle, XMEMWFF3_addrToOffset((uintptr_t)src), dst, len, XMEM_READ) != XMEM_STATUS_SUCCESS)
-    {
-        return PSA_ERROR_HARDWARE_FAILURE;
-    }
-    return PSA_SUCCESS;
-}
-
-static psa_status_t psaInt_xmemWrite(void *dst, const void *src, size_t len)
-{
-    if (psaInt_xmemEnsureHandle() != PSA_SUCCESS)
-    {
-        return PSA_ERROR_HARDWARE_FAILURE;
-    }
-    if (XMEMWFF3_write(gl_psramHandle, XMEMWFF3_addrToOffset((uintptr_t)dst), (void *)src, len, XMEM_WRITE) != XMEM_STATUS_SUCCESS)
-    {
-        return PSA_ERROR_HARDWARE_FAILURE;
-    }
-    return PSA_SUCCESS;
-}
-#endif
 
 /*----------------------------------------------------------------------------
  * psaInt_AssetAlloc
@@ -336,22 +261,6 @@ psaInt_AssetLoadPlaintext(const PsaAssetId_t TargetAssetId,
         (void)memset(&commandToken, 0, sizeof(Eip130Token_Command_t));
         (void)memset(&resultToken, 0, sizeof(Eip130Token_Result_t));
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-        /* Stage Data_p into internal RAM if it is in PSRAM. DataSize is
-         * bounded by PSA_ASSET_SIZE_MAX (enforced by PSA_STRICT_ARGS), which
-         * is also the size of gl_assetLoadBounce, so it always fits.
-         */
-        if (XMEMWFF3_isAddrExternal((uintptr_t)Data_p))
-        {
-            if (psaInt_xmemRead(Data_p, gl_assetLoadBounce, DataSize) != PSA_SUCCESS)
-            {
-                CommonResourceXXF3_releaseLock();
-                return PSA_ERROR_HARDWARE_FAILURE;
-            }
-            Data_p = gl_assetLoadBounce;
-        }
-#endif
-
         Eip130Token_Command_AssetLoad_Plaintext(&commandToken, TargetAssetId);
         Eip130Token_Command_AssetLoad_SetInput(&commandToken,
                                               (uintptr_t)Data_p,
@@ -430,34 +339,6 @@ psaInt_AssetLoadPlaintextExport(const PsaAssetId_t TargetAssetId,
         (void)memset(&commandToken, 0, sizeof(Eip130Token_Command_t));
         (void)memset(&resultToken, 0, sizeof(Eip130Token_Result_t));
 
-        const uint8_t *dataIn = Data_p;
-        uint8_t *keyBlobDma = KeyBlob_p;
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-        /* Stage plaintext input into internal RAM if it is in PSRAM. DataSize
-         * is bounded by PSA_ASSET_SIZE_MAX (enforced by PSA_STRICT_ARGS),
-         * which is also the size of gl_assetLoadBounce, so it always fits.
-         */
-        if (XMEMWFF3_isAddrExternal((uintptr_t)dataIn))
-        {
-            if (psaInt_xmemRead(dataIn, gl_assetLoadBounce, DataSize) != PSA_SUCCESS)
-            {
-                CommonResourceXXF3_releaseLock();
-                return PSA_ERROR_HARDWARE_FAILURE;
-            }
-            dataIn = gl_assetLoadBounce;
-        }
-        /* If KeyBlob_p is in PSRAM, redirect the HSM output to the internal
-         * RAM bounce buffer and write back via XMEM after the operation. The
-         * key blob size is bounded by PSA_KEYBLOB_SIZE(PSA_ASSET_SIZE_MAX)
-         * (enforced by PSA_STRICT_ARGS), which is also the size of
-         * gl_keyBlobBounce, so it always fits.
-         */
-        if (XMEMWFF3_isAddrExternal((uintptr_t)KeyBlob_p))
-        {
-            keyBlobDma = gl_keyBlobBounce;
-        }
-#endif
-
         Eip130Token_Command_AssetLoad_Plaintext(&commandToken, TargetAssetId);
 
         Eip130Token_Command_AssetLoad_Export(&commandToken, KekAssetId);
@@ -467,10 +348,10 @@ psaInt_AssetLoadPlaintextExport(const PsaAssetId_t TargetAssetId,
                                              (uint32_t)(sizeof(gl_PSA_ADLabelKeyblob) - 1U));
 
         Eip130Token_Command_AssetLoad_SetInput(&commandToken,
-                                               (uintptr_t)dataIn,
+                                               (uintptr_t)Data_p,
                                                (uint32_t)DataSize);
         Eip130Token_Command_AssetLoad_SetOutput(&commandToken,
-                                                (uintptr_t)keyBlobDma,
+                                                (uintptr_t)KeyBlob_p,
                                                 (uint32_t)*KeyBlobSize_p);
 
         status = HSMSAL_SubmitPhysicalToken(&commandToken);
@@ -494,16 +375,7 @@ psaInt_AssetLoadPlaintextExport(const PsaAssetId_t TargetAssetId,
                     else
                     {
                         *KeyBlobSize_p = outputSize;
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-                        if (keyBlobDma != KeyBlob_p)
-                        {
-                            funcres = psaInt_xmemWrite(KeyBlob_p, gl_keyBlobBounce, outputSize);
-                        }
-                        else
-#endif
-                        {
-                            funcres = PSA_SUCCESS;
-                        }
+                        funcres = PSA_SUCCESS;
                     }
                 }
                 else
@@ -560,24 +432,6 @@ psaInt_AssetLoadImport(const PsaAssetId_t TargetAssetId,
         (void)memset(&commandToken, 0, sizeof(Eip130Token_Command_t));
         (void)memset(&resultToken, 0, sizeof(Eip130Token_Result_t));
 
-        const uint8_t *keyBlobIn = KeyBlob_p;
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-        /* Stage key blob input into internal RAM if it is in PSRAM. KeyBlobSize
-         * is bounded by PSA_KEYBLOB_SIZE(PSA_ASSET_SIZE_MAX) (enforced by
-         * PSA_STRICT_ARGS), which is also the size of gl_keyBlobBounce, so it
-         * always fits.
-         */
-        if (XMEMWFF3_isAddrExternal((uintptr_t)keyBlobIn))
-        {
-            if (psaInt_xmemRead(keyBlobIn, gl_keyBlobBounce, KeyBlobSize) != PSA_SUCCESS)
-            {
-                CommonResourceXXF3_releaseLock();
-                return PSA_ERROR_HARDWARE_FAILURE;
-            }
-            keyBlobIn = gl_keyBlobBounce;
-        }
-#endif
-
         Eip130Token_Command_AssetLoad_Import(&commandToken,
                                              TargetAssetId,
                                              KekAssetId);
@@ -587,7 +441,7 @@ psaInt_AssetLoadImport(const PsaAssetId_t TargetAssetId,
                                              (uint32_t)(sizeof(gl_PSA_ADLabelKeyblob) - 1U));
 
         Eip130Token_Command_AssetLoad_SetInput(&commandToken,
-                                              (uintptr_t)keyBlobIn,
+                                              (uintptr_t)KeyBlob_p,
                                               (uint32_t)KeyBlobSize);
 
         status = HSMSAL_SubmitPhysicalToken(&commandToken);
@@ -719,20 +573,6 @@ psaInt_AssetLoadRandomExport(const PsaAssetId_t TargetAssetId,
         (void)memset(&commandToken, 0, sizeof(Eip130Token_Command_t));
         (void)memset(&resultToken, 0, sizeof(Eip130Token_Result_t));
 
-        uint8_t *keyBlobDma = KeyBlob_p;
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-        /* If KeyBlob_p is in PSRAM, redirect the HSM output to the internal
-         * RAM bounce buffer and write back via XMEM after the operation. The
-         * key blob size is bounded by PSA_KEYBLOB_SIZE(PSA_ASSET_SIZE_MAX)
-         * (enforced by PSA_STRICT_ARGS), which is also the size of
-         * gl_keyBlobBounce, so it always fits.
-         */
-        if (XMEMWFF3_isAddrExternal((uintptr_t)KeyBlob_p))
-        {
-            keyBlobDma = gl_keyBlobBounce;
-        }
-#endif
-
         Eip130Token_Command_AssetLoad_Random(&commandToken, TargetAssetId);
 
         Eip130Token_Command_AssetLoad_Export(&commandToken, KekAssetId);
@@ -742,7 +582,7 @@ psaInt_AssetLoadRandomExport(const PsaAssetId_t TargetAssetId,
                                              (uint32_t)(sizeof(gl_PSA_ADLabelKeyblob) - 1U));
 
         Eip130Token_Command_AssetLoad_SetOutput(&commandToken,
-                                                (uintptr_t)keyBlobDma,
+                                                (uintptr_t)KeyBlob_p,
                                                 (uint32_t)*KeyBlobSize_p);
 
         status = HSMSAL_SubmitPhysicalToken(&commandToken);
@@ -766,16 +606,7 @@ psaInt_AssetLoadRandomExport(const PsaAssetId_t TargetAssetId,
                     else
                     {
                         *KeyBlobSize_p = outputSize;
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-                        if (keyBlobDma != KeyBlob_p)
-                        {
-                            funcres = psaInt_xmemWrite(KeyBlob_p, gl_keyBlobBounce, outputSize);
-                        }
-                        else
-#endif
-                        {
-                            funcres = PSA_SUCCESS;
-                        }
+                        funcres = PSA_SUCCESS;
                     }
                 }
                 else
@@ -852,24 +683,8 @@ psaInt_AssetLoadDerive(const PsaAssetId_t TargetAssetId,
                                              AssociatedData_p,
                                              (uint32_t)AssociatedDataSize);
 
-        const uint8_t *saltIn = Salt_p;
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-        /* Stage salt input into internal RAM if it is in PSRAM. Salt is
-         * documented as at most 64 bytes, well within gl_keyBlobBounce.
-         */
-        if (XMEMWFF3_isAddrExternal((uintptr_t)saltIn))
-        {
-            if (psaInt_xmemRead(saltIn, gl_keyBlobBounce, SaltSize) != PSA_SUCCESS)
-            {
-                CommonResourceXXF3_releaseLock();
-                return PSA_ERROR_HARDWARE_FAILURE;
-            }
-            saltIn = gl_keyBlobBounce;
-        }
-#endif
-
         Eip130Token_Command_AssetLoad_SetInput(&commandToken,
-                                               (uintptr_t)saltIn,
+                                               (uintptr_t)Salt_p,
                                                (uint32_t)SaltSize);
 
         status = HSMSAL_SubmitPhysicalToken(&commandToken);

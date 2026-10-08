@@ -106,15 +106,11 @@ psa_crypto_init(void)
             /* MISRA - Intentially empty */
         }
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT != DeviceFamily_PARENT_CC35XX)
         if (PSA_SUCCESS == funcres)
         {
             funcres = KeyMgmt_initPreProvisionedKeys();
         }
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-        /* Do nothing specific for CC35XX. */
-#else
-    #error "Device family not currently supported"
 #endif
 
         if (PSA_SUCCESS == funcres)

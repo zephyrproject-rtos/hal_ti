@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2013-2012 ARM Limited. All rights reserved.
- * Copyright (c) 2024-2026, Texas Instruments Incorporated. All rights reserved.
+ * Copyright (c) 2024-2025, Texas Instruments Incorporated. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -27,7 +27,7 @@
 #include <DeviceFamily.h>
 
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
     #include DeviceFamily_constructPath(driverlib/flash.h) /* FAPI status codes */
     #include DeviceFamily_constructPath(driverlib/hapi.h) /* HAPI functions */
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
@@ -60,8 +60,6 @@
     static XMEM_Params params;
     #define XMEMWFF3_KEYSTORE_DEVICE_NUM 0x0
     #define XMEM_STATUS_SUCCESS (0)
-#else
-    #error "Device family not currently supported"
 #endif
 
 #ifndef ARG_UNUSED
@@ -77,12 +75,10 @@
  * ARM FLASH device structure
  */
 struct arm_flash_dev_t {
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
     const uint32_t memory_base;   /*!< FLASH memory base address */
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     uint32_t memory_base;         /*!< FLASH memory base address - must be set at runtime for CC35XX */
-#else
-    #error "Device family not currently supported"
 #endif
     ARM_FLASH_INFO *data;         /*!< FLASH data */
 };
@@ -134,14 +130,11 @@ static const ARM_FLASH_CAPABILITIES DriverCapabilities =
 static ARM_FLASH_INFO ARM_FLASH0_DEV_DATA =
 {
     .sector_info  = NULL,  /* Uniform sector layout */
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
-    .sector_count = FLASH0_SIZE / FLASH0_SECTOR_SIZE,
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     /* Since FLASH0_SIZE is a link-time variable for CC35XX,
      * we cannot determine the sector count at compile-time.
      */
-#else
-    #error "Device family not currently supported"
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    .sector_count = FLASH0_SIZE / FLASH0_SECTOR_SIZE,
 #endif
     .sector_size  = FLASH0_SECTOR_SIZE,
     .page_size    = FLASH0_PAGE_SIZE,
@@ -151,14 +144,11 @@ static ARM_FLASH_INFO ARM_FLASH0_DEV_DATA =
 
 static struct arm_flash_dev_t ARM_FLASH0_DEV =
 {
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
-    .memory_base = FLASH0_BASE_S,
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     /* Since FLASH0_BASE_S is a link-time variable for CC35XX,
      * we cannot determine the memory_base at compile-time.
      */
-#else
-    #error "Device family not currently supported"
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    .memory_base = FLASH0_BASE_S,
 #endif
     .data        = &(ARM_FLASH0_DEV_DATA)
 };
@@ -190,7 +180,7 @@ static bool isFlashRangeValid(struct arm_flash_dev_t *flash_dev, uint32_t offset
     return isValid;
 }
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)  || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
 /**
   * \brief      Translates Flash API (FAPI) status into ARM driver status code
   * \param[in]  fapiStatus FAPI status code
@@ -216,10 +206,6 @@ static int32_t translateFAPIStatus(uint32_t fapiStatus)
 
     return status;
 }
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-    /* CC35XX does not have a Flash API, so no implementation is needed. */
-#else
-    #error "Device family not currently supported"
 #endif
 
 static ARM_DRIVER_VERSION ARM_Flash_GetVersion(void)
@@ -259,12 +245,7 @@ static int32_t ARM_Flash_Initialize(ARM_Flash_SignalEvent_t cb_event)
     {
         return ARM_DRIVER_ERROR;
     }
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
-    /* Do nothing specific for CC27xx/CC23x1. */
-#else
-    #error "Device family not currently supported"
 #endif
-
     /* Nothing to be done */
     return ARM_DRIVER_OK;
 }
@@ -274,10 +255,6 @@ static int32_t ARM_Flash_Uninitialize(void)
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     XMEMWFF3_close(handle);
     handle = NULL;
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
-    /* Do nothing specific for CC27xx/CC23x1. */
-#else
-    #error "Device family not currently supported"
 #endif
     /* Nothing to be done */
     return ARM_DRIVER_OK;
@@ -313,7 +290,7 @@ static int32_t ARM_Flash_ReadData(uint32_t addr, void *data, uint32_t cnt)
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
     (void)memcpy(data, (void *)addr, cnt);
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     int_fast16_t status;
@@ -325,8 +302,6 @@ static int32_t ARM_Flash_ReadData(uint32_t addr, void *data, uint32_t cnt)
     if (status != XMEM_STATUS_SUCCESS) {
         return status;
     }
-#else
-    #error "Device family not currently supported"
 #endif
     /* Conversion between bytes and data items */
     cnt /= data_width_byte[DriverCapabilities.data_width];
@@ -336,9 +311,7 @@ static int32_t ARM_Flash_ReadData(uint32_t addr, void *data, uint32_t cnt)
 
 static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data, uint32_t cnt)
 {
-    uint32_t fapi_status;
     uint32_t status;
-    uintptr_t key;
 
     /* Conversion between data items and bytes */
     cnt *= data_width_byte[DriverCapabilities.data_width];
@@ -350,8 +323,10 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data, uint32_t c
      * is not necessary to check that the flash area is erased prior to
      * programming.
      */
-    key = HwiP_disable();
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    uint32_t fapi_status;
+    uintptr_t key = HwiP_disable();
+
     fapi_status = FlashProgram((uint8_t *)data, addr, cnt);
 
     HwiP_restore(key);
@@ -364,10 +339,6 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data, uint32_t c
      * prototype.
      */
     status = XMEMWFF3_write(handle, (addr - FLASH0_DEV->memory_base), (void *)data, cnt, 0);
-
-    HwiP_restore(key);
-#else
-    #error "Device family not currently supported"
 #endif
 
     if (status != ARM_DRIVER_OK) {
@@ -383,15 +354,15 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data, uint32_t c
 static int32_t ARM_Flash_EraseSector(uint32_t addr)
 {
     int32_t status;
-    uintptr_t key;
 
     /*
      * CMSIS -> FAPI -> HAPI (Secure ROM)
      * CC27xx FlashEraseSector handles VIMS cache and line buffer disable/restore
      * automatically.
      */
-    key = HwiP_disable();
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+    uintptr_t key = HwiP_disable();
+
     status = translateFAPIStatus(FlashEraseSector(addr));
 
     HwiP_restore(key);
@@ -400,23 +371,19 @@ static int32_t ARM_Flash_EraseSector(uint32_t addr)
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     status = XMEMWFF3_erase(handle, (addr - FLASH0_DEV->memory_base), FLASH0_SECTOR_SIZE);
 
-    HwiP_restore(key);
-
     return status;
-#else
-    #error "Device family not currently supported"
 #endif
 }
 
 static int32_t ARM_Flash_EraseChip(void)
 {
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT != DeviceFamily_PARENT_CC35XX)
     uint32_t status;
     uintptr_t key;
 
     /*
      * CMSIS -> FAPI -> HAPI (Secure ROM)
-     * CC27xx/CC23x1 FlashEraseBank handles VIMS cache and line buffer disable/restore
+     * CC27xx FlashEraseBank handles VIMS cache and line buffer disable/restore
      * automatically. Both 512KB flash banks will be erased.
      */
     key = HwiP_disable();
@@ -428,11 +395,9 @@ static int32_t ARM_Flash_EraseChip(void)
     HwiP_restore(key);
 
     return translateFAPIStatus(status);
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
+#else
     /* Not supported for Osprey - only eraseSector present in flash driver */
     return ARM_DRIVER_ERROR;
-#else
-    #error "Device family not currently supported"
 #endif
 }
 

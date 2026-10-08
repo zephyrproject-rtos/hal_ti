@@ -104,10 +104,8 @@
 #include <DeviceFamily.h>
 #if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     #include <third_party/hsmddk/include/Config/cc35xx/cs_driver_ext.h>
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
-    #include <third_party/hsmddk/include/Config/cc27xx/cs_driver_ext.h>
 #else
-    #error "Device family not currently supported"
+    #include <third_party/hsmddk/include/Config/cc27xx/cs_driver_ext.h>
 #endif
 
 

@@ -44,15 +44,14 @@
 
 /*
  * Copyright (c) 2018-2022, Arm Limited. All rights reserved.
- * Copyright (c) 2024-2026 Texas Instruments Incorporated
+ * Copyright (c) 2024, Texas Instruments Incorporated
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
 
-/* TI Customizations: Include paths are to DDK versions of the same headers that
- * mbedTLS 3.6.6 has. Remove content not related to the DDK's PSA
- * responsibilities: key derivation and key management.
+/* TI Customizations: Include paths are to DDK versions of the same headers that mbedTLS 3.6.3 has.
+ * Remove content not related to the DDK's PSA responsibilities: key derivation and key management.
  */
 #ifndef PSA_CRYPTO_H
 #define PSA_CRYPTO_H
@@ -102,19 +101,6 @@ extern "C" {
 /* The file "crypto_values.h" declares macros to build and analyze values
  * of integral types defined in "crypto_types.h". */
 #include <third_party/hsmddk/include/Integration/Adapter_PSA/incl/psa/crypto_values.h>
-
-/* The file "crypto_sizes.h" contains definitions for size calculation
- * macros whose definitions are implementation-specific. */
-#include <third_party/hsmddk/include/Integration/Adapter_PSA/incl/psa/crypto_sizes.h>
-
-/* The file "crypto_client_struct.h" contains definitions for structures
- * whose definitions differ in the client view and the PSA server
- * implementation in TF-M. */
-#include <third_party/hsmddk/include/Integration/Adapter_PSA/incl/psa/crypto_client_struct.h>
-
-/* The file "crypto_struct.h" contains definitions for
- * implementation-specific structs that are declared above. */
-#include <third_party/hsmddk/include/Integration/Adapter_PSA/incl/psa/crypto_struct.h>
 
 /** \defgroup initialization Library initialization
  * @{
@@ -4444,6 +4430,19 @@ psa_status_t psa_verify_hash_abort(
 }
 #endif
 
+
+/* The file "crypto_sizes.h" contains definitions for size calculation
+ * macros whose definitions are implementation-specific. */
+#include <third_party/hsmddk/include/Integration/Adapter_PSA/incl/psa/crypto_sizes.h>
+
+/* The file "crypto_client_struct.h" contains definitions for structures
+ * whose definitions differ in the client view and the PSA server
+ * implementation in TF-M. */
+#include <third_party/hsmddk/include/Integration/Adapter_PSA/incl/psa/crypto_client_struct.h>
+
+/* The file "crypto_struct.h" contains definitions for
+ * implementation-specific structs that are declared above. */
+#include <third_party/hsmddk/include/Integration/Adapter_PSA/incl/psa/crypto_struct.h>
 
 /* The file "crypto_extra.h" contains vendor-specific definitions. This
  * can include vendor-defined algorithms, extra functions, etc. */

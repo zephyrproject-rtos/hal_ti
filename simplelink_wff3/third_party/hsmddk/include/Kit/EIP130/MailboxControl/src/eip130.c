@@ -568,12 +568,8 @@ EIP130_MailboxCanWriteToken(
             Value = EIP130_RegisterReadOptions2(Device);
             if (
 #ifdef EIP130_PERFORM_CRC24_OK_CHECK
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT != DeviceFamily_PARENT_CC35XX)
                 ((*ModuleStatus & BIT_9) == 0U) ||
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-                /* No additional check for CC35XX.*/
-#else
-    #error "Device family not currently supported"
 #endif
 #endif
                 (((Value & BIT_9) != 0U) && ((*ModuleStatus & BIT_23) == 0U)))
