@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2026, Texas Instruments Incorporated
+ * Copyright (c) 2024-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,9 +37,7 @@
 #include <third_party/hsmddk/include/Integration/Adapter_PSA/incl/adapter_psa_key_management.h>
 #include <third_party/hsmddk/include/Integration/Adapter_PSA/incl/adapter_psa_preprovisioned_keys.h>
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-/* File not implemented for CC35XX. */
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT != DeviceFamily_PARENT_CC35XX)
 /**
  * @brief Counter to keep track of the number of pre-provisioned keys available during psa_crypto_init()
  *
@@ -278,6 +276,4 @@ static psa_status_t local_getPreProvisionedKey(mbedtls_svc_key_id_t key,
 
     return funcres;
 }
-#else
-    #error "Device family not currently supported"
-#endif
+#endif /* (DeviceFamily_PARENT != DeviceFamily_PARENT_CC35XX) */

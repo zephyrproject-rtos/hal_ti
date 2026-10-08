@@ -45,7 +45,7 @@
 
 /*
  *  Copyright The Mbed TLS Contributors
- *  Copyright (c) 2024-2026 Texas Instruments Incorporated
+ *  Copyright (c) 2024-2025, Texas Instruments Incorporated
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -142,17 +142,11 @@ extern psa_key_context_t gl_PSA_Key[];
  * in the public key, multiply the whole prior value by 2. We must add additional bytes for the
  * wrapping involved with key blobs.
  */
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-__attribute__((section(".internalRAM.bss"), aligned(4)))
-#endif
 static uint8_t KeyDataBuffer[PSA_KEYBLOB_ADDITIONAL_BYTES + (2U * (PSA_ASYM_DATA_VHEADER + (4U * ((521U + 31U) / 32U))))];
 
 /* 32 bytes is the size of the largest symmetric key supported. This second buffer would only be
  * used to hold key material for a decryption key blob for a given symmetric key.
  */
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-__attribute__((section(".internalRAM.bss"), aligned(4)))
-#endif
 static uint8_t KeyDataBuffer2[PSA_KEYBLOB_ADDITIONAL_BYTES + 32];
 
 /* vendor_ok is only true for key IDs assigned by the implementation -
@@ -3623,7 +3617,7 @@ psaInt_KeyMgmtGetKey(mbedtls_svc_key_id_t key,
     }
     else if ((psa_is_valid_key_id(id, 0)) || (id == PSA_KEY_ID_IAK))
     {
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT != DeviceFamily_PARENT_CC35XX)
         if (id == PSA_KEY_ID_IAK)
         {
             /* We must first check if the IAK is preprovisioned, if it is being requested.
@@ -3650,10 +3644,6 @@ psaInt_KeyMgmtGetKey(mbedtls_svc_key_id_t key,
                 iakIsPreProvisioned = true;
             }
         }
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-        /* Do nothing specific for CC35XX. */
-#else
-    #error "Device family not currently supported"
 #endif
         /* For CC35XX, the IAK does not yet exist & cannot be pre-provisioned.
          * This boolean will always be false from its initialization at the
@@ -3808,7 +3798,7 @@ psaInt_KeyMgmtGetKey(mbedtls_svc_key_id_t key,
             }
         }
     }
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1)
+#if (DeviceFamily_PARENT != DeviceFamily_PARENT_CC35XX)
     else if (psa_is_preprovisioned_key_id(id))
     {
         /* If the key doesn't exist in KeyStore RAM nor in KeyStore Flash, then check
@@ -3818,10 +3808,6 @@ psaInt_KeyMgmtGetKey(mbedtls_svc_key_id_t key,
          */
         funcres = KeyMgmt_getPreProvisionedKey(key, &pEntry);
     }
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
-        /* Do nothing specific for CC35XX. */
-#else
-    #error "Device family not currently supported"
 #endif
     else
     {
@@ -6040,23 +6026,6 @@ psa_purge_key(mbedtls_svc_key_id_t key)
             }
         }
 
-        if (funcres == PSA_ERROR_GENERIC_ERROR)
-        {
-            /* Key was not found in the cache. Check if it exists in persistent
-             * storage. If so, there is simply nothing to purge (the cached copy
-             * was already evicted or never loaded), so return success. If the
-             * key does not exist in persistent storage either, return invalid
-             * handle.
-             */
-            if (psa_is_key_present_in_storage(key))
-            {
-                funcres = PSA_SUCCESS;
-            }
-            else
-            {
-                funcres = PSA_ERROR_INVALID_HANDLE;
-            }
-        }
     }
 
     return funcres;

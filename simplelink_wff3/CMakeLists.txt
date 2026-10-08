@@ -118,6 +118,41 @@ if(CONFIG_HAS_CC35XX_SDK)
           third_party/hsmddk/include/Integration/Adapter_ITS/src/tfm_its_local_api.c
         )
       endif()
+      if(CONFIG_TI_CC35XX_HSM_PSA_ADAPTER)
+        zephyr_library_include_directories(
+          third_party/mbedtls/include
+          third_party/mbedtls/ti/configs
+          third_party/hsmddk/include/Integration/Adapter_PSA/incl
+          kernel/zephyr/dpl
+        )
+        zephyr_library_compile_options(
+          -UMBEDTLS_CONFIG_FILE
+          -UTF_PSA_CRYPTO_CONFIG_FILE
+          -DMBEDTLS_CONFIG_FILE="mbedtls_ti_hsm_zephyr_config.h"
+        )
+        zephyr_library_compile_definitions(ENABLE_KEY_STORAGE=1)
+        zephyr_library_sources(
+          third_party/hsmddk/include/Integration/Adapter_PSA/src/adapter_psa_asset.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/src/adapter_psa_asym_parse.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/src/adapter_psa_asym_write.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/src/adapter_psa_exchangetoken.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/src/adapter_psa_init.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/src/adapter_psa_internal.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/src/adapter_psa_key_derivation.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/src/adapter_psa_key_management.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/src/adapter_psa_preprovisioned_keys.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/src/adapter_psa_system.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/src/psa_key_store.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/Adapter_mbedTLS/src/platform.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/Adapter_mbedTLS/src/psa_crypto_client.c
+          third_party/hsmddk/include/Integration/Adapter_PSA/Adapter_mbedTLS/src/psa_crypto_storage.c
+          third_party/hsmddk/include/Integration/Asn1Der/src/asn1der_parse.c
+          third_party/hsmddk/include/Integration/Asn1Der/src/asn1der_write.c
+          source/ti/drivers/cryptoutils/cryptokey/CryptoKeyPlaintext.c
+          source/ti/drivers/cryptoutils/cryptokey/CryptoKeyKeyStore_PSA.c
+          source/ti/drivers/cryptoutils/cryptokey/CryptoKeyKeyStore_PSA_helpers.c
+        )
+      endif()
     endif()
     if(CONFIG_CRYPTO_TI_CC35XX)
       zephyr_library_sources(
