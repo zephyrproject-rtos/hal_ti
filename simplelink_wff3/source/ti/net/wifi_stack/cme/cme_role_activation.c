@@ -56,12 +56,6 @@
 extern Cme_STA_states_e gCmeDeviceFlowState_ull;
 extern int CmeDeviceFlowIsSMIdle();
 extern void set_finish_wlan_sta_roleup();
-extern bool open_at_cc35xx_debug(const char *text);
-
-static void role_debug(const char *text)
-{
-    (void)open_at_cc35xx_debug(text);
-}
 
 
 typedef enum
@@ -108,7 +102,6 @@ int cme_role_switch_manager(Cme_Users_e _deactivating_user, uint32_t deactivatio
     uint32_t requested_active_role = CME_GetStartedRoleBitmap();
     uint32_t needed_activation_roles = CME_ACTIVATABLE_MASKED_ROLE_BITMAP(requested_active_role) & ~(CME_ACTIVATABLE_MASKED_ROLE_BITMAP(cme_active_role_bitmap_ull));
     uint32_t needed_deactivation_roles = ~(CME_ACTIVATABLE_MASKED_ROLE_BITMAP(requested_active_role)) & CME_ACTIVATABLE_MASKED_ROLE_BITMAP(cme_active_role_bitmap_ull);
-    role_debug("\r\nDBG_ROLE:manager enter\r\n");
     GTRACE(GRP_CME, "Requested roles 0x%x active roles 0x%x need activation 0x%x need deactivation 0x%x",
                          requested_active_role, cme_active_role_bitmap_ull,
                          needed_activation_roles, needed_deactivation_roles);
@@ -207,10 +200,8 @@ int cme_role_switch_manager(Cme_Users_e _deactivating_user, uint32_t deactivatio
     //
     if (needed_activation_roles & BIT_x(ROLE_STA))
     {
-        role_debug("\r\nDBG_ROLE:activate STA enter\r\n");
         ASSERT_GENERAL(cme_current_sta_like_role_state_ull == CME_ROLE_DEACTIVATED);
         cme_activate_sta_role();
-        role_debug("\r\nDBG_ROLE:activate STA done\r\n");
     }
 
     if (needed_activation_roles & BIT_x(ROLE_AP))
@@ -264,7 +255,6 @@ int cme_role_switch_manager(Cme_Users_e _deactivating_user, uint32_t deactivatio
     if ((CME_ACTIVATABLE_MASKED_ROLE_BITMAP(cme_active_role_bitmap_ull) == CME_ACTIVATABLE_MASKED_ROLE_BITMAP(requested_active_role)) ||
         (g_signal_role_change_state_done.cme_signalWhenRoleStateChanged_status != CME_SIGNAL_ROLE_CHNGE_STATUS_OK))
     {
-        role_debug("\r\nDBG_ROLE:manager signal branch enter\r\n");
         // release CME manager (during role switch)
         gCmeRoleSwitchActive = FALSE;
         if (signal_event_when_done)
@@ -279,14 +269,12 @@ int cme_role_switch_manager(Cme_Users_e _deactivating_user, uint32_t deactivatio
             {
                 ASSERT_GENERAL(0);
             }
-            role_debug("\r\nDBG_ROLE:manager signal done\r\n");
             GTRACE(GRP_SL_DISPATCH, "cme_role_switch_manager: CME role switch acked back to host if");
         }
     }
 
     HOOK(HOOK_IN_CME_ROLE_ACTIVATION);
 
-    role_debug("\r\nDBG_ROLE:manager done\r\n");
     return rc;
 }
 

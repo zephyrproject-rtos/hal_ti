@@ -43,7 +43,6 @@
   ----------------------------------------------------------------------------- */
 
 #include <data_path/udata/export_inc/udata_api.h>
-#include <stdbool.h>
 #include <stdio.h>
 
 #include "osi_kernel.h"
@@ -69,21 +68,6 @@
 #include "ble_if.h"
 
 #include "errors.h"
-
-extern bool open_at_cc35xx_debug(const char *text);
-
-static void cme_debug(const char *text)
-{
-    (void)open_at_cc35xx_debug(text);
-}
-
-static void cme_debug_ret(const char *tag, int32_t ret)
-{
-    char buf[80];
-
-    (void)snprintf(buf, sizeof(buf), "\r\nDBG_CME:%s ret=%d\r\n", tag, ret);
-    cme_debug(buf);
-}
 #include "drv_ti_internal.h"
 #include "80211_utils.h"
 #include "lower_mac_if.h"
@@ -1267,7 +1251,6 @@ int32_t CME_WlanSetMode(uint8_t calledFromCmeThread,uint32_t role_bitmap, uint32
                             role_bitmap);
 
     CME_SetStartedRoleBitmap(role_bitmap);
-    cme_debug("\r\nDBG_CME:WlanSetMode:set bitmap done\r\n");
 
     GTRACE(GRP_SL_DISPATCH, "CME_WlanSetMode cont ---");
     CME_PRINT_REPORT("\r\nCME_WlanSetMode cont ---");
@@ -1289,8 +1272,43 @@ int32_t CME_WlanSetMode(uint8_t calledFromCmeThread,uint32_t role_bitmap, uint32
         HOOK(HOOK_IN_CME);
 
         pushMsg2Queue(&msg);
-        (void)timeout;
-        return WLAN_RET_CODE_OK;
+
+		GTRACE(GRP_SL_DISPATCH, "CME_WlanSetMode: triggered CME with role "
+                                "switch request, wait for completion, timeout:"
+                                " %lu\r\n", timeout);
+        CME_PRINT_REPORT("\n\rCME_WlanSetMode: send to CME with role switch "
+                         "request, wait for completion, timeout: %lu \r\n",
+                         timeout);
+        
+        // Wait on sync object - new role set operation must block command mailbox!
+		ret = osi_SyncObjWait(&gCmeCommandBlockingSyncObject, timeout);
+	    if (OSI_OK != ret)
+	    {
+	        ASSERT_GENERAL(timeout != OSI_WAIT_FOREVER);
+	        GTRACE(GRP_SL_DISPATCH, "CME_WlanSetMode : Got CME role switch TIMEOUT! carry on");
+            CME_PRINT_REPORT_ERROR("\n\rCME_WlanSetMode : Got CME role switch TIMEOUT! carry on\n\r");
+
+			return WlanError(WLAN_ERROR_SEVERITY__LOW,
+                             WLAN_ERROR_MODULE__CME,
+                             WLAN_ERROR_TYPE__HOST_RESPONSE_TIMEOUT_IN_PRGRESS);
+	    }
+	    // If role up has timed out, it means that it failed during the supplicant_run_ap/sta
+	    else if (g_signal_role_change_state_done.cme_signalWhenRoleStateChanged_status != CME_SIGNAL_ROLE_CHNGE_STATUS_OK)
+	    {
+            CME_PRINT_REPORT_ERROR("\n\rCME_WlanSetMode : Got role switch error\r\n");
+            CME_SetStartedRoleBitmap(originalStartedRoleBitmap);
+
+			return WlanError(WLAN_ERROR_SEVERITY__LOW,
+                             WLAN_ERROR_MODULE__CME,
+                             WLAN_ERROR_TYPE__HOST_RESPONSE_STATUS_ERROR);
+	    }
+	    else
+	    {
+	        GTRACE(GRP_SL_DISPATCH, "CME_WlanSetMode : Got CME role switch acknowledgments, role switch completed");
+	        CME_PRINT_REPORT("\n\rCME_WlanSetMode : Got CME role switch acknowledgments, role switch completed\r\n");
+	    }
+
+	    HOOK(HOOK_IN_CME);
     }
     else
     {
@@ -1837,28 +1855,23 @@ int32_t CME_WlanConnect(CMEWlanConnectCommon_t *apCmd, CMEEapWlanConnect_t* apEa
     CMEWlanConnectCommon_t *pCmd = NULL;
     CMEEapWlanConnect_t *pEapCmd = NULL;
 
-    cme_debug("\r\nDBG_CME:CME_WlanConnect enter\r\n");
     if (apCmd)
     {
-        cme_debug("\r\nDBG_CME:CME_WlanConnect prepare common enter\r\n");
         status = cmeWlanConnectPrepareCmd(apCmd,
                                           apCmd,
                                           sizeof(CMEWlanConnectCommon_t),
                                           &msg.un.wlanConnect.keyMgmtType,
                                           &isProfileConnection,
                                           (void **)&pCmd);
-        cme_debug_ret("CME_WlanConnect:prepare common", status);
     }
     else if (apEapCmd)
     {
-        cme_debug("\r\nDBG_CME:CME_WlanConnect prepare eap enter\r\n");
         status = cmeWlanConnectPrepareCmd(&apEapCmd->EapCommonConnect,
                                           apEapCmd,
                                           sizeof(CMEEapWlanConnect_t),
                                           &msg.un.wlanConnect.keyMgmtType,
                                           &isProfileConnection,
                                           (void **)&pEapCmd);
-        cme_debug_ret("CME_WlanConnect:prepare eap", status);
     }
     else
     {
@@ -1890,13 +1903,9 @@ int32_t CME_WlanConnect(CMEWlanConnectCommon_t *apCmd, CMEEapWlanConnect_t* apEa
         msg.generalData |= CME_GENERAL_DATA_CONNECT_IS_USER_REQ;
     }
 
-    cme_debug("\r\nDBG_CME:CME_WlanConnect push enter\r\n");
     pushMsg2Queue(&msg);
-    cme_debug("\r\nDBG_CME:CME_WlanConnect push done\r\n");
 
-    cme_debug("\r\nDBG_CME:CME_WlanConnect hook enter\r\n");
     HOOK(HOOK_IN_CME);
-    cme_debug("\r\nDBG_CME:CME_WlanConnect hook done\r\n");
 
     return status;
 }
@@ -3087,7 +3096,6 @@ void cmeFreePendingWlanConnectResources()
 void cme_Thread(void* apParam)
 {
     HOOK(HOOK_IN_CME);
-    cme_debug("\r\nDBG_CME:thread enter\r\n");
 
     uint32_t requested_active_role  = 0;
     
@@ -3124,15 +3132,12 @@ void cme_Thread(void* apParam)
         CME_PRINT_REPORT("\n\rcme_Thread: thrd is up and running");
     }
 
-    cme_debug("\r\nDBG_CME:thread cmeMngInit enter\r\n");
     cmeMngInit();
-    cme_debug("\r\nDBG_CME:thread cmeMngInit done\r\n");
 
     gCmeRoleSwitchActive = FALSE;
 
 
     //signal that thread is up and running
-    cme_debug("\r\nDBG_CME:thread signal started\r\n");
     osi_SyncObjSignal(&gCmeThreadStarted);
 
 
@@ -3291,7 +3296,6 @@ void cme_Thread(void* apParam)
 
                 case CME_MESSAGE_ID_NEW_ROLE_SET:
                 {
-                    cme_debug("\r\nDBG_CME:thread NEW_ROLE_SET enter\r\n");
                     GTRACE(GRP_CME, "CME: handle CME_MESSAGE_ID_NEW_ROLE_SET, "
                                     "calledFromCmeThread:%d", 
                                     msg.un.wlanMode.calledFromCmeThread);
@@ -3312,16 +3316,12 @@ void cme_Thread(void* apParam)
                         role_switch_rc = cme_role_switch_manager(CmeStationFlow_GetCurrentUser(),
                                                                  actionBitmap,
                                                                  signalEvent /* if role switch done signal event */);
-                        cme_debug_ret("thread NEW_ROLE_SET role_switch", role_switch_rc);
                         if (role_switch_rc == 0)
                         {
                             //in case role activation completed - try profile search
-                            cme_debug("\r\nDBG_CME:thread NEW_ROLE_SET profile enter\r\n");
                             cmeProfileManagerConfigChange(0, CALLER1);
-                            cme_debug("\r\nDBG_CME:thread NEW_ROLE_SET profile done\r\n");
                         }
                     }
-                    cme_debug("\r\nDBG_CME:thread NEW_ROLE_SET done\r\n");
                 }break; // CME_MESSAGE_ID_NEW_ROLE_SET //
 
                 case CME_MESSAGE_ID_PS_SET:
@@ -5299,7 +5299,6 @@ int32_t cme_deinit()
 int32_t cme_init()
 {
     HOOK(HOOK_IN_CME);
-    cme_debug("\r\nDBG_CME:init enter\r\n");
 
     int32_t rc = OSI_OK;
 
@@ -5320,9 +5319,7 @@ int32_t cme_init()
 
     // Debug
 
-    cme_debug("\r\nDBG_CME:init cmeScanInit enter\r\n");
     cmeScanInit();
-    cme_debug("\r\nDBG_CME:init cmeScanInit done\r\n");
 
 
     //cme_InitAfterSleep();
@@ -5344,23 +5341,17 @@ int32_t cme_init()
     gCmeP2pInfo.p2pConnectPending = FALSE;
 
     /* Connection Policy load */
-    cme_debug("\r\nDBG_CME:init LoadConnectionPolicy enter\r\n");
     LoadConnectionPolicy_GetFromFlash(TRUE, 0);
-    cme_debug("\r\nDBG_CME:init LoadConnectionPolicy done\r\n");
 
     // CME role switch is blocking the command mailbox from receiving any other commands
-     cme_debug("\r\nDBG_CME:init sync command_blocking enter\r\n");
      rc = osi_SyncObjCreate(&gCmeCommandBlockingSyncObject);
-     cme_debug_ret("init sync command_blocking", rc);
      if(rc != OSI_OK)
      {
          GTRACE_NVIC(GRP_CME, "cme_init: Sync object Create failed");
          ASSERT_GENERAL(0);
          return rc;
      }
-     cme_debug("\r\nDBG_CME:init sync thread_started enter\r\n");
      rc = osi_SyncObjCreate(&gCmeThreadStarted);
-     cme_debug_ret("init sync thread_started", rc);
      if(rc != OSI_OK)
      {
          GTRACE_NVIC(GRP_CME, "cme_init: Sync object Create failed");
@@ -5369,9 +5360,7 @@ int32_t cme_init()
      }
 
 
-     cme_debug("\r\nDBG_CME:init sync run_stop enter\r\n");
      rc = osi_SyncObjCreate(&gCmeThrdRunStopSyncObject);
-     cme_debug_ret("init sync run_stop", rc);
      if(rc != OSI_OK)
      {
          GTRACE_NVIC(GRP_CME, "cme_init: gCmeThrdRunStopSyncObject object Create failed");
@@ -5380,9 +5369,7 @@ int32_t cme_init()
      }
 
 
-     cme_debug("\r\nDBG_CME:init sync stop_blocking enter\r\n");
      rc = osi_SyncObjCreate(&gCmeCommandStopBlockingSyncObject);
-     cme_debug_ret("init sync stop_blocking", rc);
      if(rc != OSI_OK)
      {
          GTRACE_NVIC(GRP_CME, "cme_init: Sync object Create failed");
@@ -5390,9 +5377,7 @@ int32_t cme_init()
          return rc;
      }
 
-     cme_debug("\r\nDBG_CME:init sync loop_stopped enter\r\n");
      rc = osi_SyncObjCreate(&gThrdLoopStoppedCmeSync);
-     cme_debug_ret("init sync loop_stopped", rc);
      if(rc != OSI_OK)
      {
          GTRACE_NVIC(GRP_CME, "cme_init: Sync object gThrdLoopStoppedCmeSync Create failed");
@@ -5400,9 +5385,7 @@ int32_t cme_init()
          return rc;
      }
 
-     cme_debug("\r\nDBG_CME:init sync dummy_sleep enter\r\n");
      rc = osi_SyncObjCreate(&gCmeThrdDummySleep);
-     cme_debug_ret("init sync dummy_sleep", rc);
      if(rc != OSI_OK)
      {
          GTRACE_NVIC(GRP_CME, "cme_init: Sync object gCmeThrdDummySleep Create failed");
@@ -5411,9 +5394,7 @@ int32_t cme_init()
          return rc;
      }
 
-     cme_debug("\r\nDBG_CME:init sync eapols_sta enter\r\n");
      rc = osi_SyncObjCreate(&gCmeEapolsStaSyncObject);
-     cme_debug_ret("init sync eapols_sta", rc);
      if(rc != OSI_OK)
      {
          GTRACE_NVIC(GRP_CME, "cme_init: Sync object gCmeEapolsStaSyncObject Create failed");
@@ -5421,9 +5402,7 @@ int32_t cme_init()
          return rc;
      }
 
-     cme_debug("\r\nDBG_CME:init sync tx_complete enter\r\n");
      rc = osi_SyncObjCreate(&gtxCompleteSyncObj);
-     cme_debug_ret("init sync tx_complete", rc);
      if(rc != OSI_OK)
      {
          GTRACE_NVIC(GRP_CME, "cme_init: Sync object gtxCompleteSyncObj Create failed");
@@ -5431,13 +5410,11 @@ int32_t cme_init()
          return rc;
      }
 
-    cme_debug("\r\nDBG_CME:init msgq enter\r\n");
     rc = osi_MsgQCreate(&gCmeMessageQueue,
                         "eloopQueue",
                         MSGQ_MSG_SIZE,
                         MSGQ_MAX_NUM_MSGS
                         );
-    cme_debug_ret("init msgq", rc);
 
     if(rc != OSI_OK)
     {
@@ -5447,14 +5424,12 @@ int32_t cme_init()
 
     CME_PRINT_REPORT_ERROR("\n\rcme: osi_ThreadCreate");
 
-    cme_debug("\r\nDBG_CME:init thread_create enter\r\n");
     rc = osi_ThreadCreate(&gCmeThreadTcb,                   // Thread control block
                          "cme",                            // Thread name
                           CME_THR_STACK_SIZE,               // Stack size
                           CME_THREAD_PRIORITY,                 // Thread priority
                           cme_Thread,                       // Thread entry function
                           NULL);                             // Thread init parameters
-    cme_debug_ret("init thread_create", rc);
 
     if (OSI_OK != rc)
     {
@@ -5466,9 +5441,7 @@ int32_t cme_init()
         GTRACE_NVIC(GRP_CME,"cme_init: osi_ThreadCreate created successfully");
     }
     //wait for CME thread start running
-    cme_debug("\r\nDBG_CME:init wait thread_started enter\r\n");
     osi_SyncObjWait(&gCmeThreadStarted, OSI_WAIT_FOREVER);
-    cme_debug("\r\nDBG_CME:init wait thread_started done\r\n");
 
     HOOK(HOOK_IN_CME);
 
@@ -5486,23 +5459,16 @@ int32_t cme_init()
 // ----------------------------------------------------------------------------
 static int32_t pushMsg2Queue(cmeMsg_t *apMsg)
 {
-    cme_debug("\r\nDBG_CME:pushMsg2Queue enter\r\n");
     HOOK(HOOK_IN_CME);
-    cme_debug("\r\nDBG_CME:pushMsg2Queue after hook\r\n");
 
     int32_t ret = 0;
     OsiReturnVal_e rc;
-    char dbg[80];
 
     //GTRACE(GRP_CME_DEBUG,"CME add message ENUM(CmeMsgsIds_e, %d)", apMsg->msgId);
     //CME_PRINT_REPORT("\n\r CME add message ENUM(CmeMsgsIds_e, %d)", apMsg->msgId);
 
-    (void)snprintf(dbg, sizeof(dbg), "\r\nDBG_CME:pushMsg2Queue write enter msg=%d\r\n",
-                   apMsg->msgId);
-    cme_debug(dbg);
+
     rc = osi_MsgQWrite(&gCmeMessageQueue, apMsg, OSI_NO_WAIT, OSI_FLAG_NOT_FROM_INTR);
-    (void)snprintf(dbg, sizeof(dbg), "\r\nDBG_CME:pushMsg2Queue write ret=%d\r\n", rc);
-    cme_debug(dbg);
 
     if (OSI_OK != rc)
     {
