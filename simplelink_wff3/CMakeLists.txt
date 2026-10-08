@@ -1,3 +1,17 @@
+set(TI_MBEDTLS_DIR "${CMAKE_CURRENT_LIST_DIR}/third_party/mbedtls")
+
+function(ti_mbedtls_configure_target target)
+  target_compile_options(${target} PRIVATE
+    -UMBEDTLS_CONFIG_FILE
+    -UTF_PSA_CRYPTO_CONFIG_FILE
+    -DMBEDTLS_CONFIG_FILE="mbedtls_ti_config.h"
+  )
+  target_include_directories(${target} BEFORE PRIVATE
+    "${TI_MBEDTLS_DIR}/ti/configs"
+    "${TI_MBEDTLS_DIR}/include"
+  )
+endfunction()
+
 add_subdirectory(source/ti/devices)
 
 if(CONFIG_HAS_CC35XX_SDK)
