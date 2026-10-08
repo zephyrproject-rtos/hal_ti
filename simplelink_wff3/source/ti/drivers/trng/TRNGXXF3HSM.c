@@ -124,21 +124,20 @@ TRNG_Handle TRNG_construct(TRNG_Config *config, const TRNG_Params *params)
     handle = config;
     object = handle->object;
 
-    key = HwiP_disable();
-
     /* Initialize and boot HSM and related FW architectures */
     if (HSMXXF3_init() != HSMXXF3_STATUS_SUCCESS)
     {
         /* Upon HSM Boot failure, this driver stores the failure status in the object */
         object->hsmStatus = HSMXXF3_STATUS_ERROR;
 
-        HwiP_restore(key);
         return NULL;
     }
     else
     {
         object->hsmStatus = HSMXXF3_STATUS_SUCCESS;
     }
+
+    key = HwiP_disable();
 
     if (object->isOpen || !isInitialized)
     {
