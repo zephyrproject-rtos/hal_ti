@@ -36,8 +36,6 @@
 #include "macro_utils.h"
 #include "wlan_if.h"
 #include <ti/drivers/Power.h>
-#include <stdbool.h>
-#include <stdio.h>
 
 typedef struct __PACKED__
 {
@@ -65,20 +63,6 @@ extern int  ctrlCmdFw_FirstCommand();
 extern int  ctrlCmdFw_GetCmdSize();
 extern int  WLSendFWDownloadCommand(void *cmd, uint32_t len, void *out,uint32_t outLen);
 extern int  ctrlCmdFw_GetMacAddress(Macaddress_t* macaddress);
-extern bool open_at_cc35xx_debug(const char *text);
-
-static void init_dev_debug(const char *text)
-{
-    (void)open_at_cc35xx_debug(text);
-}
-
-static void init_dev_debug_ret(const char *tag, int32_t ret)
-{
-    char buf[88];
-
-    (void)snprintf(buf, sizeof(buf), "\r\nDBG_DEV:%s ret=%d\r\n", tag, ret);
-    init_dev_debug(buf);
-}
 
 
 #define CHUNK_SIZE (600)
@@ -141,49 +125,24 @@ int ctrlCmdFw_ContainerDownload(char *containerName)
     uint32_t numOfRecords = 0;
     uint32_t cmdSize = ctrlCmdFw_GetCmdSize();
 
-    init_dev_debug("\r\nDBG_DEV:ContainerDownload malloc enter\r\n");
     buffer = os_malloc(CHUNK_SIZE + cmdSize);
-    init_dev_debug(buffer ? "\r\nDBG_DEV:ContainerDownload malloc ok\r\n" :
-                            "\r\nDBG_DEV:ContainerDownload malloc fail\r\n");
 
     if(NULL == buffer)
     {
         Report("\n\rcouldn't allocate for record download\n\r");
         ASSERT_GENERAL(0);
     }
-    init_dev_debug("\r\nDBG_DEV:ContainerDownload fopen enter\r\n");
     containerFileHandle = osi_fopen(containerName, "rb");
-    init_dev_debug(containerFileHandle ? "\r\nDBG_DEV:ContainerDownload fopen ok\r\n" :
-                                        "\r\nDBG_DEV:ContainerDownload fopen fail\r\n");
-    init_dev_debug("\r\nDBG_DEV:ContainerDownload read header enter\r\n");
-    ret = osi_fread(buffer, sizeof(recordHeader_t), offset, containerFileHandle);
-    init_dev_debug_ret("ContainerDownload read header", ret);
+    osi_fread(buffer, sizeof(recordHeader_t), offset, containerFileHandle);
 
     header = (recordHeader_t *)buffer;
-    {
-        char dbg[128];
-
-        (void)snprintf(dbg, sizeof(dbg),
-                       "\r\nDBG_DEV:ContainerDownload header magic=0x%08x len=%u type=%u\r\n",
-                       header->magicNum, header->len, header->type);
-        init_dev_debug(dbg);
-    }
 
     while( (RECORD_MAGIC_NUM == header->magicNum) || (RECORD_MAGIC_NUM_ALT == header->magicNum) )
     {
         // find number of records
         if (0 == recordCounter)
         {
-            init_dev_debug("\r\nDBG_DEV:ContainerDownload NumOfRecordOffset enter\r\n");
             numOfRecords = NumOfRecordOffset(containerName, header);
-            {
-                char dbg[80];
-
-                (void)snprintf(dbg, sizeof(dbg),
-                               "\r\nDBG_DEV:ContainerDownload numRecords=%u\r\n",
-                               numOfRecords);
-                init_dev_debug(dbg);
-            }
         }
 
         currentRecordLength = sizeof(recordHeader_t) + ALIGNN_TO_4(header->len);
@@ -204,9 +163,7 @@ int ctrlCmdFw_ContainerDownload(char *containerName)
            // Report("\r\nsending 0x%x 0x%x ends 0x%x 0x%x",(buffer + cmdSize)[0],(buffer + cmdSize)[1],(buffer + cmdSize)[CHUNK_SIZE - 2],(buffer + cmdSize)[CHUNK_SIZE - 1]);
            // Report(" offset - %d",offset + offsetInRecord);
             //write to device
-            init_dev_debug("\r\nDBG_DEV:ContainerDownload send chunk enter\r\n");
             ret = WLSendFWDownloadCommand(buffer, CHUNK_SIZE, NULL, 0);
-            init_dev_debug_ret("ContainerDownload send chunk", ret);
             currentRecordLength -= CHUNK_SIZE;
             offsetInRecord += CHUNK_SIZE;
         }
@@ -233,9 +190,7 @@ int ctrlCmdFw_ContainerDownload(char *containerName)
             }
 
             //write to device
-            init_dev_debug("\r\nDBG_DEV:ContainerDownload send tail enter\r\n");
             ret = WLSendFWDownloadCommand(buffer, currentRecordLength, NULL, 0);
-            init_dev_debug_ret("ContainerDownload send tail", ret);
 
             if (isLastRecord && (0 == os_strcmp("rambtlr",containerName)))
             {
@@ -248,27 +203,9 @@ int ctrlCmdFw_ContainerDownload(char *containerName)
 
         offset = offset + offsetInRecord;
 
-        init_dev_debug("\r\nDBG_DEV:ContainerDownload read next header enter\r\n");
-        ret = osi_fread(buffer , sizeof(recordHeader_t), offset, containerFileHandle);
-        init_dev_debug_ret("ContainerDownload read next header", ret);
+        osi_fread(buffer , sizeof(recordHeader_t), offset, containerFileHandle);
 
         header = (recordHeader_t *)buffer;
-        {
-            char dbg[128];
-
-            (void)snprintf(dbg, sizeof(dbg),
-                           "\r\nDBG_DEV:ContainerDownload next magic=0x%08x len=%u type=%u\r\n",
-                           header->magicNum, header->len, header->type);
-            init_dev_debug(dbg);
-        }
-    }
-    {
-        char dbg[80];
-
-        (void)snprintf(dbg, sizeof(dbg),
-                       "\r\nDBG_DEV:ContainerDownload recordsSent=%u\r\n",
-                       recordCounter);
-        init_dev_debug(dbg);
     }
 
     osi_fclose(containerFileHandle);
@@ -281,89 +218,62 @@ int32_t init_device(uint32_t commandsEventsSizeBTL,uint32_t commandsEventsSize)
 {
     int ret = 0;
 
-    init_dev_debug("\r\nDBG_DEV:init_device enter\r\n");
-    init_dev_debug("\r\nDBG_DEV:Power_setConstraint enter\r\n");
     Power_setConstraint(PowerWFF3_DISALLOW_SLEEP);
-    init_dev_debug("\r\nDBG_DEV:Power_setConstraint done\r\n");
 
-    init_dev_debug("\r\nDBG_DEV:fwEvent_SetDuringInit 1 enter\r\n");
     fwEvent_SetDuringInit(1,commandsEventsSize);
-    init_dev_debug("\r\nDBG_DEV:fwEvent_SetDuringInit 1 done\r\n");
 
     /* start downloading the RAM btlr and FW */
     Report("\n\rStarting software download.....\r\n");
 
     /* we need to wait so the LX device will wake up */
-    init_dev_debug("\r\nDBG_DEV:wait ROM_LOADER_INIT enter\r\n");
     if(fwEvent_Wait(OSI_WAIT_FOREVER,HINT_ROM_LOADER_INIT_COMPLETE) == -1)
     {
-        init_dev_debug("\r\nDBG_DEV:wait ROM_LOADER_INIT fail\r\n");
         Report("didn't receive ROM init complete\n\r");
         //ASSERT_GENERAL(0);
         while(1);
     }
-    init_dev_debug("\r\nDBG_DEV:wait ROM_LOADER_INIT done\r\n");
 
     Report("\n\rreceived ROM init complete.....\r\n");
 
     // RAM Bootloader download
-    init_dev_debug("\r\nDBG_DEV:ContainerDownload fw enter\r\n");
     ctrlCmdFw_ContainerDownload("fw");
-    init_dev_debug("\r\nDBG_DEV:ContainerDownload fw done\r\n");
 
     /* we need to wait so the LX device will wake up */
-    init_dev_debug("\r\nDBG_DEV:wait FW_WAKEUP enter\r\n");
     if(fwEvent_Wait(OSI_WAIT_FOREVER,HINT_FW_WAKEUP_COMPLETE) == -1)
     {
-        init_dev_debug("\r\nDBG_DEV:wait FW_WAKEUP fail\r\n");
         Report("didn't receive ROM init complete");
         //ASSERT_GENERAL(0);
         while(1);
     }
-    init_dev_debug("\r\nDBG_DEV:wait FW_WAKEUP done\r\n");
 
-    init_dev_debug("\r\nDBG_DEV:fwEvent_SetDuringInit 0 enter\r\n");
     fwEvent_SetDuringInit(0,commandsEventsSize);
-    init_dev_debug("\r\nDBG_DEV:fwEvent_SetDuringInit 0 done\r\n");
 
     Report("-------------- Download First CMD\n\r");
     // download first comand
     // Note: ! Must come before ini !
-    init_dev_debug("\r\nDBG_DEV:FirstCommand enter\r\n");
     ctrlCmdFw_FirstCommand();
-    init_dev_debug("\r\nDBG_DEV:FirstCommand done\r\n");
 
     Report("-------------- Download IniParams\n\r");
 
     // Download ini File Params
-    init_dev_debug("\r\nDBG_DEV:DownloadIniParams enter\r\n");
     ctrlCmdFw_DownloadIniParams();
-    init_dev_debug("\r\nDBG_DEV:DownloadIniParams done\r\n");
 
     Report("-------------- Wait for IniParams complete\n\r");
-    init_dev_debug("\r\nDBG_DEV:wait INI_PARAMS enter\r\n");
     if(fwEvent_Wait(OSI_WAIT_FOREVER,HINT_FW_DOWNLOADING_INI_PARAMS_COMPLETE) == -1)
     {
-        init_dev_debug("\r\nDBG_DEV:wait INI_PARAMS fail\r\n");
         Report("didn't receive HINT_FW_DOWNLOADING_INI_PARAMS_COMPLETE\n\r");
         while(1);
     }
-    init_dev_debug("\r\nDBG_DEV:wait INI_PARAMS done\r\n");
 
 #if 0
     /* same command size fro BTL and Stack*/
     fwEvent_set_cmdEventSize(commandsEventsSize);
 #endif
 
-    init_dev_debug("\r\nDBG_DEV:get_device_mac_address enter\r\n");
-    ret = get_device_mac_address();
-    init_dev_debug_ret("get_device_mac_address", ret);
+    get_device_mac_address();
 
-    init_dev_debug("\r\nDBG_DEV:Power_releaseConstraint enter\r\n");
     Power_releaseConstraint(PowerWFF3_DISALLOW_SLEEP);
-    init_dev_debug("\r\nDBG_DEV:Power_releaseConstraint done\r\n");
     
-    init_dev_debug("\r\nDBG_DEV:init_device done\r\n");
     return ret;
 }
 
@@ -511,3 +421,4 @@ int get_device_mac_address()
 
     return 0;
 }
+
