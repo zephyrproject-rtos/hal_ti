@@ -1,6 +1,0 @@
-# Zephyr module descriptor for TI TivaWare HAL
-
-build:
-  cmake: .
-  settings:
-    dts_root: .
