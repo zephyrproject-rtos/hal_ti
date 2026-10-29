@@ -3,7 +3,7 @@
  *
  *  Description:    Prototypes and defines for the ADC API.
  *
- *  Copyright (c) 2022 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2025 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -113,6 +113,14 @@ extern "C" {
 //! \brief Set ADC reference to VDDS
 #define ADC_VDDS_REFERENCE 3
 
+//! \brief ADC is powered down on completion of a conversion if there is no
+//! pending trigger. To be used with \ref ADCSetPowerDownPolicy()
+#define ADC_POWER_DOWN_POLICY_AUTO ADC_CTL0_PWRDN_AUTO
+
+//! \brief ADC remains powered on as long as the power mode it set to manual.
+//! To be used with \ref ADCSetPowerDownPolicy()
+#define ADC_POWER_DOWN_POLICY_MANUAL ADC_CTL0_PWRDN_MANUAL
+
 //! \brief Set ADC conversion sequence to repeat control registers defined by start and stop address,
 //! as set by \ref ADCSetMemctlRange
 #define ADC_SEQUENCE_REPEATSEQUENCE ADC_CTL1_CONSEQ_REPEATSEQUENCE
@@ -127,6 +135,40 @@ extern "C" {
 //! \brief Set ADC conversion sequence to do a single conversion of control register defined by start,
 //! as set by \ref ADCSetMemctlRange
 #define ADC_SEQUENCE_SINGLE ADC_CTL1_CONSEQ_SINGLE
+
+//! \brief Sample duration is controlled by values set using
+//! \ref ADCSetSampleDuration()
+#define ADC_SAMPLE_MODE_AUTO ADC_CTL1_SAMPMODE_AUTO
+
+//! \brief Sample phase is manually started using \ref ADCStartConversion() and
+//! manually stopped using \ref ADCStopConversion()
+//!
+//! This can only be used when the trigger source selected by
+//! \ref ADCSetTriggerSource() is \ref ADC_TRIGGER_SOURCE_SOFTWARE
+#define ADC_SAMPLE_MODE_MANUAL ADC_CTL1_SAMPMODE_MANUAL
+
+//! \brief The ADC trigger source is a hardware event.
+//!
+//! Can only be used when the sample mode configured using
+//! \ref ADCSetSamplingMode() is \ref ADC_SAMPLE_MODE_AUTO
+#define ADC_TRIGGER_SOURCE_EVENT ADC_CTL1_TRIGSRC_EVENT
+
+//! \brief The ADC trigger source is software.
+//!
+//! \ref ADCStartConversion() is used to trigger the start of a conversion.
+//! If the sampling mode configured using \ref ADCSetSamplingMode() is
+//! \ref ADC_SAMPLE_MODE_MANUAL, then the sample phase must also be manually
+//! stopped using \ref ADCStopConversion()
+#define ADC_TRIGGER_SOURCE_SOFTWARE ADC_CTL1_TRIGSRC_SOFTWARE
+
+//! \brief The next conversion is automatically started after the completion of
+//! the previous conversion.
+//!
+//! This means that no trigger is needed to start the next conversion.
+#define ADC_TRIGGER_POLICY_AUTO_NEXT ADC_MEMCTL0_TRG_AUTO_NEXT
+
+//! \brief The next conversion requires a trigger
+#define ADC_TRIGGER_POLICY_TRIGGER_NEXT ADC_MEMCTL0_TRG_TRIGGER_NEXT
 
 //! \brief Result ready in memory result register 23
 #define ADC_INT_MEMRES_23 ADC_IMASK0_MEMRESIFG23
@@ -224,6 +266,9 @@ extern "C" {
 //! \brief Conversion overflow
 #define ADC_INT_OVIFG ADC_IMASK0_OVIFG
 
+//! \brief Max comparator settling time
+#define ADC_DEBUG1_CTRL_MAX_COMP_SETTLE_TIME (0x3 << 9)
+
 //*****************************************************************************
 //
 // API Functions and prototypes
@@ -271,15 +316,15 @@ extern void ADCSetSampleDuration(uint32_t clkDiv, uint16_t clkCycles);
 //! This function sets the resolution of the ADC conversion.
 //!
 //! \param resolution Bit resolution to be used in conversion
-//! - \ref ADC_RESOLUTION_12_BIT
-//! - \ref ADC_RESOLUTION_10_BIT
 //! - \ref ADC_RESOLUTION_8_BIT
+//! - \ref ADC_RESOLUTION_10_BIT
+//! - \ref ADC_RESOLUTION_12_BIT
 //!
 //! \note
 //! The resolution will affect how long a conversion will take.
-//! - 12 bit: 14 clock cycles
-//! - 10 bit: 12 clock cycles
-//! - 8 bit: 9 clock cycles
+//! - 8 bit: 9 conversion clock cycles
+//! - 10 bit: 12 conversion clock cycles
+//! - 12 bit: 14 conversion clock cycles
 //!
 //! \return None
 //
@@ -327,6 +372,21 @@ extern void ADCSetMemctlRange(uint32_t start, uint32_t stop);
 
 //*****************************************************************************
 //
+//! \brief Set power down policy
+//!
+//! This function sets the power down policy for the ADC.
+//!
+//! \param powerDownPolicy
+//! - \ref ADC_POWER_DOWN_POLICY_MANUAL
+//! - \ref ADC_POWER_DOWN_POLICY_AUTO
+//!
+//! \return None
+//
+//*****************************************************************************
+extern void ADCSetPowerDownPolicy(uint32_t powerDownPolicy);
+
+//*****************************************************************************
+//
 //! \brief Set conversion sequence
 //!
 //! This function sets the sequence for ADC conversions. The actual sequence is
@@ -346,11 +406,55 @@ extern void ADCSetSequence(uint32_t sequence);
 
 //*****************************************************************************
 //
-//! \brief Triggers an ADC conversion
+//! \brief Set ADC sampling mode
 //!
-//! This function manually triggers an ADC conversion sequence, based on the
-//! settings in the control registers in the start and stop range. See
-//! \ref ADCSetMemctlRange and \ref ADCSetSequence
+//! \param samplingMode
+//! - \ref ADC_SAMPLE_MODE_MANUAL
+//! - \ref ADC_SAMPLE_MODE_AUTO
+//!
+//! \return None
+//
+//*****************************************************************************
+extern void ADCSetSamplingMode(uint32_t samplingMode);
+
+//*****************************************************************************
+//
+//! \brief Set ADC trigger source
+//!
+//! \param triggerSource
+//! - \ref ADC_TRIGGER_SOURCE_SOFTWARE
+//! - \ref ADC_TRIGGER_SOURCE_EVENT
+//!
+//! \return None
+//
+//*****************************************************************************
+extern void ADCSetTriggerSource(uint32_t triggerSource);
+
+//*****************************************************************************
+//
+//! \brief Set ADC trigger policy
+//!
+//! This not applicable when the sequence set by \ref ADCSetSequence() is
+//! \ref ADC_SEQUENCE_SINGLE
+//!
+//! \param triggerPolicy
+//! - \ref ADC_TRIGGER_POLICY_AUTO_NEXT
+//! - \ref ADC_TRIGGER_POLICY_TRIGGER_NEXT
+//!
+//! \param index Index of which control register to write to. See device data
+//!              for valid indexes.
+//!
+//! \return None
+//
+//*****************************************************************************
+extern void ADCSetTriggerPolicy(uint32_t triggerPolicy, uint32_t index);
+
+//*****************************************************************************
+//
+//! \brief Start conversion.
+//!
+//! Can only be used if the trigger source is set to
+//! \ref ADC_TRIGGER_SOURCE_SOFTWARE using \ref ADCSetTriggerSource()
 //!
 //! \note It takes a minimum of 9 system-clock cycles for the BUSY-bit
 //! in the STATUS register to go high after calling this function.
@@ -358,7 +462,95 @@ extern void ADCSetSequence(uint32_t sequence);
 //! \return None
 //
 //*****************************************************************************
-extern void ADCManualTrigger(void);
+__STATIC_INLINE void ADCStartConversion(void)
+{
+    HWREG(ADC_BASE + ADC_O_CTL1) |= ADC_CTL1_SC_START;
+}
+
+//*****************************************************************************
+//
+//! \brief Stop sample phase of a conversion.
+//!
+//! Only applicable if the trigger source is set to
+//! \ref ADC_TRIGGER_SOURCE_SOFTWARE using \ref ADCSetTriggerSource() and if the
+//! sampling mode is set to \ref ADC_SAMPLE_MODE_MANUAL using
+//! \ref ADCSetSamplingMode().
+//!
+//! \return None
+//
+//*****************************************************************************
+__STATIC_INLINE void ADCStopConversion(void)
+{
+    HWREG(ADC_BASE + ADC_O_CTL1) &= ~ADC_CTL1_SC_M;
+}
+
+//*****************************************************************************
+//
+//! \brief Enable conversion
+//!
+//! This will enable ADC conversions. The ADC sequencer will wait for the
+//! trigger configured using \ref ADCSetTriggerSource() before the first
+//! conversion is started.
+//!
+//! If the trigger source has been configured to
+//! \ref ADC_TRIGGER_SOURCE_SOFTWARE, then the conversion can be started using
+//! \ref ADCStartConversion().
+//!
+//! \note While conversion is enabled, configuration of the ADC is not possible,
+//! so all configurations must be done before enabling conversion.
+//!
+//! \return None
+//
+//*****************************************************************************
+__STATIC_INLINE void ADCEnableConversion(void)
+{
+    HWREG(ADC_BASE + ADC_O_CTL0) |= ADC_CTL0_ENC_ON;
+}
+
+//*****************************************************************************
+//
+//! \brief Disable conversion
+//!
+//! This will disable ADC conversions. The current conversion will finish and
+//! the result can be read out using \ref ADCReadResult() or
+//! \ref ADCReadResultNonBlocking(). Any subsequent conversions in a sequence
+//! will be aborted.
+//!
+//! \return None
+//
+//*****************************************************************************
+__STATIC_INLINE void ADCDisableConversion(void)
+{
+    HWREG(ADC_BASE + ADC_O_CTL0) &= ~ADC_CTL0_ENC_M;
+}
+
+//*****************************************************************************
+//
+//! \brief Enable DMA trigger for data transfer.
+//!
+//! \note The DMA trigger is automatically cleared by hardware based on DMA done
+//! signal at the end of data transfer. Software has to re-enable the DMA
+//! trigger for ADC to generate DMA triggers after the DMA done signal.
+//!
+//! \return None
+//
+//*****************************************************************************
+__STATIC_INLINE void ADCEnableDmaTrigger(void)
+{
+    HWREG(ADC_BASE + ADC_O_CTL2) |= ADC_CTL2_DMAEN_EN;
+}
+
+//*****************************************************************************
+//
+//! \brief Disable DMA trigger for data transfer.
+//!
+//! \return None
+//
+//*****************************************************************************
+__STATIC_INLINE void ADCDisableDmaTrigger(void)
+{
+    HWREG(ADC_BASE + ADC_O_CTL2) &= ~ADC_CTL2_DMAEN_M;
+}
 
 //*****************************************************************************
 //
@@ -589,122 +781,21 @@ __STATIC_INLINE void ADCClearInterrupt(uint32_t intFlags)
 
 //*****************************************************************************
 //
-//! \brief Enable DMA trigger for data transfer.
+//! \brief Increase settling time for comparator output.
 //!
-//! This function enables DMA trigger for data transfer. DMAEN bit is cleared by hardware
-//! based on DMA done signal at the end of data transfer. Software has to re-enable DMAEN
-//! bit for ADC to generate DMA triggers.
-//!
-//! \return None
-//
-//*****************************************************************************
-__STATIC_INLINE void ADCEnableDMATrigger(void)
-{
-    HWREG(ADC_BASE + ADC_O_CTL2) |= ADC_CTL2_DMAEN;
-}
-
-//*****************************************************************************
-//
-//! \brief Enables individual ADC interrupt sources for DMA Trigger Event Publisher (INT_EVENT2).
-//!
-//! This function enables the indicated ADC interrupt sources (INT_EVENT2).
-//!
-//! \param intFlags is the bit mask of the interrupt sources to be enabled.
-//! The parameter is the bitwise OR of any of the following:
-//! - ADC_INT_MEMRES_N (\ref ADC_INT_MEMRES_00, \ref ADC_INT_MEMRES_01, etc)
+//! Set bits 9-10 in ADC:DEBUG1:CTRL to increase settling time for the
+//! comparator output. This will reduce the error rate of ADC conversions.
+//! This is a workaround for the ADC errata: 'ADC_09', documented at:
+//! https://www.ti.com/lit/er/swrz134e/swrz134e.pdf or
+//! https://www.ti.com/lit/er/swrz161a/swrz161a.pdf
 //!
 //! \return None
 //
 //*****************************************************************************
-__STATIC_INLINE void ADCEnableDMAInterrupt(uint32_t intFlags)
+__STATIC_INLINE void ADCIncreaseComparatorSettlingTime(void)
 {
-    // Enable the specified interrupts.
-    HWREG(ADC_BASE + ADC_O_IMASK2) |= intFlags;
-}
-
-//*****************************************************************************
-//
-//! \brief Disables individual ADC interrupt sources for DMA Trigger Event Publisher (INT_EVENT2).
-//!
-//! This function disables the indicated ADC interrupt sources (INT_EVENT2).
-//!
-//! \param intFlags is the bit mask of the interrupt sources to be disabled.
-//! The parameter is the bitwise OR of any of the following:
-//! - ADC_INT_MEMRES_N (\ref ADC_INT_MEMRES_00, \ref ADC_INT_MEMRES_01, etc)
-//!
-//! \return None
-//
-//*****************************************************************************
-__STATIC_INLINE void ADCDisableDMAInterrupt(uint32_t intFlags)
-{
-    // Disable the specified interrupts.
-    HWREG(ADC_BASE + ADC_O_IMASK2) &= ~(intFlags);
-}
-
-//*****************************************************************************
-//
-//! \brief Gets the current raw interrupt status for DMA Trigger Event Publisher (INT_EVENT2).
-//!
-//! This function returns the raw interrupt status for the ADC (INT_EVENT2).
-//!
-//! \return Returns the current interrupt status, enumerated as a bit field of:
-//! - ADC_INT_MEMRES_N (\ref ADC_INT_MEMRES_00, \ref ADC_INT_MEMRES_01, etc)
-//
-//*****************************************************************************
-__STATIC_INLINE uint32_t ADCRawDMAInterruptStatus(void)
-{
-    return (HWREG(ADC_BASE + ADC_O_RIS2));
-}
-
-//*****************************************************************************
-//
-//! \brief Gets the current masked interrupt status for DMA Trigger Event Publisher (INT_EVENT2).
-//!
-//! This function returns the masked interrupt status for the ADC (INT_EVENT2).
-//!
-//! \return Returns the current interrupt status, enumerated as a bit field of:
-//! - ADC_INT_MEMRES_N (\ref ADC_INT_MEMRES_00, \ref ADC_INT_MEMRES_01, etc)
-//
-//*****************************************************************************
-__STATIC_INLINE uint32_t ADCMaskedDMAInterruptStatus(void)
-{
-    return (HWREG(ADC_BASE + ADC_O_MIS2));
-}
-
-//*****************************************************************************
-//
-//! \brief Clears ADC interrupt sources for DMA Trigger Event Publisher (INT_EVENT2).
-//!
-//! The specified ADC interrupt sources are cleared, so that they no longer
-//! assert. This function must be called in the interrupt handler to keep the
-//! interrupt from being recognized again immediately upon exit.
-//!
-//! \note Due to write buffers and synchronizers in the system it may take several
-//! clock cycles from a register write clearing an event in a module and until the
-//! event is actually cleared in the NVIC of the system CPU. It is recommended to
-//! clear the event source early in the interrupt service routine (ISR) to allow
-//! the event clear to propagate to the NVIC before returning from the ISR.
-//! At the same time, an early event clear allows new events of the same type to be
-//! pended instead of ignored if the event is cleared later in the ISR.
-//! It is the responsibility of the programmer to make sure that enough time has passed
-//! before returning from the ISR to avoid false re-triggering of the cleared event.
-//! A simple, although not necessarily optimal, way of clearing an event before
-//! returning from the ISR is:
-//! -# Write to clear event (interrupt source). (buffered write)
-//! -# Dummy read from the event source module. (making sure the write has propagated)
-//! -# Wait two system CPU clock cycles (user code or two NOPs). (allowing cleared event to propagate through any
-//! synchronizers)
-//!
-//! \param intFlags is a bit mask of the interrupt sources to be cleared.
-//! - ADC_INT_MEMRES_N (\ref ADC_INT_MEMRES_00, \ref ADC_INT_MEMRES_01, etc)
-//!
-//! \return None
-//
-//*****************************************************************************
-__STATIC_INLINE void ADCClearDMAInterrupt(uint32_t intFlags)
-{
-    // Clear the requested interrupt sources
-    HWREG(ADC_BASE + ADC_O_ICLR2) = intFlags;
+    /* It is sufficient to use the OR operator since the complete field will be set. */
+    HWREG(ADC_BASE + ADC_O_DEBUG1) |= ADC_DEBUG1_CTRL_MAX_COMP_SETTLE_TIME;
 }
 
 //*****************************************************************************
@@ -729,7 +820,7 @@ extern uint16_t ADCGetAdjustmentGain(uint32_t reference);
 //
 //! \brief Write correct offset value to ADC-peripheral trim register
 //!
-//! The ADC peripheral relies on an offset trim value in \ref SYS0_O_TMUTE2. This value
+//! The ADC peripheral relies on an offset trim value in SYS0_O_TMUTE2. This value
 //! needs to be set depending on which reference source is used in the conversion
 //!
 //! \param reference reference source used in conversion
@@ -751,7 +842,10 @@ extern void ADCSetAdjustmentOffset(uint32_t reference);
 //! \param adcValue
 //!     ADC unadjusted value
 //! \param bitResolution
-//!     ADC bit resolution
+//!     ADC bit resolution. Valid options are:
+//!     - \ref ADC_RESOLUTION_8_BIT
+//!     - \ref ADC_RESOLUTION_10_BIT
+//!     - \ref ADC_RESOLUTION_12_BIT
 //! \param gain
 //!     Gain adjustment value provided by \ref ADCGetAdjustmentGain()
 //!

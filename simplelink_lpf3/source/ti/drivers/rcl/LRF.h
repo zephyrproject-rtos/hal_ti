@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Texas Instruments Incorporated
+ * Copyright (c) 2021-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,25 +30,14 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __lrf_h__
-#define __lrf_h__
+#ifndef ti_drivers_rcl_LRF__include
+#define ti_drivers_rcl_LRF__include
 
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <ti/drivers/rcl/hal/hal.h>
-
-#if defined(DeviceFamily_CC23X0R5) || defined(DeviceFamily_CC23X0R2) || defined(DeviceFamily_CC27XX) || defined(DeviceFamily_CC23X0R22) || defined(DeviceFamily_CC2340R53)
-#  include <ti/devices/DeviceFamily.h>
-#  include DeviceFamily_constructPath(inc/hw_types.h)
-#  include DeviceFamily_constructPath(inc/hw_lrfdpbe.h)
-#  include <ti/drivers/rcl/LRFCC23X0.h>
-#endif
-
-#ifdef DeviceFamily_CC1308
-#  define BUFFER_SPLIT_SUPPORT
-#  include "LRFCC1308.h"
-#endif
+#include <ti/drivers/rcl/LRF_Platform.h>
+#include <ti/drivers/rcl/hal/RCL_Hal.h>
 
 /**
  *  Special value given as a TX power to indicate that the lowest available
@@ -255,18 +244,25 @@ void LRF_powerDown(void);
 void LRF_sendHardStop(void);
 void LRF_sendGracefulStop(void);
 void LRF_hardStop(void);
-
 void LRF_waitForTopsmReady(void);
-uint32_t LRF_prepareRxFifo(void);
 uint32_t LRF_prepareTxFifo(void);
-uint32_t LRF_peekRxFifo(int32_t offset);
+uint32_t LRF_getTxFifoWritable(void);
 uint32_t LRF_peekTxFifo(int32_t offset);
 uint8_t *LRF_getTxFifoWrAddr(int32_t offset);
+void LRF_retryTxFifo(void);
 void LRF_skipTxFifoWords(uint32_t wordLength);
-void LRF_discardRxFifoWords(uint32_t wordLength);
-void LRF_readRxFifoWords(uint32_t *data32, uint32_t wordLength);
 void LRF_writeTxFifoWords(const uint32_t *data32, uint32_t wordLength);
+void LRF_resetTxFifo(void);
+void LRF_deallocateTxFifo(void);
+uint32_t LRF_prepareRxFifo(void);
+bool LRF_hasRxWordToRead(void);
+void LRF_readRxFifoWords(uint32_t *data32, uint32_t wordLength);
+uint32_t LRF_peekRxFifo(int32_t offset);
+void LRF_discardRxFifoWords(uint32_t wordLength);
 void LRF_setRxFifoEffSz(uint32_t maxSz);
+void LRF_peekRxFifoWords(uint32_t *data32, uint32_t wordLength, uint32_t startRp);
+uint32_t LRF_getUncommittedFifoStatus(uint32_t *currentRp);
+void LRF_resetRxFifo(void);
 void LRF_programFrequency(uint32_t frequency, bool tx);
 uint32_t LRF_enableSynthRefsys(void);
 void LRF_disableSynthRefsys(void);
@@ -276,6 +272,22 @@ int8_t LRF_readRssi(void);
 void LRF_setRawTxPower(uint32_t value, uint32_t temperatureCoefficient);
 LRF_TxPowerTable_Entry LRF_getRawTxPower(void);
 bool LRF_imagesNeedUpdate(const LRF_Config *lrfConfig);
+
+  /**
+   * @brief Search for settings corresponding to tx power in the tx power table with extended options
+   *
+   * @param table pointer to the tx power table to be searched
+   * @param powerLevel requested power level
+   * @param roundUp decides if round up or down when an exact match is not found
+   * @param returnBoundaryOnOutOfRange if true, return boundary values instead of invalid when out of range
+   *
+   * @return Settings corresponding to power level based on rounding and boundary options,
+   *         or LRF_TxPowerEntry_INVALID_VALUE if no valid setting found and returnBoundaryOnOutOfRange is false
+   */
+LRF_TxPowerTable_Entry LRF_TxPowerTable_findValueExtended(const LRF_TxPowerTable *table, LRF_TxPowerTable_Index powerLevel, bool roundUp, bool returnBoundaryOnOutOfRange);
+
+void LRF_rclEnableRadioClocks(void);
+void LRF_rclDisableRadioClocks(void);
 
 /**
  * @brief Search for settings corresponding to the highest tx power lower than
@@ -288,27 +300,27 @@ bool LRF_imagesNeedUpdate(const LRF_Config *lrfConfig);
  *  or LRF_TxPowerTable_INVALID_VALUE if no valid setting was found.
  *
  */
-LRF_TxPowerTable_Entry LRF_TxPowerTable_findValue(const LRF_TxPowerTable *table, LRF_TxPowerTable_Index powerLevel);
-
-void LRF_rclEnableRadioClocks(void);
-void LRF_rclDisableRadioClocks(void);
+static inline LRF_TxPowerTable_Entry LRF_TxPowerTable_findValue(const LRF_TxPowerTable *table, LRF_TxPowerTable_Index powerLevel)
+{
+    return LRF_TxPowerTable_findValueExtended(table, powerLevel, false, false);
+}
 
 static inline void LRF_enableHwInterrupt(uint32_t mask)
 {
-    hal_enable_command_radio_interrupt(mask);
+    RCL_Hal_enableCommandRadioInterrupt(mask);
 }
 
 static inline void LRF_disableHwInterrupt(uint32_t mask)
 {
-    hal_disable_command_radio_interrupt(mask);
+    RCL_Hal_disableCommandRadioInterrupt(mask);
 }
 
 static inline void LRF_clearHwInterrupt(uint32_t mask)
 {
-    hal_clear_command_radio_interrupt(mask);
+    RCL_Hal_clearCommandRadioInterrupt(mask);
 }
 
 extern uint32_t swParamList[];
 extern const size_t swParamListSz;
 
-#endif
+#endif /* ti_drivers_rcl_LRF__include */

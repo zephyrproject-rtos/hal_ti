@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Texas Instruments Incorporated
+ * Copyright (c) 2022-2024, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,12 +51,13 @@
  * driver) so users should not have to interface to this driver from the
  * application.
  * The uDMA hardware makes use of a control table in RAM which must be 1024 bytes
- * aligned. The default base address of this control table is 0x20000400, however
- * this can be changed simply by defining UDMALPF3_CONFIG_BASE.
+ * aligned. The default base address of this control table is 0x20000400
+ * (0x3000C400 if TFM is enabled), however this can be changed simply by
+ * defining UDMALPF3_CONFIG_BASE.
  * The SPILPF3DMA.h supports SPI0, and uses both TX and RX DMA channels.
  * Each control table entry is 16 bytes, so if an application uses SPI0
  * the total RAM usage will be 2*16=32 bytes. Please see [Use cases] (@ref
- * UDMA_23XX_USE_CASES) for example.
+ * UDMA_LPF3_USE_CASES) for example.
  *
  * # Error handling #
  * Error handling is handled by the overlying driver which uses the DMA.
@@ -70,7 +71,7 @@
  *
  * | API function             | Description                                    |
  * |------------------------- |------------------------------------------------|
- * | UDMALPF3_init()        | Initialize the uDMA HW.                        |
+ * | UDMALPF3_init()          | Initialize the uDMA HW.                        |
  *
  * @note These functions should not be called by code. These functions are called
  *       by drivers using the DMA.
@@ -78,7 +79,7 @@
  * # Unsupported Functionality #
  * No known limitations
  *
- * # Use Cases @anchor UDMA_23XX_USE_CASES #
+ * # Use Cases @anchor UDMA_LPF3_USE_CASES #
  * In a system that has available SPI and UART peripherals, the following
  * scenarios are possible:
  * @code
@@ -115,7 +116,11 @@ extern "C" {
 
 /*! Base address for the DMA control table, must be 1024 bytes aligned */
 #if !defined(UDMALPF3_CONFIG_BASE)
-    #define UDMALPF3_CONFIG_BASE 0x20000400
+    #if TFM_ENABLED
+        #define UDMALPF3_CONFIG_BASE 0x3000C400
+    #else
+        #define UDMALPF3_CONFIG_BASE 0x20000400
+    #endif
 #endif
 
 /*! Make sure DMA control table base address is 1024 bytes aligned */

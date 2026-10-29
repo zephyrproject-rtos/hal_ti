@@ -3,7 +3,7 @@
  *
  *  Description:    Collection of functions returning chip information.
  *
- *  Copyright (c) 2022-2023 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2026 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -108,6 +108,8 @@ typedef enum
     CC2340R52E0RGER    = 0x012DDAU, //!< Part ID is CC2340R52E0RGER
     CC2340R52E0RKPR    = 0x3B2DDAU, //!< Part ID is CC2340R52E0RKPR
     CC2340R52E0WRHBRQ1 = 0x0F2DDAU, //!< Part ID is CC2340R52E0WRHBRQ1
+    CC2340R22E0RKPR    = 0x9E2DDAU, //!< Part ID is CC2340R22E0RKPR (memory spin
+                                    //!< of CC2340R52E0RKPR)
 } ChipPartId;
 
 //*****************************************************************************
@@ -122,6 +124,25 @@ __STATIC_INLINE ChipPartId ChipInfoGetPartId(void)
 {
     return (ChipPartId)(fcfg->deviceInfo.partId.val32 & 0x00FFFFFFU);
 }
+
+//*****************************************************************************
+//
+//! \brief Copies the BLE address to the provided buffer.
+//!
+//! \param pBleAddr Pointer to a valid 6-byte buffer where the BLE address
+//!                 will be copied.
+//!
+//! \return None
+//!
+//! \note
+//! While this function is a one-liner, it cannot be an inline function.
+//! The reason for this is that this function is used by the BLE stack,
+//! which is common to CC27xxx10 and CC27xxx20 devices. If this function were
+//! to be inline, the BLE stack would use the same FCFG struct for both
+//! devices, which causes issue.
+//
+//*****************************************************************************
+extern void ChipInfoGetBleAddr(uint8_t *pBleAddr);
 
 //*****************************************************************************
 //

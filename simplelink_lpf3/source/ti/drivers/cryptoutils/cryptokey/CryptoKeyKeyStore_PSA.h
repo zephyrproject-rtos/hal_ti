@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Texas Instruments Incorporated
+ * Copyright (c) 2022-2026, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -104,12 +104,23 @@
 #ifndef ti_drivers_CryptoKeyKeyStore_PSA__include
 #define ti_drivers_CryptoKeyKeyStore_PSA__include
 
+#include <ti/devices/DeviceFamily.h>
+
 #if (TFM_ENABLED == 0) || defined(TFM_BUILD) /* TFM_BUILD indicates this is a TF-M build */
-    #include <third_party/mbedtls/include/psa/crypto.h>
-    #include <third_party/mbedtls/include/psa/crypto_extra.h>
-    #include <third_party/mbedtls/include/mbedtls/build_info.h>
-    #include <third_party/mbedtls/include/mbedtls/private_access.h>
-    #include <third_party/mbedtls/ti/driver/ti_sl_transparent_driver_entrypoints.h>
+    #if ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX))
+        #include <third_party/mbedtls/include/psa/crypto.h>
+        #include <third_party/mbedtls/include/psa/crypto_extra.h>
+        #include <third_party/mbedtls/include/mbedtls/private_access.h>
+    #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4)
+        #include <third_party/mbedtls/include/psa/crypto.h>
+        #include <third_party/mbedtls/include/psa/crypto_extra.h>
+        #include <third_party/mbedtls/include/mbedtls/build_info.h>
+        #include <third_party/mbedtls/include/mbedtls/private_access.h>
+        #include <third_party/mbedtls/ti/driver/ti_sl_transparent_driver_entrypoints.h>
+    #else
+        #error "Unsupported DeviceFamily_Parent for CryptoKeyKeyStore_PSA"
+    #endif /* #if ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == \
+              DeviceFamily_PARENT_CC35XX)) */
 #else
     #include <third_party/tfm/interface/include/psa/crypto.h>
 #endif /* #if (TFM_ENABLED == 0) || defined(TFM_BUILD) */
@@ -576,6 +587,9 @@ typedef psa_algorithm_t KeyStore_PSA_Algorithm;
 /** SHA2-512/256 */
 #define KEYSTORE_PSA_ALG_SHA_512_256 ((KeyStore_PSA_Algorithm)PSA_ALG_SHA_512_256)
 
+/** Macro to build an HMAC algorithm */
+#define KEYSTORE_PSA_ALG_HMAC(hash_alg) ((KeyStore_PSA_Algorithm)(PSA_ALG_HMAC(hash_alg)))
+
 /** The CBC-MAC construction over a block cipher
  *
  * @warning CBC-MAC is insecure in many cases.
@@ -702,48 +716,59 @@ typedef psa_algorithm_t KeyStore_PSA_Algorithm;
  * TLS EC Named Curve Registry)
  * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-8
  * The values are defined by RFC 8422 and RFC 7027. */
-#define KEYSTORE_PSA_ECC_CURVE_SECT163K1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
-#define KEYSTORE_PSA_ECC_CURVE_SECT163R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTORE_PSA_ECC_CURVE_SECT163R2     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R2)
-#define KEYSTORE_PSA_ECC_CURVE_SECT193R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTORE_PSA_ECC_CURVE_SECT193R2     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R2)
-#define KEYSTORE_PSA_ECC_CURVE_SECT233K1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
-#define KEYSTORE_PSA_ECC_CURVE_SECT233R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTORE_PSA_ECC_CURVE_SECT239K1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
-#define KEYSTORE_PSA_ECC_CURVE_SECT283K1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
-#define KEYSTORE_PSA_ECC_CURVE_SECT283R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTORE_PSA_ECC_CURVE_SECT409K1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
-#define KEYSTORE_PSA_ECC_CURVE_SECT409R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTORE_PSA_ECC_CURVE_SECT571K1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
-#define KEYSTORE_PSA_ECC_CURVE_SECT571R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTORE_PSA_ECC_CURVE_SECP160K1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
-#define KEYSTORE_PSA_ECC_CURVE_SECP160R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTORE_PSA_ECC_CURVE_SECP160R2     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R2)
-#define KEYSTORE_PSA_ECC_CURVE_SECP192K1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
-#define KEYSTORE_PSA_ECC_CURVE_SECP192R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTORE_PSA_ECC_CURVE_SECP224K1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
-#define KEYSTORE_PSA_ECC_CURVE_SECP224R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTORE_PSA_ECC_CURVE_SECP256K1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
-#define KEYSTORE_PSA_ECC_CURVE_SECP256R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTORE_PSA_ECC_CURVE_SECP384R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTORE_PSA_ECC_CURVE_SECP521R1     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
-#define KEYSTRORE_ECC_CURVE_BRAINPOOL_P256R1 ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_BRAINPOOL_P_R1)
-#define KEYSTRORE_ECC_CURVE_BRAINPOOL_P384R1 ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_BRAINPOOL_P_R1)
-#define KEYSTRORE_ECC_CURVE_BRAINPOOL_P512R1 ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_BRAINPOOL_P_R1)
-/** Cur KEYSTRORE_ECC_CURVE_SECPv((KeyStore_PSA_KeyType)e25519.
+#define KEYSTORE_PSA_ECC_CURVE_SECT163K1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
+#define KEYSTORE_PSA_ECC_CURVE_SECT163R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_PSA_ECC_CURVE_SECT163R2    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R2)
+#define KEYSTORE_PSA_ECC_CURVE_SECT193R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_PSA_ECC_CURVE_SECT193R2    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R2)
+#define KEYSTORE_PSA_ECC_CURVE_SECT233K1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
+#define KEYSTORE_PSA_ECC_CURVE_SECT233R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_PSA_ECC_CURVE_SECT239K1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
+#define KEYSTORE_PSA_ECC_CURVE_SECT283K1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
+#define KEYSTORE_PSA_ECC_CURVE_SECT283R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_PSA_ECC_CURVE_SECT409K1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
+#define KEYSTORE_PSA_ECC_CURVE_SECT409R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_PSA_ECC_CURVE_SECT571K1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
+#define KEYSTORE_PSA_ECC_CURVE_SECT571R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_PSA_ECC_CURVE_SECP160K1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
+#define KEYSTORE_PSA_ECC_CURVE_SECP160R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_PSA_ECC_CURVE_SECP160R2    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R2)
+#define KEYSTORE_PSA_ECC_CURVE_SECP192K1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
+#define KEYSTORE_PSA_ECC_CURVE_SECP192R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_PSA_ECC_CURVE_SECP224K1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
+#define KEYSTORE_PSA_ECC_CURVE_SECP224R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_PSA_ECC_CURVE_SECP256K1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_K1)
+#define KEYSTORE_PSA_ECC_CURVE_SECP256R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_PSA_ECC_CURVE_SECP384R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_PSA_ECC_CURVE_SECP521R1    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_SECP_R1)
+#define KEYSTORE_ECC_CURVE_BRAINPOOL_P256R1 ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_BRAINPOOL_P_R1)
+#define KEYSTORE_ECC_CURVE_BRAINPOOL_P384R1 ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_BRAINPOOL_P_R1)
+#define KEYSTORE_ECC_CURVE_BRAINPOOL_P512R1 ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_BRAINPOOL_P_R1)
+/** Ed25519
+ *
+ * PureEdDSA requires an elliptic curve key on a twisted Edwards curve.
+ * In this specification, the following curves are supported:
+ * - PSA_ECC_FAMILY_TWISTED_EDWARDS, 255-bit: Ed25519 as specified
+ *   in RFC 8032.
+ *   The curve is Edwards25519.
+ *   The hash function used internally is SHA-512.
+ * The algorithm #KEYSTORE_PSA_ALG_PURE_EDDSA performs ed25519 when used with this curve.
+ */
+#define KEYSTORE_PSA_ECC_CURVE_ED25519      ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_TWISTED_EDWARDS)
+/** Curve25519
  *
  * This is the curve defined in Bernstein et al.,
  * _Curve25519: new Diffie-Hellman speed records_, LNCS 3958, 2006.
  * The algorithm #KEYSTORE_PSA_ALG_ECDH performs X25519 when used with this curve.
  */
-#define KEYSTORE_PSA_ECC_CURVE_CURVE25519    ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_MONTGOMERY)
+#define KEYSTORE_PSA_ECC_CURVE_CURVE25519   ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_MONTGOMERY)
 /** Curve448
  *
  * This is the curve defined in Hamburg,
  * _Ed448-Goldilocks, a new elliptic curve_, NIST ECC Workshop, 2015.
  * The algorithm #KEYSTORE_PSA_ALG_ECDH performs X448 when used with this curve.
  */
-#define KEYSTORE_PSA_ECC_CURVE_CURVE448      ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_MONTGOMERY)
+#define KEYSTORE_PSA_ECC_CURVE_CURVE448     ((KeyStore_PSA_KeyType)PSA_ECC_FAMILY_MONTGOMERY)
 
 /** Minimum value for a vendor-defined ECC curve identifier
  *
@@ -825,13 +850,21 @@ typedef psa_algorithm_t KeyStore_PSA_Algorithm;
  */
 #define KEYSTORE_PSA_KEY_PERSISTENCE_DEFAULT ((KeyStore_PSA_KeyPersistence)PSA_KEY_PERSISTENCE_DEFAULT)
 
+/** The persistence level for HSM Asset Store.
+ *
+ * See ::KeyStore_PSA_KeyPersistence for more information.
+ */
+#define KEYSTORE_PSA_KEY_PERSISTENCE_HSM_ASSET_STORE ((KeyStore_PSA_KeyPersistence)0x80U)
+
 /** A persistence level indicating that a key is never destroyed.
  *
  * See ::KeyStore_PSA_KeyPersistence for more information.
  */
 #define KEYSTORE_PSA_KEY_PERSISTENCE_READ_ONLY ((KeyStore_PSA_KeyPersistence)PSA_KEY_PERSISTENCE_READ_ONLY)
 
-#define KEYSTORE_PSA_KEY_LIFETIME_GET_PERSISTENCE(lifetime) ((KeyStore_PSA_KeyPersistence)((lifetime)&0x000000ff))
+/* clang-format off */
+#define KEYSTORE_PSA_KEY_LIFETIME_GET_PERSISTENCE(lifetime) ((KeyStore_PSA_KeyPersistence)((lifetime) & 0x000000ff))
+/* clang-format on */
 
 #define KEYSTORE_PSA_KEY_LIFETIME_GET_LOCATION(lifetime) ((KeyStore_PSA_KeyLocation)((lifetime) >> 8))
 
@@ -895,13 +928,30 @@ typedef psa_algorithm_t KeyStore_PSA_Algorithm;
  */
 #define KEYSTORE_PSA_KEY_LOCATION_LOCAL_STORAGE ((KeyStore_PSA_KeyLocation)PSA_KEY_LOCATION_LOCAL_STORAGE)
 
+/** The default secure element storage area for persistent keys.
+ *
+ * This storage location is available on systems that have one or more secure
+ * elements that are able to store keys (i.e. CC27XX and CC35XX)
+ *
+ * See ::KeyStore_PSA_KeyLocation for more information.
+ */
+#define KEYSTORE_PSA_KEY_LOCATION_HSM_ASSET_STORE ((KeyStore_PSA_KeyLocation)0x000001U)
+
 /** The null key identifier.
  */
 #define KEYSTORE_PSA_KEY_ID_NULL ((KeyStore_PSA_keyID)0x0)
 
+/** The maximum value for a key identifier chosen by the application.
+ */
+#define KEYSTORE_PSA_KEY_ID_USER_MAX ((KeyStore_PSA_keyID)PSA_KEY_ID_USER_MAX)
+
 /** The minimum value for a key identifier chosen by the application.
  */
 #define KEYSTORE_PSA_KEY_ID_USER_MIN ((KeyStore_PSA_keyID)PSA_KEY_ID_USER_MIN)
+
+/** The maximum value for a key identifier chosen by the application.
+ */
+#define KEYSTORE_PSA_KEY_ID_USER_MAX ((KeyStore_PSA_keyID)PSA_KEY_ID_USER_MAX)
 
 /** The minimum value for a key identifier chosen by the implementation.
  */
@@ -949,6 +999,17 @@ typedef psa_algorithm_t KeyStore_PSA_Algorithm;
  * is sufficient to permit the copy.
  */
 #define KEYSTORE_PSA_KEY_USAGE_COPY ((KeyStore_PSA_KeyUsage)PSA_KEY_USAGE_COPY)
+
+/** Whether the key may be cached.
+ *
+ * This flag allows the implementation to make additional copies of the key
+ * material that are not in storage and not for the purpose of an ongoing
+ * operation. Applications can use it as a hint to keep the key around
+ * for repeated access.
+ * An application can request that cached key material is removed
+ * from memory by calling psa_purge_key().
+ */
+#define KEYSTORE_PSA_KEY_USAGE_CACHE ((KeyStore_PSA_KeyUsage)PSA_KEY_USAGE_CACHE)
 
 /** Whether the key may be used to encrypt a message.
  *
@@ -1013,6 +1074,18 @@ typedef psa_algorithm_t KeyStore_PSA_Algorithm;
 /** Whether the key may be used to derive other keys.
  */
 #define KEYSTORE_PSA_KEY_USAGE_DERIVE ((KeyStore_PSA_KeyUsage)PSA_KEY_USAGE_DERIVE)
+
+/** Whether the key may be used with an external cryptographic coprocessor.
+ *
+ * This flag allows a key stored within a secure element to be securely loaded
+ * into a cryptographic coprocessor external to the secure element. Typically,
+ * the key is stored in a wrapped format and must be unwrapped by the secure
+ * element before being sent to the coprocessor for use. For persistent keys,
+ * the #KEYSTORE_PSA_KEY_USAGE_CACHE flag may also be set to reduce overhead for faster
+ * subsequent loading into the coprocessor.
+ */
+#define KEYSTORE_PSA_KEY_USAGE_COPROCESSOR ((KeyStore_PSA_KeyUsage)PSA_KEY_USAGE_COPROCESSOR)
+
 /**@}*/
 
 /** \defgroup attributes Key attributes
@@ -1126,8 +1199,9 @@ typedef psa_key_attributes_t KeyStore_PSA_KeyAttributes;
 /* A key owner is a PSA partition identifier. */
 typedef mbedtls_key_owner_id_t KeyStore_PSA_key_owner_id_t;
 
-typedef psa_key_id_t KeyStore_PSA_keyID;
     #endif /* defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER) */
+
+typedef psa_key_id_t KeyStore_PSA_keyID;
 
 typedef mbedtls_svc_key_id_t KeyStore_PSA_KeyFileId;
 
@@ -1476,7 +1550,9 @@ void KeyStore_PSA_resetKeyAttributes(KeyStore_PSA_KeyAttributes *attributes);
  *                          that make up the key data.
  *
  * @retval #KEYSTORE_PSA_STATUS_SUCCESS
- * @retval KEYSTORE_PSA_STATUS_RESOURCE_UNAVAILABLE
+ * @retval #KEYSTORE_PSA_STATUS_RESOURCE_UNAVAILABLE
+ *         If the KeyStore lock cannot be acquired, the KeyStore
+ *         module is in use elsewhere.
  * @retval #KEYSTORE_PSA_STATUS_INVALID_KEY_ID
  * @retval #KEYSTORE_PSA_STATUS_INVALID_ARGUMENT
  *         The key is neither a public key nor a key pair.
@@ -1543,7 +1619,9 @@ int_fast16_t KeyStore_PSA_exportPublicKey(KeyStore_PSA_KeyFileId key,
  *                          that make up the key data.
  *
  * @retval #KEYSTORE_PSA_STATUS_SUCCESS
- * @retval KEYSTORE_PSA_STATUS_RESOURCE_UNAVAILABLE
+ * @retval #KEYSTORE_PSA_STATUS_RESOURCE_UNAVAILABLE
+ *         If the KeyStore lock cannot be acquired, the KeyStore
+ *         module is in use elsewhere.
  * @retval #KEYSTORE_PSA_STATUS_INVALID_KEY_ID
  *         The key identifier does not exist.
  * @retval #KEYSTORE_PSA_STATUS_NOT_PERMITTED
@@ -1607,7 +1685,9 @@ int_fast16_t KeyStore_PSA_exportKey(KeyStore_PSA_KeyFileId key, uint8_t *data, s
  *         Success.
  *         If the key is persistent, the key material and the key's metadata
  *         have been saved to persistent storage.
- * @retval KEYSTORE_PSA_STATUS_RESOURCE_UNAVAILABLE
+ * @retval #KEYSTORE_PSA_STATUS_RESOURCE_UNAVAILABLE
+ *         If the KeyStore lock cannot be acquired, the KeyStore
+ *         module is in use elsewhere.
  * @retval #KEYSTORE_PSA_STATUS_ALREADY_EXISTS
  *         This is an attempt to create a key, and there is
  *         already a key with the given key file identifier.
@@ -1652,6 +1732,8 @@ int_fast16_t KeyStore_PSA_importKey(KeyStore_PSA_KeyAttributes *attributes,
  *
  * @retval #KEYSTORE_PSA_STATUS_SUCCESS
  * @retval #KEYSTORE_PSA_STATUS_RESOURCE_UNAVAILABLE
+ *         If the KeyStore lock cannot be acquired, the KeyStore
+ *         module is in use elsewhere.
  * @retval #KEYSTORE_PSA_STATUS_INVALID_KEY_ID
  * @retval #KEYSTORE_PSA_STATUS_INSUFFICIENT_MEMORY
  * @retval #KEYSTORE_PSA_STATUS_COMMUNICATION_FAILURE
@@ -1686,7 +1768,9 @@ int_fast16_t KeyStore_PSA_getKeyAttributes(KeyStore_PSA_KeyFileId key, KeyStore_
  *         @p Handle was valid and the key material that it
  *         referred to has been closed.
  *         Alternatively, @p Handle is @c 0.
- * @retval KEYSTORE_PSA_STATUS_RESOURCE_UNAVAILABLE
+ * @retval #KEYSTORE_PSA_STATUS_RESOURCE_UNAVAILABLE
+ *         If the KeyStore lock cannot be acquired, the KeyStore
+ *         module is in use elsewhere.
  * @retval #KEYSTORE_PSA_STATUS_INVALID_KEY_ID
  *         @p handle is not a valid handle nor @c 0.
  * @retval #KEYSTORE_PSA_STATUS_COMMUNICATION_FAILURE
@@ -1740,7 +1824,9 @@ int_fast16_t KeyStore_PSA_purgeKey(KeyStore_PSA_KeyFileId key);
  *         @p ID was a valid ID and the key material that it
  *         referred to has been erased.
  *         Alternatively, @p ID is @c 0.
- * @retval KEYSTORE_PSA_STATUS_RESOURCE_UNAVAILABLE
+ * @retval #KEYSTORE_PSA_STATUS_RESOURCE_UNAVAILABLE
+ *         If the KeyStore lock cannot be acquired, the KeyStore
+ *         module is in use elsewhere.
  * @retval #KEYSTORE_PSA_STATUS_NOT_PERMITTED
  *         The key cannot be erased because it is read-only,
  *         either due to a policy or due to physical restrictions.
@@ -1765,6 +1851,101 @@ int_fast16_t KeyStore_PSA_purgeKey(KeyStore_PSA_KeyFileId key);
  */
 int_fast16_t KeyStore_PSA_destroyKey(KeyStore_PSA_KeyFileId key);
 
+#if ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX))
+
+/**
+ * @brief Make a copy of a key.
+ *
+ * Copy key material from one location to another.
+ *
+ * This function is primarily useful to copy a key from one location
+ * to another, since it populates a key using the material from
+ * another key which may have a different lifetime.
+ *
+ * This function may be used to share a key with a different party,
+ * subject to implementation-defined restrictions on key sharing.
+ *
+ * The policy on the source key must have the usage flag
+ * #KEYSTORE_PSA_KEY_USAGE_COPY set.
+ * This flag is sufficient to permit the copy if the key has the lifetime
+ * #KEYSTORE_PSA_KEY_LIFETIME_VOLATILE or #KEYSTORE_PSA_KEY_LIFETIME_PERSISTENT.
+ * Some secure elements do not provide a way to copy a key without
+ * making it extractable from the secure element. If a key is located
+ * in such a secure element, then the key must have both usage flags
+ * #KEYSTORE_PSA_KEY_USAGE_COPY and #KEYSTORE_PSA_KEY_USAGE_EXPORT in order
+ * to make a copy of the key outside the secure element.
+ *
+ * The resulting key may only be used in a way that conforms to
+ * both the policy of the original key and the policy specified in
+ * the @p attributes parameter:
+ * - The usage flags on the resulting key are the bitwise-and of the
+ *   usage flags on the source policy and the usage flags in @p attributes.
+ * - If both allow the same algorithm or wildcard-based
+ *   algorithm policy, the resulting key has the same algorithm policy.
+ * - If either of the policies allows an algorithm and the other policy
+ *   allows a wildcard-based algorithm policy that includes this algorithm,
+ *   the resulting key allows the same algorithm.
+ * - If the policies do not allow any algorithm in common, this function
+ *   fails with the status #KEYSTORE_PSA_STATUS_INVALID_ARGUMENT.
+ *
+ * The effect of this function on implementation-defined attributes is
+ * implementation-defined.
+ *
+ * @param [in] source_key   The key to copy. It must allow the usage
+ *                          #KEYSTORE_PSA_KEY_USAGE_COPY. If a private or secret key is
+ *                          being copied outside of a secure element it must
+ *                          also allow #KEYSTORE_PSA_KEY_USAGE_EXPORT.
+ * @param [in] attributes   The attributes for the new key.
+ *                          They are used as follows:
+ *                          - The key type and size may be 0. If either is
+ *                            nonzero, it must match the corresponding
+ *                            attribute of the source key.
+ *                          - The key location (the lifetime and, for
+ *                            persistent keys, the key identifier) is
+ *                            used directly.
+ *                          - The policy constraints (usage flags and
+ *                            algorithm policy) are combined from
+ *                            the source key and \p attributes so that
+ *                            both sets of restrictions apply, as
+ *                            described in the documentation of this function.
+ * @param [out] target_key  On success, an identifier for the newly created
+ *                          key. For persistent keys, this is the key
+ *                          identifier defined in \p attributes.
+ *                          \c 0 on failure.
+ *
+ * @retval #KEYSTORE_PSA_STATUS_SUCCESS
+ * @retval #KEYSTORE_PSA_STATUS_INVALID_KEY_ID
+ *         @p source_key is invalid.
+ * @retval #KEYSTORE_PSA_STATUS_ALREADY_EXISTS
+ *         This is an attempt to create a persistent key, and there is
+ *         already a persistent key with the given identifier.
+ * @retval #KEYSTORE_PSA_STATUS_INVALID_ARGUMENT
+ *         The lifetime or identifier in @p attributes are invalid, or
+ *         the policy constraints on the source and specified in
+ *         @p attributes are incompatible, or
+ *         @p attributes specifies a key type or key size
+ *         which does not match the attributes of the source key.
+ * @retval #KEYSTORE_PSA_STATUS_NOT_PERMITTED
+ *         The source key does not have the #KEYSTORE_PSA_KEY_USAGE_COPY usage flag, or
+ *         the source key is not exportable and its lifetime does not
+ *         allow copying it to the target's lifetime.
+ * @retval #KEYSTORE_PSA_STATUS_INSUFFICIENT_MEMORY
+ * @retval #KEYSTORE_PSA_STATUS_INSUFFICIENT_STORAGE
+ * @retval #KEYSTORE_PSA_STATUS_COMMUNICATION_FAILURE
+ * @retval #KEYSTORE_PSA_STATUS_HARDWARE_FAILURE
+ * @retval #KEYSTORE_PSA_STATUS_STORAGE_FAILURE
+ * @retval #KEYSTORE_PSA_STATUS_CORRUPTION_DETECTED
+ * @retval #KEYSTORE_PSA_STATUS_BAD_STATE
+ *         The library has not been previously initialized by psa_crypto_init().
+ *         It is implementation-dependent whether a failure to initialize
+ *         results in this error code.
+ */
+int_fast16_t KeyStore_PSA_copyKey(KeyStore_PSA_KeyFileId source_key,
+                                  KeyStore_PSA_KeyAttributes *attributes,
+                                  KeyStore_PSA_KeyFileId *target_key);
+
+#endif /* #if ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == \
+          DeviceFamily_PARENT_CC35XX)) */
 #ifdef __cplusplus
 }
 #endif

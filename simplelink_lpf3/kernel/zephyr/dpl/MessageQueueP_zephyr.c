@@ -50,11 +50,11 @@ MessageQueueP_Handle MessageQueueP_create(size_t msgSize, size_t msgCount)
 {
     struct k_msgq *msgq = dpl_msgq_pool_alloc();
     int status = k_msgq_alloc_init(msgq, msgSize, msgCount);
-    if(status != 0)
+    if(status == 0)
     {
-        return NULL;
+        return (MessageQueueP_Handle) msgq;
     }
-    return (MessageQueueP_Handle) msgq;
+    return NULL;
 }
 
 /*
@@ -83,11 +83,13 @@ MessageQueueP_Handle MessageQueueP_construct(MessageQueueP_Struct *msgStruct,
 {
     struct k_msgq* msgq;
     msgq = (struct k_msgq* )msgStruct;
-    if (msgq) {
+    if (msgq)
+    {
         k_msgq_init(msgq, msgBuf, msgSize, msgCount);
+        return (MessageQueueP_Handle)msgq;
     }
+    return NULL;
 
-    return (MessageQueueP_Handle)msgq;
 }
 
 /*
@@ -103,25 +105,15 @@ void MessageQueueP_destruct(MessageQueueP_Handle handle)
  */
 MessageQueueP_Status MessageQueueP_pend(MessageQueueP_Handle handle, void *message, uint32_t timeout)
 {
-    uint32_t tickPeriod;
     k_timeout_t msgTimeout;
 
+    msgTimeout = dpl_to_zephyr_timeout(timeout);
     /* Timeout must be K_NO_WAIT if in an ISR */
-    if ((timeout == MessageQueueP_NO_WAIT) || k_is_in_isr())
+    if (k_is_in_isr())
     {
         msgTimeout = K_NO_WAIT;
     }
-    else if (timeout == MessageQueueP_WAIT_FOREVER)
-    {
-        msgTimeout = K_FOREVER;
-    }
-    else
-    {
-        /* If necessary, convert ClockP ticks to Zephyr ticks */
-        /* Should really be ClockP_getSystemTickPeriod() but this causes issues with ielftool post build step */
-        tickPeriod = ClockP_TICK_PERIOD;
-        msgTimeout = K_TICKS(timeout);
-    }
+
     int status = k_msgq_get((struct k_msgq*) handle, message, msgTimeout);
     if(status == 0)
     {
@@ -151,33 +143,9 @@ MessageQueueP_Status MessageQueueP_peek(MessageQueueP_Handle handle, void *messa
  */
 MessageQueueP_Status MessageQueueP_post(MessageQueueP_Handle handle, const void *message, uint32_t timeout)
 {
-    uint32_t tickPeriod;
     k_timeout_t msgTimeout;
-    uint64_t timeUS;
 
-    if (timeout == MessageQueueP_NO_WAIT)
-    {
-        msgTimeout = K_NO_WAIT;
-    }
-    else if (timeout == MessageQueueP_WAIT_FOREVER)
-    {
-        msgTimeout = K_FOREVER;
-    }
-    else
-    {
-        /* if necessary, convert ClockP ticks to Zephyr ticks */
-        /* Should really be ClockP_getSystemTickPeriod() but this causes issues with ielftool post build step */
-        tickPeriod = ClockP_TICK_PERIOD;
-        if (tickPeriod != CONFIG_SYS_CLOCK_TICKS_PER_SEC)
-        {
-            timeUS  = timeout * (uint64_t)tickPeriod;
-            msgTimeout = K_USEC(timeUS);
-        }
-        else
-        {
-            msgTimeout = K_TICKS(timeout);
-        }
-    }
+    msgTimeout = dpl_to_zephyr_timeout(timeout);
 
     int status = k_msgq_put((struct k_msgq*) handle, message, msgTimeout);
 

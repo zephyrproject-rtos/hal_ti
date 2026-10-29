@@ -1,7 +1,7 @@
 /******************************************************************************
-*  Filename:       hw_lrfdrxf_h
+*  Filename:       hw_lrfdrxf.h
 ******************************************************************************
-*  Copyright (c) 2021 Texas Instruments Incorporated. All rights reserved.
+*  Copyright (c) 2021-2025 Texas Instruments Incorporated. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions are met:
@@ -39,7 +39,7 @@
 // LRFDRXF component
 //
 //*****************************************************************************
-// Data to from RXFIFO 
+// Data to from RXFIFO
 #define LRFDRXF_O_RXD                                               0x00000000U
 
 //*****************************************************************************
@@ -47,13 +47,13 @@
 // Register: LRFDRXF_O_RXD
 //
 //*****************************************************************************
-// Field:  [31:0] DATA 
+// Field:  [31:0] DATA
 //
-// RX FIFO data. When written the register data is pushed to the RX FIFO. When 
-// read, data is popped from the RX FIFO. When writing or reading this register 
-// the access size will determine how many bytes are pushed to or popped from 
-// the FIFO. It is possible to push or pop 1,2 or 4 bytes depending on the 
-// access being done. 
+// RX FIFO data. When written the register data is pushed to the RX FIFO. When
+// read, data is popped from the RX FIFO. When writing or reading this register
+// the access size will determine how many bytes are pushed to or popped from
+// the FIFO. It is possible to push or pop 1,2 or 4 bytes depending on the
+// access being done.
 #define LRFDRXF_RXD_DATA_W                                                  32U
 #define LRFDRXF_RXD_DATA_M                                          0xFFFFFFFFU
 #define LRFDRXF_RXD_DATA_S                                                   0U

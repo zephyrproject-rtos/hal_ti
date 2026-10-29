@@ -1,7 +1,7 @@
 /******************************************************************************
  *  Filename:       gpio_doc.h
  *
- *  Copyright (c) 2022 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2026 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -36,12 +36,14 @@
 //!
 //! The GPIO module allows software to control the pins of the device directly.
 //!
-//! The System CPU can access the GPIO module to read the value of any DIO of the device and if the IOC
-//! module has been configured such that one or more DIOs are GPIO controlled (software controlled) the
-//! System CPU can write these DIOs through the GPIO module.
+//! The System CPU can access the GPIO module to read the value of any DIO of
+//! the device and if the IOC module has been configured such that one or more
+//! DIOs are GPIO controlled (software controlled) the System CPU can write
+//! these DIOs through the GPIO module.
 //!
-//! The IOC module can also be configured to generate events on edge detection and these events can be
-//! read and cleared in the GPIO module by the System CPU.
+//! The IOC module can also be configured to generate events on edge detection
+//! and these events can be read and cleared in the GPIO module by the System
+//! CPU.
 //!
 //! \section sec_gpio_api API
 //!
@@ -65,16 +67,20 @@
 //! - \ref GPIOToggleDio()
 //! - \ref GPIOToggleMultiDio()
 //!
-//! Read DIO (even if IOC is NOT configured for GPIO usage; however, the DIO must be configured for input enable in
-//! IOC):
+//! Read DIO (even if IOC is NOT configured for GPIO usage; however, the DIO
+//! must be configured for input enable in IOC):
 //! - \ref GPIOReadDio()
 //! - \ref GPIOReadMultiDio()
 //!
-//! Read or clear events (even if IOC is NOT configured for GPIO usage; however, the DIO must be configured for input
-//! enable in IOC):
+//! Read, clear or configure events (even if IOC is NOT configured for GPIO
+//! usage; however, the DIO must be configured for input enable in IOC):
 //! - \ref GPIOGetEventDio()
 //! - \ref GPIOGetEventMultiDio()
 //! - \ref GPIOClearEventDio()
 //! - \ref GPIOClearEventMultiDio()
+//! - \ref GPIODisableEventDio()
+//! - \ref GPIOEnableEventDio()
+//! - \ref GPIOGetEventEnableDio()
+//! - \ref GPIOSetEventEnableMultiDio()
 //!
 //! @}

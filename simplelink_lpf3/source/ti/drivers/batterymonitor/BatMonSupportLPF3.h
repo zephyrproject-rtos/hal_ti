@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Texas Instruments Incorporated
+ * Copyright (c) 2022-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
  *  @anchor ti_drivers_batterymonitor_BatMonSupportLPF3_Overview
  *  # Overview #
  *  The purpose of the BatMon Support layer is to provide a way for multiple
- *  drivers to share the the BATMON hardware resource. The BATMON provides both
+ *  drivers to share the BATMON hardware resource. The BATMON provides both
  *  temperature and supply voltage measurements. For this reason, both the
  *  Temperature driver and the Battery Monitor driver depends on the BATMON
  *  module.
@@ -109,15 +109,24 @@ extern "C" {
  *  const BatMonSupportLPF3_Config BatMonSupportLPF3_config = {
  *      .intNum = INT_CPUIRQ2,
  *      .intPriority = (~0),
- *      .intMux = EVTSVT_CPUIRQ2SEL_PUBID_AON_PMU_COMB,
+ *      .intSubscriberId = EVTSVT_SUB_CPUIRQ2,
  *  };
  *  @endcode
  */
 typedef struct
 {
-    uint32_t intNum;      /*!< Device-specific interrupt number */
-    uint32_t intPriority; /*!< Device-specific interrupt priority */
-    uint32_t intMux;      /*!< Device-specific interrupt muxing */
+    /*! Device-specific interrupt number. The interrupt must support the
+     *  AON_PMU_COMB event.
+     */
+    uint32_t intNum;
+
+    /*! Device-specific interrupt priority */
+    uint32_t intPriority;
+
+    /*! Device-specific interrupt subscriber ID, as defined in
+     *  driverlib/evtsvt.h. This must match intNum.
+     */
+    uint32_t intSubscriberId;
 } BatMonSupportLPF3_Config;
 
 /*!

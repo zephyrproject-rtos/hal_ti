@@ -1,7 +1,7 @@
 /******************************************************************************
-*  Filename:       hw_ints_h
+*  Filename:       hw_ints.h
 ******************************************************************************
-*  Copyright (c) 2021 Texas Instruments Incorporated. All rights reserved.
+*  Copyright (c) 2021-2025 Texas Instruments Incorporated. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions are met:
@@ -43,61 +43,63 @@
 #define INT_SVCALL              11 // Supervisor Call (SVCall)
 #define INT_PENDSV              14 // Pending Service Call (PendSV)
 #define INT_SYSTICK             15 // SysTick Interrupt from the System Timer
-                                   // in NVIC.
+// in NVIC.
 #define INT_CPUIRQ0             16 // IRQ0: Configurable source controlled by
-                                   // EVTSVT.CPUIRQ0SEL
+// EVTSVT.CPUIRQ0SEL
 #define INT_CPUIRQ1             17 // IRQ1: Configurable source controlled by
-                                   // EVTSVT.CPUIRQ1SEL
+// EVTSVT.CPUIRQ1SEL
 #define INT_CPUIRQ2             18 // IRQ2: Configurable source controlled by
-                                   // EVTSVT.CPUIRQ2SEL
+// EVTSVT.CPUIRQ2SEL
 #define INT_CPUIRQ3             19 // IRQ3: Configurable source controlled by
-                                   // EVTSVT.CPUIRQ3SEL
+// EVTSVT.CPUIRQ3SEL
 #define INT_CPUIRQ4             20 // IRQ4: Configurable source controlled by
-                                   // EVTSVT.CPUIRQ4SEL
+// EVTSVT.CPUIRQ4SEL
 #define INT_GPIO_COMB           21 // GPIO combined wake up interrupt,
-                                   // interrupt flags can be found here
-                                   // GPIO:MIS
+// interrupt flags can be found here
+// GPIO:MIS
 #define INT_LRFD_IRQ0           22 // LRFD combined event, interrupt flags can
-                                   // be found here LRFDDBELL:MIS0
+// be found here LRFDDBELL:MIS0
 #define INT_LRFD_IRQ1           23 // LRFD combined event, interrupt flags can
-                                   // be found here LRFDDBELL:MIS1
+// be found here LRFDDBELL:MIS1
 #define INT_DMA_DONE_COMB       24 // DMA combined done interrupt,
-                                   // corresponding flags can be found here
-                                   // DMA:REQDONE
+// corresponding flags can be found here
+// DMA:REQDONE
 #define INT_AES_COMB            25 // AES accelerator combined interrupt
-                                   // request, interrupt flags can be found
-                                   // here AES:MIS
+// request, interrupt flags can be found
+// here AES:MIS
 #define INT_SPI0_COMB           26 // SPI0 combined interrupt request,
-                                   // interrupt flags can be found here
-                                   // SPI0:MIS
+// interrupt flags can be found here
+// SPI0:MIS
 #define INT_UART0_COMB          27 // UART0 combined interrupt, interrupt
-                                   // flags are found here UART0:MIS
+// flags are found here UART0:MIS
 #define INT_I2C0_IRQ            28 // Interrupt event from I2C0, interrupt
-                                   // flags can be found here I2C0:MIS
+// flags can be found here I2C0:MIS
 #define INT_LGPT0_COMB          29 // LGPT0 combined interrupt, interrupt
-                                   // flags are found here LGPT0:MIS
+// flags are found here LGPT0:MIS
 #define INT_LGPT1_COMB          30 // LGPT1 combined interrupt, interrupt
-                                   // flags are found here LGPT1:MIS
+// flags are found here LGPT1:MIS
 #define INT_ADC_COMB            31 // ADC combined interrupt request,
-                                   // interrupt flags can be found here
-                                   // ADC:MIS0
+// interrupt flags can be found here
+// ADC:MIS0
 #define INT_CPUIRQ16            32 // IRQ16: Configurable source controlled by
-                                   // EVTSVT.CPUIRQ16SEL
+// EVTSVT.CPUIRQ16SEL
 #define INT_LGPT2_COMB          33 // LGPT2 combined interrupt, interrupt
-                                   // flags are found here LGPT2:MIS
+// flags are found here LGPT2:MIS
 #define INT_LGPT3_COMB          34 // LGPT3 combined interrupt, interrupt
-                                   // flags are found here LGPT3:MIS
+// flags are found here LGPT3:MIS
 
 //*****************************************************************************
 //
 // The following are defines for number of interrupts and priority levels.
 //
 //*****************************************************************************
+#define INT_PRIORITY_MASK       0x000000C0 // Priority level mask
+#define INT_PRI_HIGHEST         0x00000000 // Highest priority level (level 0)
 #define INT_PRI_LEVEL0          0x00000000 // Priority level 0 value
 #define INT_PRI_LEVEL1          0x00000040 // Priority level 1 value
 #define INT_PRI_LEVEL2          0x00000080 // Priority level 2 value
 #define INT_PRI_LEVEL3          0x000000C0 // Priority level 3 value
-#define INT_PRIORITY_MASK       0x000000C0 // Priority level mask
+#define INT_PRI_LOWEST          0x000000C0 // Lowest priority level (level 3)
 #define NUM_INTERRUPTS          35 // Number of exceptions
 #define NUM_PRIORITY             4 // Number of exception priority levels
 #define NUM_PRIORITY_BITS        2 // Number of exception priority bits

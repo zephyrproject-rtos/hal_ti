@@ -30,8 +30,8 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ti_drivers_RCL_Client_h__include
-#define ti_drivers_RCL_Client_h__include
+#ifndef ti_drivers_rcl_RCL_Client__include
+#define ti_drivers_rcl_RCL_Client__include
 
 #include <ti/drivers/rcl/LRF.h>
 #include <ti/drivers/rcl/RCL_Types.h>
@@ -51,4 +51,4 @@ struct RCL_Client_s {
     const LRF_Config *lrfConfig;
 };
 
-#endif
+#endif /* ti_drivers_rcl_RCL_Client__include */

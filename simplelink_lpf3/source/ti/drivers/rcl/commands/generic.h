@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, Texas Instruments Incorporated
+ * Copyright (c) 2021-2026, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,18 +30,16 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ti_drivers_RCL_commands_generic_h__include
-#define ti_drivers_RCL_commands_generic_h__include
+#ifndef ti_drivers_rcl_commands_generic__include
+#define ti_drivers_rcl_commands_generic__include
 
 #include <ti/drivers/rcl/RCL_Command.h>
 #include <ti/drivers/rcl/RCL_Buffer.h>
 #include <ti/drivers/rcl/handlers/generic.h>
+#include <ti/drivers/rcl/LRF.h>
 
 #include <ti/drivers/utils/List.h>
 
-#include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(inc/pbe_generic_ram_regs.h)
-#include DeviceFamily_constructPath(inc/pbe_generic_regdef_regs.h)
 
 typedef struct RCL_CMD_GENERIC_FS_t            RCL_CmdGenericFs;
 typedef struct RCL_CMD_GENERIC_FS_OFF_t        RCL_CmdGenericFsOff;
@@ -49,7 +47,7 @@ typedef struct RCL_CMD_GENERIC_TX_t            RCL_CmdGenericTx;
 typedef struct RCL_CMD_GENERIC_TX_REPEAT_t     RCL_CmdGenericTxRepeat;
 typedef struct RCL_CMD_GENERIC_TX_TEST_t       RCL_CmdGenericTxTest;
 typedef struct RCL_CMD_GENERIC_RX_t            RCL_CmdGenericRx;
-typedef struct RCL_CMD_GENERIC_PBE_OPERATION_t RCL_CmdGenericPbeOperation;
+typedef struct RCL_CMD_GENERIC_LRF_OPERATION_t RCL_CmdGenericLrfOperation;
 typedef struct RCL_STATS_GENERIC_t             RCL_StatsGeneric;
 typedef struct RCL_CMD_NESB_PTX_t              RCL_CmdNesbPtx;
 typedef struct RCL_CMD_NESB_PRX_t              RCL_CmdNesbPrx;
@@ -63,7 +61,7 @@ typedef struct RCL_CONFIG_ADDRESS_t            RCL_ConfigAddress;
 #define RCL_CMDID_GENERIC_TX_REPEAT     0x0004U
 #define RCL_CMDID_GENERIC_TX_TEST       0x0005U
 #define RCL_CMDID_GENERIC_RX            0x0006U
-#define RCL_CMDID_GENERIC_PBE_OPERATION 0x0007U
+#define RCL_CMDID_GENERIC_LRF_OPERATION 0x0007U
 #define RCL_CMDID_NESB_PTX              0x0008U
 #define RCL_CMDID_NESB_PRX              0x0009U
 
@@ -215,10 +213,10 @@ struct RCL_CMD_GENERIC_TX_TEST_t {
 }
 #define RCL_CmdGenericTxTest_DefaultRuntime() (RCL_CmdGenericTxTest) RCL_CmdGenericTxTest_Default()
 
-#define RCL_CMD_GENERIC_WH_MODE_NONE     0 /*!< config.whitenMode: No whitening */
-#define RCL_CMD_GENERIC_WH_MODE_DEFAULT  1 /*!< config.whitenMode: Default whitening */
-#define RCL_CMD_GENERIC_WH_MODE_PRBS15   2 /*!< config.whitenMode: PRBS-15 */
-#define RCL_CMD_GENERIC_WH_MODE_PRBS32   3 /*!< config.whitenMode: PRBS-32 */
+#define RCL_CMD_GENERIC_WH_MODE_NONE     0U /*!< config.whitenMode: No whitening */
+#define RCL_CMD_GENERIC_WH_MODE_DEFAULT  1U /*!< config.whitenMode: Default whitening */
+#define RCL_CMD_GENERIC_WH_MODE_PRBS15   2U /*!< config.whitenMode: PRBS-15 */
+#define RCL_CMD_GENERIC_WH_MODE_PRBS32   3U /*!< config.whitenMode: PRBS-32 */
 
 /**
  *  @brief Generic receive command
@@ -286,22 +284,22 @@ struct RCL_STATS_GENERIC_t {
 #define RCL_StatsGeneric_DefaultRuntime() (RCL_StatsGeneric) RCL_StatsGeneric_Default()
 
 /**
- *  @brief Send PBE operation
+ *  @brief Send LRF operation
  *
- *  Send an opcode to the PBE and wait for it to report done
+ *  Send an opcode to the LRF and wait for it to report done
  */
-struct RCL_CMD_GENERIC_PBE_OPERATION_t {
+struct RCL_CMD_GENERIC_LRF_OPERATION_t {
     RCL_Command     common;
-    uint16_t        pbeOperation;     /*!<  Operation code to send to the PBE */
+    uint16_t        lrfOperation;     /*!<  Operation code to send to the LRF */
 };
 
-#define RCL_CmdGenericPbeOperation_Default()                        \
+#define RCL_CmdGenericLrfOperation_Default()                        \
 {                                                                   \
-    .common = RCL_Command_Default(RCL_CMDID_GENERIC_PBE_OPERATION,  \
-                                  RCL_Handler_Generic_PbeOperation),\
-    .pbeOperation =  PBE_GENERIC_REGDEF_API_OP_PING,                \
+    .common = RCL_Command_Default(RCL_CMDID_GENERIC_LRF_OPERATION,  \
+                                  RCL_Handler_Generic_LrfOperation),\
+    .lrfOperation = LRF_INTERFACE_GENERIC_API_OP_PING,              \
 }
-#define RCL_CmdGenericPbeOperation_DefaultRuntime() (RCL_CmdGenericPbeOperation) RCL_CmdGenericPbeOperation_Default()
+#define RCL_CmdGenericLrfOperation_DefaultRuntime() (RCL_CmdGenericLrfOperation) RCL_CmdGenericLrfOperation_Default()
 
 /**
  *  @brief NESB transmit command
@@ -473,4 +471,4 @@ struct RCL_STATS_NESB_t {
 #define RCL_StatsNesb_DefaultRuntime() (RCL_StatsNesb) RCL_StatsNesb_Default()
 
 
-#endif
+#endif /* ti_drivers_rcl_commands_generic__include */

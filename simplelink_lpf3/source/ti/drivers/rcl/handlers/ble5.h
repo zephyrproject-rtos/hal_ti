@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, Texas Instruments Incorporated
+ * Copyright (c) 2020-2026, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,8 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ti_drivers_RCL_handlers_ble5_h__include
-#define ti_drivers_RCL_handlers_ble5_h__include
+#ifndef ti_drivers_rcl_handlers_ble5__include
+#define ti_drivers_rcl_handlers_ble5__include
 
 #include <stdint.h>
 #include <ti/drivers/rcl/RCL_Command.h>
@@ -50,6 +50,7 @@ RCL_Events RCL_Handler_Ble5_txTest(RCL_Command *cmd, LRF_Events lrfEvents, RCL_E
 RCL_Events RCL_Handler_BLE5_aux_adv(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
 RCL_Events RCL_Handler_BLE5_periodicAdv(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
 RCL_Events RCL_Handler_BLE5_periodicScan(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
+RCL_Events RCL_Handler_BLE5_ChannelAssessment(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
 
 /**
  *  @brief Result of filter list update API
@@ -152,13 +153,39 @@ uint32_t RCL_BLE5_getRxTimestamp(const RCL_Buffer_DataEntry *rxEntry);
  *  sent over a specific PHY on a defined channel map, and the start time of an AUX_ADV_IND that contains
  *  the SyncInfo field needed for periodic advertising establishment.
  *
- *  @param  phyFeatures         PHY feature selector
- *  @param  chMap               Channel map. Bit positions 0-2 correspond to channels 37-39
- *  @param  advPayloadLen       Payload length of ADV_EXT_IND
+ *  @param  primaryPhyFeatures         PHY feature selector corresponding to the primary PHY
+ *  @param  secondaryPhyFeatures       PHY feature selector corresponding to the secondary PHY
+ *  @param  chMap                      Channel map. Bit positions 0-2 correspond to channels 37-39
+ *  @param  advPayloadLen              Payload length of ADV_EXT_IND
  *
  *  @return Time delta in 250[ns] units between the start time of the ADV_EXT_IND and the start time of the AUX_ADV_IND
  */
-uint32_t RCL_BLE5_getAuxAdvStartTimeDelta(uint16_t phyFeatures, uint8_t chMap, uint8_t advPayloadLen);
+uint32_t RCL_BLE5_getAuxAdvStartTimeDelta(uint16_t primaryPhyFeatures, uint16_t secondaryPhyFeatures, uint8_t chMap, uint8_t advPayloadLen);
 
+/**
+ *  @brief  Adjust the absStartTime of a command to account for radio startup delay
+ *
+ *  Subtracts the internal radio delay from the absStartTime parameter of a command.
+ *  This makes sure that the RF operation starts at the absStartTime given to the command before calling this API.
+ *  This is supported for all BLE 5 commands. Note that channel sounding commands are not supported.
+ *  Has to be called before submitting the command to RCL.
+ *
+ *  @param  c         Command handle of the RCL command.
+ *
+ */
+void RCL_BLE5_adjustStartTime(RCL_Command_Handle c);
 
-#endif /* ti_drivers_RCL_handlers_ble5_h__include */
+/**
+ *  @brief  Get the radio startup delay for a specific command.
+ *
+ *  Returns the radio startup delay in ticks for a specific command. This is the same delay applied in
+ *  RCL_BLE5_adjustStartTime(). The API supports all BLE 5 commands. Note that channel sounding
+ *  commands are not supported.
+ *
+ *  @param  c          Command handle of the RCL command.
+ *
+ *  @return Start time delay in ticks
+ */
+uint32_t RCL_BLE5_getStartTimeDelay(RCL_Command_Handle c);
+
+#endif /* ti_drivers_rcl_handlers_ble5__include */

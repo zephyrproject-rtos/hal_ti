@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Texas Instruments Incorporated
+ * Copyright (c) 2022-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -265,7 +265,7 @@ extern "C" {
  * struct definition because of the circular dependency between
  * #BatteryMonitor_NotifyFxn() and #BatteryMonitor_NotifyObj.
  */
-typedef struct BatteryMonitor_NotifyObj BatteryMonitor_NotifyObj;
+typedef struct BatteryMonitor_NotifyObj_ BatteryMonitor_NotifyObj;
 /* @endcond */
 
 /*!
@@ -299,7 +299,7 @@ typedef void (*BatteryMonitor_NotifyFxn)(uint16_t currentVoltage,
  *  or #BatteryMonitor_registerNotifyRange() will take care initializing the
  *  internal elements appropriately.
  */
-struct BatteryMonitor_NotifyObj
+struct BatteryMonitor_NotifyObj_
 {
     List_Elem link;                     /*!< For placing on the notify list */
     BatteryMonitor_NotifyFxn notifyFxn; /*!< Application callback function */
@@ -458,7 +458,7 @@ int_fast16_t BatteryMonitor_unregisterNotify(BatteryMonitor_NotifyObj *notifyObj
  *  @pre Register @c notifyObject with #BatteryMonitor_registerNotifyHigh(),
  *       or #BatteryMonitor_registerNotifyRange()
  */
-static inline uint16_t BatteryMonitor_getThresholdHigh(BatteryMonitor_NotifyObj *notifyObject)
+static inline uint16_t BatteryMonitor_getThresholdHigh(const BatteryMonitor_NotifyObj *notifyObject)
 {
     return notifyObject->thresholdHigh;
 }
@@ -477,7 +477,7 @@ static inline uint16_t BatteryMonitor_getThresholdHigh(BatteryMonitor_NotifyObj 
  *  @pre Register @c notifyObject with #BatteryMonitor_registerNotifyLow(),
  *       or #BatteryMonitor_registerNotifyRange()
  */
-static inline uint16_t BatteryMonitor_getThresholdLow(BatteryMonitor_NotifyObj *notifyObject)
+static inline uint16_t BatteryMonitor_getThresholdLow(const BatteryMonitor_NotifyObj *notifyObject)
 {
     return notifyObject->thresholdLow;
 }
@@ -501,7 +501,7 @@ static inline uint16_t BatteryMonitor_getThresholdLow(BatteryMonitor_NotifyObj *
  *
  *  @pre Register @c notifyObject with #BatteryMonitor_registerNotifyRange()
  */
-static inline void BatteryMonitor_getThresholdRange(BatteryMonitor_NotifyObj *notifyObject,
+static inline void BatteryMonitor_getThresholdRange(const BatteryMonitor_NotifyObj *notifyObject,
                                                     uint16_t *thresholdHigh,
                                                     uint16_t *thresholdLow)
 {
@@ -519,7 +519,7 @@ static inline void BatteryMonitor_getThresholdRange(BatteryMonitor_NotifyObj *no
  *  @pre Register @c notifyObject with #BatteryMonitor_registerNotifyHigh(),
  *       #BatteryMonitor_registerNotifyLow(), or #BatteryMonitor_registerNotifyRange()
  */
-static inline uintptr_t BatteryMonitor_getClientArg(BatteryMonitor_NotifyObj *notifyObject)
+static inline uintptr_t BatteryMonitor_getClientArg(const BatteryMonitor_NotifyObj *notifyObject)
 {
     return notifyObject->clientArg;
 }
@@ -534,7 +534,7 @@ static inline uintptr_t BatteryMonitor_getClientArg(BatteryMonitor_NotifyObj *no
  *  @pre Register @c notifyObject with #BatteryMonitor_registerNotifyHigh(),
  *       #BatteryMonitor_registerNotifyLow(), or #BatteryMonitor_registerNotifyRange()
  */
-static inline BatteryMonitor_NotifyFxn BatteryMonitor_getNotifyFxn(BatteryMonitor_NotifyObj *notifyObject)
+static inline BatteryMonitor_NotifyFxn BatteryMonitor_getNotifyFxn(const BatteryMonitor_NotifyObj *notifyObject)
 {
     return notifyObject->notifyFxn;
 }

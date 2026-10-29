@@ -40,13 +40,13 @@ static struct k_sem *dpl_sem_pool_alloc()
 
 static SemaphoreP_Status dpl_sem_pool_free(struct k_sem *sem)
 {
-	k_mem_slab_free(&sem_slab, (void **)&sem);
+	k_mem_slab_free(&sem_slab, sem);
 
 	return SemaphoreP_OK;
 }
 
 /* timeout comes in and out in ticks */
-static k_timeout_t dpl_convert_timeout(uint32_t timeout)
+static k_timeout_t dpl_to_zephyr_timeout(uint32_t timeout)
 {
 	switch(timeout) {
 	case SemaphoreP_NO_WAIT:
@@ -122,7 +122,7 @@ SemaphoreP_Status SemaphoreP_pend(SemaphoreP_Handle handle, uint32_t timeout)
 		retval = SemaphoreP_OK;
 	} else {
 		retval = k_sem_take((struct k_sem *)handle,
-				    dpl_convert_timeout(timeout));
+				    dpl_to_zephyr_timeout(timeout));
 		__ASSERT_NO_MSG(retval != -EBUSY);
 		retval = (retval >= 0) ? SemaphoreP_OK : SemaphoreP_TIMEOUT;
 	}

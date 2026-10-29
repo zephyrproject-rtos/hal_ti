@@ -1,0 +1,31 @@
+# Copyright (c) 2026 Texas Instruments Incorporated
+# SPDX-License-Identifier: Apache-2.0
+
+config RCL_DRIVER
+	bool "Radio Control Layer (RCL)"
+	depends on HAS_CC23X0_SDK
+	default n if MCUBOOT
+	default y
+	help
+		Radio Control Layer (RCL) provides access to the radio hardware
+		on LPF3 devices (CC23x0).
+
+		Disabled for MCUboot as it's not needed and causes configuration
+		conflicts (enables MBEDTLS_CIPHER_AES_ENABLED which conflicts
+		with MCUboot's crypto configuration).
+
+		Say Y for wireless applications.
+
+config RCL_RF_SETTING_PREGEN
+	bool "Use pre-generated RF settings"
+	depends on RCL_DRIVER
+	default y
+	help
+		Use pre-generated RF/PHY settings created by SmartRF Studio or
+		SysConfig. These contain optimized LRF register configurations
+		for radio hardware tuned for specific protocols.
+
+		Located at: ti/boards/generated/<board>/ti_radio_config.{c,h}
+
+		Say Y to use board-specific pre-generated settings.
+		Say N only if providing custom RF settings.
