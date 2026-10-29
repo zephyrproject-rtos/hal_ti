@@ -114,3 +114,42 @@ already existing in ROM.
 
 After setting CONFIG_HAS_MSP432P4XXSDK=y in Kconfig, most of the
 peripheral driver library functions will be accessible from ROM.
+
+4. CC13x4/26x4 SDK
+
+The current version supported in Zephyr is the SimpleLink CC13x4 and CC26x4 SDK
+8.33.00.16, downloaded from:
+
+  https://www.ti.com/tool/SIMPLELINK-LOWPOWER-SDK
+
+The driver library source is copied from the SDK, as follows:
+
+  EXT_DIR=$HOME/hal_ti/simplelink/source/ti
+  pushd simplelink_cc13x4_26x4_sdk_8_33_00_16/source/ti
+  find devices/cc13x4_cc26x4/{driverlib,inc,rf_patches} -depth -name '*.[c|h]' -print0 | cpio --null -pvdm $EXT_DIR
+  find devices/cc13x4_cc26x4/startup_files -depth -name ccfg.c -print0 | cpio --null -pvd $EXT_DIR
+  cp -r drivers/power/* $EXT_DIR/drivers/power/.
+  mkdir $EXT_DIR/drivers/temperature
+  cp -r drivers/temperature/* $EXT_DIR/drivers/temperature/.
+  cp drivers/Temperature.* $EXT_DIR/drivers/.
+  mkdir $EXT_DIR/drivers/rf
+  cp drivers/rf/RF.h $EXT_DIR/drivers/rf/.
+  cp drivers/rf/RFCC26X2.h $EXT_DIR/drivers/rf/.
+  cp drivers/rf/RFCC26X2_multiMode.c $EXT_DIR/drivers/rf/.
+  find $EXT_DIR/devices/cc13x4_cc26x4 -name '*.[c|h]' -exec dos2unix {} \;
+  find $EXT_DIR/drivers/power -name '*.[c|h]' -exec dos2unix {} \;
+  find $EXT_DIR/drivers/rf -name '*.[c|h]' -exec dos2unix {} \;
+  find $EXT_DIR/drivers/temperature -name '*.[c|h]' -exec dos2unix {} \;
+  popd
+
+Afterwards, search through the `git diff` for the 'Zephyr' word in comments and
+reapply specific patches.
+
+The source file devices/cc13x4_cc26x4/startup_files/ccfg.c has been
+modified to use the appropriate sections when linking.
+
+TI provides the driver library functions burned into ROM at the factory,
+or updated via a service pack patch, thus saving application code space.
+
+After setting CONFIG_HAS_CC13X4_CC26X4_SDK=y in Kconfig, most of the
+peripheral driver library functions will be accessible from ROM.

@@ -92,6 +92,25 @@ elseif(CONFIG_HAS_CC13X2_CC26X2_SDK OR CONFIG_HAS_CC13X2X7_CC26X2X7_SDK)
     kernel/zephyr/dpl/QueueP_zephyr.c
     )
 
+  elseif(CONFIG_HAS_CC13X4_CC26X4_SDK)
+    zephyr_compile_definitions(DeviceFamily_CC13X4 ${COMPILER})
+    zephyr_include_directories(. source)
+
+    zephyr_library()
+    zephyr_library_compile_definitions(${COMPILER})
+
+    zephyr_library_sources(source/ti/drivers/power/PowerCC26X2.c)
+    zephyr_library_sources(source/ti/drivers/power/PowerCC26X2_calibrateRCOSC.c)
+    zephyr_library_sources(source/ti/drivers/utils/List.c)
+    zephyr_library_sources(source/ti/devices/cc13x4_cc26x4/driverlib/vims.c)
+    zephyr_library_sources(source/ti/devices/cc13x4_cc26x4/driverlib/pwr_ctrl.c)
+    zephyr_library_sources(kernel/zephyr/dpl/config.c)
+    zephyr_library_sources(kernel/zephyr/dpl/ClockP_zephyr.c)
+    zephyr_library_sources(kernel/zephyr/dpl/HwiP_zephyr.c)
+    zephyr_library_sources(kernel/zephyr/dpl/SwiP_zephyr.c)
+    zephyr_library_sources(kernel/zephyr/dpl/SemaphoreP_zephyr.c)
+    zephyr_library_sources(kernel/zephyr/dpl/QueueP_zephyr.c)
+
 elseif(CONFIG_HAS_MSP432P4XXSDK)
   zephyr_include_directories(
     source

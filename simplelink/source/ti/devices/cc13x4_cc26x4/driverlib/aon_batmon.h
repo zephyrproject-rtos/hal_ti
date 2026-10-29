@@ -1,0 +1,1 @@
+../../cc13x2_cc26x2/driverlib/aon_batmon.h
