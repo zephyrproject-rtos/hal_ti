@@ -72,7 +72,11 @@ AESProcessAlignedBlocksCMAC:
 CMAC_WRITE_BLOCK:
     LDM input!, {R3-R6}           // Read input block (4 words)
     LDR buf0, AES_BUF0_ADDR       // buf0 = AES BUF0 register addr
-    STM buf0!, {R3-R6}            // Write input block to AES BUF regs
+    // Single-word writes: a BUF3 write triggers AES (WRBUF3); see AESProcessAlignedBlocksCTR.
+    STR R3, [buf0, #0]            // Write input block to AES BUF regs
+    STR R4, [buf0, #4]
+    STR R5, [buf0, #8]
+    STR R6, [buf0, #12]
     SUBS blocks, blocks, #0x1     // Decrement block cnt by 1
     BNE CMAC_WRITE_BLOCK
 
@@ -146,16 +150,26 @@ AESProcessAlignedBlocksECB:
 
     LDM input!, {R4-R7}           // Read first input block (4 words)
     LDR dst, AES_BUF0_ADDR        // dst = AES BUF0 register addr
-    STM dst!, {R4-R7}             // Write first input block to AES TXTX regs
+    // Single-word accesses to the AES registers; see AESProcessAlignedBlocksCTR.
+    STR R4, [dst, #0]             // Write first input block to AES BUF regs
+    STR R5, [dst, #4]
+    STR R6, [dst, #8]
+    STR R7, [dst, #12]
     SUBS blocks, blocks, #0x1     // Decrement block cnt by 1
     BEQ ECB_READ_FINAL_OUTPUT
 
 ECB_PROCESS_BLOCK:
     LDM input!, {R4-R7}           // Read input block (4 words)
     LDR dst, AES_BUF0_ADDR        // dst = AES BUF0 register addr
-    STM dst!, {R4-R7}             // Write input block to AES TXTX regs
+    STR R4, [dst, #0]             // Write input block to AES BUF regs
+    STR R5, [dst, #4]
+    STR R6, [dst, #8]
+    STR R7, [dst, #12]
     LDR dst, AES_TXT0_ADDR        // dst = AES TXT0 register addr
-    LDM dst!, {R4-R7}             // Read output block from TXT regs (4 words)
+    LDR R4, [dst, #0]             // Read output block from TXT regs (4 words)
+    LDR R5, [dst, #4]
+    LDR R6, [dst, #8]
+    LDR R7, [dst, #12]
     STM output!, {R4-R7}          // Write output block (4 words)
     SUBS blocks, blocks, #0x1     // Decrement block cnt by 1
     BNE ECB_PROCESS_BLOCK
@@ -170,7 +184,10 @@ ECB_READ_FINAL_OUTPUT:
     STR R4, [R3]                  // Write modified AUTOCFG value
 
     LDR dst, AES_TXT0_ADDR        // dst = AES TXT0 register addr
-    LDM dst!, {R4-R7}             // Read final output block from TXT regs (4 words)
+    LDR R4, [dst, #0]             // Read final output block from TXT regs (4 words)
+    LDR R5, [dst, #4]
+    LDR R6, [dst, #8]
+    LDR R7, [dst, #12]
     STM output!, {R4-R7}          // Write final output block (4 words)
 
     POP {R4-R7}
