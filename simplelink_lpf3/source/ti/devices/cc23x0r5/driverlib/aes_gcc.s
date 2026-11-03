@@ -103,9 +103,18 @@ AESProcessAlignedBlocksCTR:
 CTR_PROCESS_BLOCK:
     LDM input!, {R4-R7}           // Read input block (4 words)
     LDR dst, AES_TXTX0_ADDR       // dst = AES TXTX0 register addr
-    STM dst!, {R4-R7}             // Write input block to AES TXTX regs
+    // Single-word accesses: a TXTX write XORs into TXT, and an STM/LDM that takes
+    // an interrupt may be restarted from its first word (always on ARMv6-M),
+    // XORing the words already written in twice.
+    STR R4, [dst, #0]             // Write input block to AES TXTX regs
+    STR R5, [dst, #4]
+    STR R6, [dst, #8]
+    STR R7, [dst, #12]
     LDR dst, AES_TXT0_ADDR        // dst = AES TXT0 register addr
-    LDM dst!, {R4-R7}             // Read output block from TXT regs (4 words)
+    LDR R4, [dst, #0]             // Read output block from TXT regs (4 words)
+    LDR R5, [dst, #4]
+    LDR R6, [dst, #8]
+    LDR R7, [dst, #12]
     STM output!, {R4-R7}          // Write output block (4 words)
     SUBS blocks, blocks, #0x1     // Decrement block cnt by 1
     BNE CTR_PROCESS_BLOCK
@@ -206,10 +215,15 @@ AESCopyBlock:
     BNE UNALIGNED_COPY
 
 WORD_ALIGNED_COPY:
-    PUSH {R4-R5}
-    LDM src!, {R2-R5}             // Read src block (4 words)
-    STM dst!, {R2-R5}             // dst block = src block
-    POP {R4-R5}
+    // Single-word accesses: dst may be TXTX (AESWriteTXTXOR); see AESProcessAlignedBlocksCTR.
+    LDR R2, [src, #0]
+    LDR R3, [src, #4]
+    STR R2, [dst, #0]
+    STR R3, [dst, #4]
+    LDR R2, [src, #8]
+    LDR R3, [src, #12]
+    STR R2, [dst, #8]
+    STR R3, [dst, #12]
     BX LR
 
 UNALIGNED_COPY:
