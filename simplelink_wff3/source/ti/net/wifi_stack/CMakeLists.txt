@@ -1,0 +1,75 @@
+zephyr_library()
+zephyr_compile_options(
+  -Wno-address-of-packed-member
+)
+
+zephyr_library_sources(
+  app_entry/init_host.c
+  app_entry/wlan_if.c
+  cme/cme.c
+  cme/cme_ap_access_list.c
+  cme/cme_ap_flow.c
+  cme/cme_device_flow.c
+  cme/cme_connection_mng.c
+  cme/cme_role_activation.c
+  cme/cme_scan.c
+  cme/cme_station_flow.c
+  cme/cme_tester.c
+  driver/data_path/twd/data_service/tx_ctrl_blk.c
+  driver/data_path/twd/data_service/tx_hw_queue.c
+  driver/data_path/twd/tw_driver/tw_driver_tx.c
+  driver/data_path/twd/fw_transfer/txResult.c
+  driver/data_path/twd/fw_transfer/txXfer.c
+  driver/data_path/twd/fw_transfer/txXfer_aggr.c
+  driver/data_path/udata/Tx_data_clsfr.c
+  driver/data_path/udata/rx_queue.c
+  driver/data_path/udata/rx_stack.c
+  driver/data_path/udata/tx_ctrl.c
+  driver/data_path/udata/tx_ctrl_params.c
+  driver/data_path/udata/tx_data_queue.c
+  driver/data_path/udata/tx_mgmt_queue.c
+  driver/data_path/udata/udata.c
+  driver/drv_cc33xx/config_cc33xx.c
+  driver/drv_cc33xx/driver_cc35xx.c
+  driver/drv_cc33xx/driver_osprey_mx_scan.c
+  driver/drv_cc33xx/driver_ti_wifi.c
+  driver/drv_cc33xx/l2_packet_ti.c
+  driver/drv_core.c
+  driver/eloop.c
+  driver/l2_cfg.c
+  driver/csi.c
+  driver/wlan_links.c
+  driver/drv_ti/drv_ti_ap_specific.c
+  driver/drv_ti/drv_ti_mlme.c
+  driver/drv_ti/drv_ti_sta_specific.c
+  driver/drv_ti/drv_ti_utils.c
+  driver/drv_ti/drv_ext_app.c
+  driver/drv_ti/rsn.c
+  driver/drv_ti/uwd/src/services/80211_utils.c
+  driver/drv_ti/uwd/src/services/ie_parser_util.c
+  driver/drv_ti/uwd/src/services/mlme_parser.c
+  driver/drv_ti/uwd/src/services/regulatory_domain.c
+  driver/drv_ti/uwd/src/services/scan_result_table.c
+  fw_control_cmd/control_cmd_fw.c
+)
+
+zephyr_include_directories(
+  .
+  cme
+  driver
+  driver/drv_ti
+  driver/drv_ti/uwd/export_inc
+  driver/drv_ti/uwd/src/services
+  driver/data_path
+  driver/data_path/udata
+  driver/data_path/udata/export_inc
+  driver/data_path/twd
+  driver/data_path/twd/tw_driver
+  driver/data_path/twd/data_service/export_inc
+  driver/data_path/twd/fw_transfer/export_inc
+  inc_common
+  inc_shared_w_fw
+  inc_shared_w_fw/inc_common_fw
+  ../ble_interface/inc_adapt
+  ../ble_interface/inc_common
+)
