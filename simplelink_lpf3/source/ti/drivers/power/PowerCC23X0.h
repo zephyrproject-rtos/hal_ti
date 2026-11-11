@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Texas Instruments Incorporated
+ * Copyright (c) 2021-2026, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,18 +72,29 @@
  *  will be found at/after boot, meaning it will take longer before HFXT is
  *  ready after boot, but when it is ready the amplitude will already be in the
  *  optimal range. This process is done asynchronously, so the application can
- *  do other stuff while waiting for HFXT to be ready.
+ *  do other tasks while waiting for HFXT to be ready.
  *
  *  Enabling initial HFXT amplitude compensation will result in more flash usage
  *  and longer time from boot to the first RF operation.
+ *
+ *  @anchor ti_drivers_PowerCC23XX_HFXT_Temperature_Compensation
+ *  ### HFXT Temperature Compensation (Software TCXO) ###
+ *  HFXT frequency is known to vary with temperature,
+ *  landing outside acceptable operational range. By enabling compensation,
+ *  the device will correct for this variation above the selected temperature.
+ *  The compensation is disabled by default on CC23XX devices.
+ *  The ppm offset used to compensate the HFXT can be approximated by a
+ *  third order polynomial function of temperature in Celsius,
+ *  see #PowerLPF3_initHFXTCompensation().
  *
  *
  *  ============================================================================
  */
 
-#ifndef ti_drivers_power_PowerCC23X0_
-#define ti_drivers_power_PowerCC23X0_
+#ifndef ti_drivers_power_PowerCC23X0__include
+#define ti_drivers_power_PowerCC23X0__include
 
+#include <stdint.h>
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/dpl/ClockP.h>
 #include <ti/drivers/Power.h>
@@ -101,13 +112,13 @@ extern "C" {
 #endif
 
 /*! The latency to reserve for resume from STANDBY (usec). */
-#define PowerCC23X0_RESUMETIMESTANDBY 400
+#define PowerCC23X0_RESUMETIMESTANDBY (400U)
 
 /*! The total latency to reserve for entry to and exit from STANDBY (usec). */
-#define PowerCC23X0_TOTALTIMESTANDBY 500
+#define PowerCC23X0_TOTALTIMESTANDBY (500U)
 
 /*! The initial delay when waking from STANDBY (usec). */
-#define PowerCC23X0_WAKEDELAYSTANDBY 185
+#define PowerCC23X0_WAKEDELAYSTANDBY (185U)
 
 /* Default lower threshold for when HFXT compensation is enabled */
 #define PowerCC23X0_HFXT_THRESHOLD_TEMP_DEFAULT (-40)
@@ -119,10 +130,10 @@ extern "C" {
  * and the bits in the PowerCC23X0_PERIPH_BIT_INDEX_M mask is used to store the
  * bit index shift value in the register for the given group.
  */
-#define PowerCC23X0_PERIPH_GROUP_M       0xFF00
-#define PowerCC23X0_PERIPH_GROUP_CLKCTL0 0x0000
-#define PowerCC23X0_PERIPH_GROUP_LRFD    0x0100
-#define PowerCC23X0_PERIPH_BIT_INDEX_M   0x00FF
+#define PowerCC23X0_PERIPH_GROUP_M       (0xFF00U)
+#define PowerCC23X0_PERIPH_GROUP_CLKCTL0 (0x0000U)
+#define PowerCC23X0_PERIPH_GROUP_LRFD    (0x0100U)
+#define PowerCC23X0_PERIPH_BIT_INDEX_M   (0x00FFU)
 
 /* \endcond */
 
@@ -168,11 +179,61 @@ typedef uint16_t PowerLPF3_Resource; /* Power resource identifier */
     #define PowerLPF3_PERIPH_LGPT3 (PowerCC23X0_PERIPH_GROUP_CLKCTL0 | CLKCTL_DESCEX0_LGPT3_S)
 #endif
 
+/*! @brief Resource ID: LRFD
+ *
+ *  This can used to enable the clock for LRFD, without having to enable the
+ *  clock for any of the sub-clocks in LRFD.
+ *
+ *  To enable specific sub-clocks in LRFD, sub-clock specific resource IDs can
+ *  be used. Using those resource IDs will automatically enable the main LRFD
+ *  clock, so this resource ID (#PowerLPF3_PERIPH_LRFD) is not necessary.
+ *  The sub-clock resource IDs are:
+ *  - #PowerLPF3_PERIPH_LRFD_PBE
+ *  - #PowerLPF3_PERIPH_LRFD_MDM
+ *  - #PowerLPF3_PERIPH_LRFD_RFE
+ *  - #PowerLPF3_PERIPH_LRFD_S2R
+ *  - #PowerLPF3_PERIPH_LRFD_TRC
+ *  - #PowerLPF3_PERIPH_LRFD_PBERAM
+ *  - #PowerLPF3_PERIPH_LRFD_MCERAM
+ *  - #PowerLPF3_PERIPH_LRFD_RFERAM
+ *  - #PowerLPF3_PERIPH_LRFD_DSBRAM
+ *  - #PowerLPF3_PERIPH_LRFD_BUFRAM
+ *  - #PowerLPF3_PERIPH_LRFD_S2RRAM
+ */
+#define PowerLPF3_PERIPH_LRFD (PowerCC23X0_PERIPH_GROUP_LRFD | LRFD_CLK_DEP_LRFD_S)
+
+/*! Resource ID: LRFD PBE */
+#define PowerLPF3_PERIPH_LRFD_PBE (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_PBE_S)
+
+/*! Resource ID: LRFD Modem */
+#define PowerLPF3_PERIPH_LRFD_MDM (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_MDM_S)
+
+/*! Resource ID: LRFD RFE */
+#define PowerLPF3_PERIPH_LRFD_RFE (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_RFE_S)
+
+/*! Resource ID: LRFD Samples2RAM */
+#define PowerLPF3_PERIPH_LRFD_S2R (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_S2R_S)
+
 /*! Resource ID: LRFD Tracer */
-#define PowerLPF3_PERIPH_LFRD_TRC (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_TRC_S)
+#define PowerLPF3_PERIPH_LRFD_TRC (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_TRC_S)
+
+/*! Resource ID: LRFD PBE RAM */
+#define PowerLPF3_PERIPH_LRFD_PBERAM (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_PBERAM_S)
+
+/*! Resource ID: LRFD MCE RAM */
+#define PowerLPF3_PERIPH_LRFD_MCERAM (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_MCERAM_S)
+
+/*! Resource ID: LRFD RFE RAM */
+#define PowerLPF3_PERIPH_LRFD_RFERAM (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_RFERAM_S)
+
+/*! Resource ID: LRFD DSB RAM */
+#define PowerLPF3_PERIPH_LRFD_DSBRAM (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_DSBRAM_S)
+
+/*! Resource ID: LRFD BUFRAM */
+#define PowerLPF3_PERIPH_LRFD_BUFRAM (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_BUFRAM_S)
 
 /*! Resource ID: LRFD S2R RAM */
-#define PowerLPF3_PERIPH_LFRD_S2RRAM (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_S2RRAM_S)
+#define PowerLPF3_PERIPH_LRFD_S2RRAM (PowerCC23X0_PERIPH_GROUP_LRFD | LRFDDBELL_CLKCTL_S2RRAM_S)
 
 /* \cond */
 /* Number of resources in the different resource groups. This is possibly larger
@@ -181,21 +242,16 @@ typedef uint16_t PowerLPF3_Resource; /* Power resource identifier */
  * sparse table.
  */
 #if defined(DeviceFamily_CC23X0R2)
-    #define PowerCC23X0_NUMRESOURCES_CLKCTL0 29
+    #define PowerCC23X0_NUMRESOURCES_CLKCTL0 (29U)
 #elif (defined(DeviceFamily_CC23X0R5) || defined(DeviceFamily_CC23X0R22))
-    #define PowerCC23X0_NUMRESOURCES_CLKCTL0 31
+    #define PowerCC23X0_NUMRESOURCES_CLKCTL0 (31U)
 #else
     #error "Unsupported DeviceFamily specified!"
 #endif
-#define PowerCC23X0_NUMRESOURCES_LRFD 12
+#define PowerCC23X0_NUMRESOURCES_LRFD (12U)
 /* \endcond */
 
-#define PowerLPF3_STANDBY 0x1 /*!< The STANDBY sleep state */
-/* \cond */
-/* Internal flags for enabling/disabling resources */
-#define PowerLPF3_ENABLE  1
-#define PowerLPF3_DISABLE 0
-/* \endcond */
+#define PowerLPF3_STANDBY (0x1U) /*!< The STANDBY sleep state */
 
 /* Constraints
  *
@@ -204,19 +260,22 @@ typedef uint16_t PowerLPF3_Resource; /* Power resource identifier */
  */
 
 /*! Constraint: Disallow a transition to the SHUTDOWN state */
-#define PowerLPF3_DISALLOW_SHUTDOWN 0
+#define PowerLPF3_DISALLOW_SHUTDOWN (0U)
 
 /*! Constraint: Disallow a transition to the STANDBY sleep state */
-#define PowerLPF3_DISALLOW_STANDBY 1
+#define PowerLPF3_DISALLOW_STANDBY (1U)
 
 /*! Constraint: Disallow a transition to the IDLE sleep state */
-#define PowerLPF3_DISALLOW_IDLE 2
+#define PowerLPF3_DISALLOW_IDLE (2U)
 
 /*! Constraint: Flash memory needs to enabled during IDLE */
-#define PowerLPF3_NEED_FLASH_IN_IDLE 3
+#define PowerLPF3_NEED_FLASH_IN_IDLE (3U)
+
+/*! Constraint: Disallow software TCXO during RF operations */
+#define PowerLPF3_DISALLOW_SWTCXO (4U)
 
 /* \cond */
-#define PowerCC23X0_NUMCONSTRAINTS 4 /* Number of constraints supported */
+#define PowerCC23X0_NUMCONSTRAINTS (5U) /* Number of constraints supported */
 /* \endcond */
 
 /*
@@ -227,26 +286,26 @@ typedef uint16_t PowerLPF3_Resource; /* Power resource identifier */
  */
 
 /*! Power event: The device is entering the STANDBY sleep state */
-#define PowerLPF3_ENTERING_STANDBY (1 << 0)
+#define PowerLPF3_ENTERING_STANDBY ((uint_fast16_t)((uint_fast16_t)1U << 0))
 
 /*! Power event: The device is entering the SHUTDOWN state */
-#define PowerLPF3_ENTERING_SHUTDOWN (1 << 1)
+#define PowerLPF3_ENTERING_SHUTDOWN ((uint_fast16_t)((uint_fast16_t)1U << 1))
 
 /*! Power event: The device is waking up from the STANDBY sleep state */
-#define PowerLPF3_AWAKE_STANDBY (1 << 2)
+#define PowerLPF3_AWAKE_STANDBY ((uint_fast16_t)((uint_fast16_t)1U << 2))
 
 /*! Power event: The high frequency (HF) crystal oscillator is now available
  *   for use (HFXT) by the digital domain
  */
-#define PowerLPF3_HFXT_AVAILABLE (1 << 3)
+#define PowerLPF3_HFXT_AVAILABLE ((uint_fast16_t)((uint_fast16_t)1U << 3))
 
 /*! Power event: The system has switched to the low frequency clock source
  *   configured in CCFG
  */
-#define PowerLPF3_LFCLK_SWITCHED (1 << 4)
+#define PowerLPF3_LFCLK_SWITCHED ((uint_fast16_t)((uint_fast16_t)1U << 4))
 
 /* \cond */
-#define PowerCC23X0_NUMEVENTS 5 /* Number of events supported */
+#define PowerCC23X0_NUMEVENTS ((uint_fast16_t)((uint_fast16_t)5U)) /* Number of events supported */
 /* \endcond */
 
 /*!
@@ -345,6 +404,8 @@ typedef enum
     PowerLPF3_RESET_PIN          = PMCTL_RESET_PIN,
     /*! Device booted due to power on reset */
     PowerLPF3_RESET_POR          = PMCTL_RESET_POR,
+    /*! Unknown reset reason */
+    PowerLPF3_RESET_UNKNOWN      = UINT32_MAX,
 } PowerLPF3_ResetReason;
 
 /*!
@@ -366,10 +427,7 @@ void PowerCC23X0_doWFI(void);
  * @pre Power_shutdown()
  * @post PowerLPF3_releaseLatches()
  */
-static inline PowerLPF3_ResetReason PowerLPF3_getResetReason(void)
-{
-    return (PowerLPF3_ResetReason)PMCTLGetResetReason();
-}
+PowerLPF3_ResetReason PowerLPF3_getResetReason(void);
 
 /*!
  * @brief Unlatch all IOs
@@ -472,12 +530,15 @@ void PowerLPF3_selectLFXT(void);
 void PowerLPF3_selectEXTLF(void);
 
 /*!
- * @brief Initialise HFXT temperature compensation coefficients
+ * @brief Initialize HFXT temperature compensation coefficients
  *
- * Initialise the parameters used for HFXT temperature coefficients. They approximate
+ * Initialize the parameters used for HFXT temperature coefficients. They approximate
  * the ppm offset of the HFXT frequency with the following polynomial as a function of
  * temperature (degC), where P_3 = P3 / 2^shift, P_2 = P2 / 2^shift, etc..
  * ppm(T) = P_3*T^3 + P_2*T^2 + P_1*T + P_0
+ *
+ * @note The fixed-point coefficients and the shift argument must ensure that the computation does
+ * not overflow 32 bits in the -40, 125 degC range.
  *
  * @param[in] P0    0th-order coefficient, multiplied by 2^shift
  * @param[in] P1    1st-order coefficient, multiplied by 2^shift
@@ -528,6 +589,28 @@ void PowerLPF3_enableHFXTCompensation(int16_t tempThreshold, int16_t tempDelta);
 void PowerLPF3_disableHFXTCompensation(void);
 
 /*!
+ * @brief Force HFXT temperature compensation update
+ *
+ * Should be called after releasing the #PowerLPF3_DISALLOW_SWTCXO constraint
+ * to ensure the correct HFXT frequency.
+ *
+ * @pre PowerLPF3_enableHFXTCompensation()
+ */
+void PowerLPF3_forceHFXTCompensationUpdate(void);
+
+/*!
+ * @brief Get the current HFXT compensation ratio.
+ *
+ * The compensation ratio is the ratio between the nominal HFXT freqeuncy
+ * (48MHz) and the currently expected HFXT frequency.
+ *
+ * The format of the ratio is 4.22 (4 integer bits and 22 fractional bits).
+ *
+ * @return @c 48MHz*2^22/f where @c f is the currently expected HFXT frequency.
+ */
+uint32_t PowerLPF3_getHFXTCompensationRatio(void);
+
+/*!
  * @brief Start initial compensation of the HFXT amplitude
  *
  * @warning This function must not be called by the application. It is only
@@ -576,6 +659,59 @@ int_fast8_t PowerLPF3_getHfxtAmpAdjustment(void);
  */
 void PowerLPF3_adjustHfxtAmp(int_fast8_t adjustment);
 
+/*!
+ *  @brief  Transition the device into standby and configure RTC to wakeup
+ *          the device ahead of a specified time.
+ *
+ *  This function is called from the power policy when the decision has been
+ *  made to put the device in standby. This function returns to the caller
+ *  (the policy function) after the device wakes up from standby.
+ *
+ *  The function is doing the following:
+ *  - Disable SysTick (For TFM enabled apps, the NS SysTick is disabled)
+ *  - Store SysTimer state
+ *  - Configure RTC to wake up the device #PowerCC23X0_WAKEDELAYSTANDBY
+ *    microseconds before the next event, @c nextEventTimeUs. This is to ensure
+ *    that the device is ready to service the event at time @c nextEventTimeUs.
+ *  - Post the #PowerLPF3_ENTERING_STANDBY notification
+ *  - Adjust HFXT amplitude, if needed.
+ *  - Enter standby
+ *  - Start HFXT
+ *  - Disarm RTC
+ *  - Restore SysTimer state
+ *  - Configure LRFD clocks
+ *  - Post the #PowerLPF3_AWAKE_STANDBY notification
+ *
+ *  @note The SysTick is not re-enabled by this function, it is the caller's
+ *  responsibility to re-enable the SysTick if needed after this function
+ *  returns.
+ *
+ *  @warning This function must be called with interrupts disabled, and
+ *  should not be called directly by the application, or by any drivers.
+ *  This function does not check declared constraints; the policy function
+ *  must check constraints before calling this function to initiate sleep.
+
+ *
+ *  @param[in]  nextEventTimeUs    the SysTimer time of the next event, this
+ *                                 must be far enough in the future.
+ *
+ *  @retval  #Power_SOK on success, the device has slept and is awake again.
+ *
+ *  @retval  #Power_EFAIL if an error occurred during client notifications, or
+ *  if a general failure occurred.
+ */
+int_fast16_t PowerLPF3_sleep(uint32_t nextEventTimeUs);
+
+/**
+ * @brief Checks if the LFINC filter is ready to go to standby or not.
+ *
+ * @note This is separate from the normal standby constraint system in the Power
+ * driver.
+ *
+ * @return true if standby is allowed by the LFINC filter, false otherwise.
+ */
+bool PowerLPF3_isLfincFilterAllowingStandby(void);
+
 void PowerCC23X0_schedulerDisable(void);
 void PowerCC23X0_schedulerRestore(void);
 
@@ -583,4 +719,4 @@ void PowerCC23X0_schedulerRestore(void);
 }
 #endif
 
-#endif /* POWER_CC23X0_ */
+#endif /* ti_drivers_power_PowerCC23X0__include */

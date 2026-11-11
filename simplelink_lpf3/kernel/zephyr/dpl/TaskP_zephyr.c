@@ -6,6 +6,7 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/kernel_structs.h>
+#include <zephyr/sys/bitarray.h>
 
 #include <zephyr/sys/__assert.h>
 
@@ -19,34 +20,71 @@
 #include <ti/drivers/dpl/ClockP.h>
 #include <ti/drivers/dpl/HwiP.h>
 
-#if (defined(CONFIG_DYNAMIC_DPL_OBJECTS) && defined(CONFIG_DYNAMIC_THREAD) && defined(CONFIG_DYNAMIC_THREAD_ALLOC) && defined(CONFIG_THREAD_STACK_INFO))
+#ifdef TaskP_STRUCT_SIZE
+#undef TaskP_STRUCT_SIZE
+#endif
+#define TaskP_STRUCT_SIZE (160)
+
+#ifdef TaskP_DEFAULT_STACK_SIZE
+#undef TaskP_DEFAULT_STACK_SIZE
+#endif
+#define TaskP_DEFAULT_STACK_SIZE (CONFIG_SOC_FAMILY_TI_SIMPLELINK_DPL_TASK_STACK_SIZE)
+
+#if (defined(CONFIG_DYNAMIC_DPL_OBJECTS) && defined(CONFIG_THREAD_STACK_INFO))
     #define DYNAMIC_THREADS
 #endif
 
 #ifdef DYNAMIC_THREADS
-/* Space for thread objects  */
-K_MEM_SLAB_DEFINE(task_slab, sizeof(struct k_thread), CONFIG_DYNAMIC_THREAD_POOL_SIZE,\
+/* Space for thread objects */
+K_MEM_SLAB_DEFINE(task_slab, sizeof(struct k_thread), CONFIG_SOC_FAMILY_TI_SIMPLELINK_DPL_TASK_POOL_SIZE,\
           MEM_ALIGN);
 
-static struct k_thread *dpl_task_pool_alloc()
+/* Private stack pool for TaskP threads, independent of Zephyr's generic
+ * dynamic thread pool (CONFIG_DYNAMIC_THREAD_STACK_SIZE / CONFIG_DYNAMIC_THREAD_POOL_SIZE).
+ */
+K_THREAD_STACK_ARRAY_DEFINE(dpl_task_stacks, CONFIG_SOC_FAMILY_TI_SIMPLELINK_DPL_TASK_POOL_SIZE,
+                             CONFIG_SOC_FAMILY_TI_SIMPLELINK_DPL_TASK_STACK_SIZE);
+
+SYS_BITARRAY_DEFINE_STATIC(dpl_stack_bitmap, CONFIG_SOC_FAMILY_TI_SIMPLELINK_DPL_TASK_POOL_SIZE);
+
+static struct k_thread *dpl_task_pool_alloc(void)
 {
     struct k_thread *task_ptr = NULL;
 
     if (k_mem_slab_alloc(&task_slab, (void **)&task_ptr, K_NO_WAIT) < 0) {
-
-         __ASSERT(0, "Increase size of DPL task pool");
+        __ASSERT(0, "Increase CONFIG_SOC_FAMILY_TI_SIMPLELINK_DPL_TASK_POOL_SIZE");
     }
-    printk("Slabs used: %d / %d \n", task_slab.info.num_used, task_slab.info.num_blocks);
     return task_ptr;
 }
 
 static void dpl_task_pool_free(struct k_thread *task)
 {
     k_mem_slab_free(&task_slab, (void *)task);
-    return;
 }
 
-#endif /* CONFIG_DYNAMIC_DPL_OBJECTS */
+static k_thread_stack_t *dpl_stack_alloc(void)
+{
+    size_t idx;
+
+    if (sys_bitarray_alloc(&dpl_stack_bitmap, 1, &idx) < 0) {
+        __ASSERT(0, "Increase CONFIG_SOC_FAMILY_TI_SIMPLELINK_DPL_TASK_POOL_SIZE");
+        return NULL;
+    }
+    return dpl_task_stacks[idx];
+}
+
+static void dpl_stack_free(k_thread_stack_t *stack)
+{
+    for (size_t i = 0; i < CONFIG_SOC_FAMILY_TI_SIMPLELINK_DPL_TASK_POOL_SIZE; i++) {
+        if (dpl_task_stacks[i] == stack) {
+            sys_bitarray_free(&dpl_stack_bitmap, 1, i);
+            return;
+        }
+    }
+    __ASSERT(0, "Stack not in DPL pool");
+}
+
+#endif /* DYNAMIC_THREADS */
 
 /*
  *  ======== Array for conversion of Zephyr thread state to DPL task state ========
@@ -64,8 +102,8 @@ const TaskP_State taskState[] = {TaskP_State_RUNNING,  /*!< Running */
 static const TaskP_Params TaskP_defaultParams = {
     .name      = "NAME",
     .arg       = NULL,
-    .priority  = 1,
-    .stackSize = TaskP_DEFAULT_STACK_SIZE,
+    .priority  = 0,
+    .stackSize = CONFIG_SOC_FAMILY_TI_SIMPLELINK_DPL_TASK_STACK_SIZE,
     .stack     = NULL,
 };
 
@@ -87,24 +125,26 @@ TaskP_Handle TaskP_create(TaskP_Function fxn, const TaskP_Params *params)
     k_tid_t task_tid;
     struct k_thread *task = dpl_task_pool_alloc();
 
-    k_thread_stack_t * task_stack = k_thread_stack_alloc(params->stackSize, 0);
+    __ASSERT(params->stackSize <= CONFIG_SOC_FAMILY_TI_SIMPLELINK_DPL_TASK_STACK_SIZE,
+             "Increase CONFIG_SOC_FAMILY_TI_SIMPLELINK_DPL_TASK_STACK_SIZE");
 
-    if(task_stack != NULL)
+    k_thread_stack_t *task_stack = dpl_stack_alloc();
+
+    if (task_stack != NULL)
     {
-
         /* TaskP uses inversed priority to Zephyr */
         task_tid = k_thread_create(task, task_stack,
-                            K_THREAD_STACK_SIZEOF(task_stack),
+                            params->stackSize,
                             (k_thread_entry_t) fxn,
                             params->arg, NULL, NULL,
                             (0 - params->priority), 0, K_NO_WAIT);
-        if(task_tid != NULL)
+        if (task_tid != NULL)
         {
             k_thread_name_set(task_tid, params->name);
+            return ((TaskP_Handle)task);
         }
     }
-
-    return ((TaskP_Handle)task);
+    return NULL;
 }
 
 /*
@@ -117,18 +157,15 @@ void TaskP_delete(TaskP_Handle task)
         TaskP_State state = TaskP_getState(task);
         if(state != TaskP_State_INVALID && state != TaskP_State_DELETED)
         {
-            struct k_thread*  thread = (struct k_thread* )task;
+            struct k_thread *thread = (struct k_thread *)task;
             k_thread_abort((k_tid_t) thread);
 
-            int status = k_thread_stack_free((k_thread_stack_t *) thread->stack_info.start);
-            if(status == 0)
-            {
-                dpl_task_pool_free(thread);
-            }
+            dpl_stack_free((k_thread_stack_t *) thread->stack_info.start);
+            dpl_task_pool_free(thread);
         }
     }
 }
-#endif
+#endif /* DYNAMIC_THREADS */
 /*
  *  ======== TaskP_construct ========
  */
@@ -150,9 +187,9 @@ TaskP_Handle TaskP_construct(TaskP_Struct *obj, TaskP_Function fxn, const TaskP_
     if(task_tid != NULL)
     {
         k_thread_name_set(task_tid, params->name);
+        return ((TaskP_Handle) obj);
     }
-
-    return ((TaskP_Handle) obj);
+    return NULL;
 }
 
 /*
@@ -244,4 +281,9 @@ void TaskP_yield(void)
 uint32_t TaskP_getTaskObjectSize(void)
 {
     return (sizeof(struct k_thread));
+}
+
+void TaskP_setTaskResourcePool(struct k_heap *heap)
+{
+    k_thread_heap_assign(k_current_get(), heap);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Texas Instruments Incorporated
+ * Copyright (c) 2022-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,14 +30,15 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ti_drivers_RCL_Scheduler_h__include
-#define ti_drivers_RCL_Scheduler_h__include
+#ifndef ti_drivers_rcl_RCL_Scheduler__include
+#define ti_drivers_rcl_RCL_Scheduler__include
 
 #include <stdint.h>
 #include <stddef.h>
 
 #include <ti/drivers/rcl/RCL_Command.h>
-#include <ti/drivers/rcl/hal/hal.h>
+#include <ti/drivers/rcl/hal/RCL_Hal.h>
+#include <ti/drivers/rcl/LRF.h>
 
 /**
  *  Number of ticks in the given number of microseconds
@@ -55,22 +56,24 @@
 #define RCL_SCHEDULER_MARGIN_ARM         RCL_SCHEDULER_SYSTIM_US(40U)  /*!< Time to prepare FIFO + PBE */
 #define RCL_SCHEDULER_MARGIN_CONFIGURE   RCL_SCHEDULER_SYSTIM_US(76U)  /*!< Time to reload REGBANKs */
 #define RCL_SCHEDULER_MARGIN_LOAD        RCL_SCHEDULER_SYSTIM_US(460U) /*!< Time to load TOPsm images */
-#define RCL_SCHEDULER_SLEEP_CUTOFF       RCL_SCHEDULER_SYSTIM_MS(10U)  /*!< Time margin when not to arm LRF immediately */
+#define RCL_SCHEDULER_SLEEP_CUTOFF       RCL_SCHEDULER_SYSTIM_MS(5U)  /*!< Time margin when not to arm LRF immediately */
 #define RCL_SCHEDULER_TRIG_NOW_DELAY     RCL_SCHEDULER_SYSTIM_US(50U)  /*!< Delay to add to current time to allow start to be in the future */
-#if defined(DeviceFamily_CC23X0R5) || defined(DeviceFamily_CC23X0R2) || defined(DeviceFamily_CC23X0R22) || defined(DeviceFamily_CC2340R53)
+#if (DeviceFamily_LRF_PARENT == DeviceFamily_PARENT_CC23X0)
 #define RCL_SCHEDULER_WAKEUP_MARGIN      RCL_SCHEDULER_SYSTIM_US(390U) /*!< Wakeup margin to allow for varying command and setup time */
+#elif (DeviceFamily_LRF_PARENT == DeviceFamily_PARENT_CC27XX)
+#define RCL_SCHEDULER_WAKEUP_MARGIN      RCL_SCHEDULER_SYSTIM_US(150U) /*!< Wakeup margin to allow for varying command and setup time */
 #else
 #define RCL_SCHEDULER_WAKEUP_MARGIN      RCL_SCHEDULER_SYSTIM_US(1000U)/*!< Wakeup margin to allow for varying command and setup time */
 #endif
 
-typedef enum {
+typedef enum RCL_SchedulerStopReason_e {
     RCL_SchedulerStopReason_None = 0,       /*!< No stop active */
     RCL_SchedulerStopReason_Timeout = 1,    /*!< Command stop time is active  */
     RCL_SchedulerStopReason_Scheduling = 2, /*!< Scheduler stop is active */
     RCL_SchedulerStopReason_Api = 3,        /*!< API stop has been sent and will take precedence */
 } RCL_SchedulerStopReason;
 
-typedef enum {
+typedef enum RCL_SchedulerStopTimeState_e {
     RCL_SchedulerStopTimeState_Init = 0,       /*!< Stop times not calculated or programmed */
     RCL_SchedulerStopTimeState_Found = 1,      /*!< Stop times calculated, but not programmed */
     RCL_SchedulerStopTimeState_Programmed = 2, /*!< Stop times calculated and programmed to timer */
@@ -87,6 +90,7 @@ typedef struct RCL_SchedulerStopInfo_s {
 
 typedef struct RCL_SchedulerState_s {
     RCL_Command  *currCmd;
+    RCL_Command  *stopCmd;
     uint32_t nextWantsStop                      : 1;
     RCL_SchedulerStopTimeState stopTimeState    : 2;
     RCL_SchedulerStopReason descheduleReason    : 2;
@@ -117,6 +121,20 @@ extern RCL_SchedulerState rclSchedulerState;
  *  @return Command status that should be produced
  */
 RCL_CommandStatus RCL_Scheduler_findStopStatus(RCL_StopType stopType);
+
+/**
+ *  @brief  Update relevant status when a command was stopped
+ *
+ *  Returns the status to be set for a command that was stopped with the given stop source,
+ *  depending on what caused the stop
+ *
+ *  @note This function is intended as internal to RCL and its handlers
+ *
+ *  @param  stopType Stop type observed
+ *
+ *  @return Command status that should be produced
+ */
+RCL_CommandStatus RCL_Scheduler_updateStopStatus(RCL_StopType stopType, RCL_SchedulerStopReason stopReason);
 
 /**
  *  @brief  Set start and stop time for LRF based on command
@@ -287,7 +305,7 @@ int32_t            RCL_Scheduler_delta(uint32_t refTime, uint32_t chkTime);
  */
 static inline uint32_t RCL_Scheduler_getCurrentTime(void)
 {
-    return hal_get_current_time();
+    return RCL_Hal_getCurrentTime();
 }
 
 /**
@@ -359,4 +377,4 @@ bool RCL_Scheduler_postEvent(RCL_Command_Handle c, RCL_Events e);
 /** @}
  */
 
-#endif
+#endif /* ti_drivers_rcl_RCL_Scheduler__include */

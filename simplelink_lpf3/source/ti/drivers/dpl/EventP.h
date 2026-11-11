@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Texas Instruments Incorporated - http://www.ti.com
+ * Copyright (c) 2021-2025, Texas Instruments Incorporated - http://www.ti.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,9 +75,11 @@ extern "C" {
 /*!
  *  @brief    Number of bytes greater than or equal to the size of any RTOS Event object.
  *
- *  Zephyr: 16
+ *  BIOS 7.x: 20
+ *  FreeRTOS: 52
+ *  Zephyr: 12
  */
-#define EventP_STRUCT_SIZE (16)
+#define EventP_STRUCT_SIZE (52)
 
 /*!
  *  @brief    EventP structure.
@@ -114,6 +116,10 @@ typedef EventP_Struct *EventP_Handle;
  * EventP_create creates a new event object. EventP_create returns the
  * handle of the new task object or NULL if the event could not be created.
  *
+ * When created, no bits of an event are set. For FreeRTOS,
+ * configSUPPORT_DYNAMIC_ALLOCATION also has to be set to 1 in FreeRTOSConfig.h.
+ * See 'Configuration with FreeRTOS' in the Core SDK User's Guide for how to do
+ * this.
  *
  * This API cannot be called from interrupt contexts.
  *
@@ -134,6 +140,10 @@ extern void EventP_delete(EventP_Handle handle);
  * EventP_construct creates a new event object. EventP_construct returns the
  * handle of the new task object or NULL if the event could not be created.
  *
+ * When created, no bits of an event are set. For FreeRTOS,
+ * configSUPPORT_STATIC_ALLOCATION also has to be set to 1 in FreeRTOSConfig.h.
+ * See 'Configuration with FreeRTOS' in the Core SDK User's Guide for how to do
+ * this.
  *
  * This API cannot be called from interrupt contexts.
  *
@@ -173,7 +183,10 @@ extern void EventP_destruct(EventP_Struct *obj);
  * This API cannot be called from interrupt contexts.
  *
  * @param event         Event handle
- * @param eventMask     Match against the events in this bitmask.
+ * @param eventMask     Match against the events in this bitmask. For FreeRTOS,
+ *                      only the 24 least significant bits in the event mask may
+ *                      be set, meaning the maximum allowed value for FreeRTOS
+ *                      is 0x00FFFFFF.
  * @param waitForAll    If true, only return when all matching bits are set
  * @param timeout       Return after this many ClockP ticks, even if there is no match
  *
@@ -190,7 +203,10 @@ extern uint32_t EventP_pend(EventP_Handle event, uint32_t eventMask, bool waitFo
  * object and returns.
  *
  * @param event         Event handle
- * @param eventMask     Mask of eventIds to post (this must be non-zero).
+ * @param eventMask     Mask of eventIds to post (this must be non-zero). For
+ *                      FreeRTOS, only the 24 least significant bits in the
+ *                      event mask may be set, meaning the maximum allowed value
+ *                      for FreeRTOS is 0x00FFFFFF.
  */
 extern void EventP_post(EventP_Handle event, uint32_t eventMask);
 
@@ -200,7 +216,10 @@ extern void EventP_post(EventP_Handle event, uint32_t eventMask);
  * Clears the bits in eventMask from the EventP.
  *
  * @param event         Event handle
- * @param eventMask     Mask of eventIds to clear (this must be non-zero).
+ * @param eventMask     Mask of eventIds to clear (this must be non-zero). For
+ *                      FreeRTOS, only the 24 least significant bits in the
+ *                      event mask may be set, meaning the maximum allowed value
+ *                      for FreeRTOS is 0x00FFFFFF.
  */
 extern void EventP_clear(EventP_Handle event, uint32_t eventMask);
 

@@ -1,7 +1,7 @@
 /******************************************************************************
-*  Filename:       hw_lrfds2r_h
+*  Filename:       hw_lrfds2r.h
 ******************************************************************************
-*  Copyright (c) 2021 Texas Instruments Incorporated. All rights reserved.
+*  Copyright (c) 2021-2025 Texas Instruments Incorporated. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions are met:
@@ -39,19 +39,19 @@
 // LRFDS2R component
 //
 //*****************************************************************************
-// Sample2RAM Config Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDS2R_O_CFG                                               0x00000000U
 
-// Sample2RAM Start Address Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDS2R_O_START                                             0x00000004U
 
-// Sample2RAM Stop Address Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDS2R_O_STOP                                              0x00000008U
 
-// Sample2RAM Status Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDS2R_O_STAT                                              0x0000000CU
 
-// Sample2RAM Trigger Register 
+// Internal. Only to be used through TI provided API.
 #define LRFDS2R_O_TRIG                                              0x00000010U
 
 //*****************************************************************************
@@ -59,31 +59,25 @@
 // Register: LRFDS2R_O_CFG
 //
 //*****************************************************************************
-// Field:     [5] LAST0 
+// Field:     [5] LAST0
 //
-// When this bit is enabled, then the S2R will write all zeros, whenever it 
-// tries to write the stop address (instead of the regular value) 
-// ENUMs: 
-// EN                       Writing all zeros to stop address is enabled 
-// DIS                      Writing all zeros to stop address is disabled 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// EN                       Internal. Only to be used through TI provided API.
+// DIS                      Internal. Only to be used through TI provided API.
 #define LRFDS2R_CFG_LAST0                                           0x00000020U
 #define LRFDS2R_CFG_LAST0_M                                         0x00000020U
 #define LRFDS2R_CFG_LAST0_S                                                  5U
 #define LRFDS2R_CFG_LAST0_EN                                        0x00000020U
 #define LRFDS2R_CFG_LAST0_DIS                                       0x00000000U
 
-// Field:   [4:3] TRIGMODE 
+// Field:   [4:3] TRIGMODE
 //
-// Trigger mode 
-// ENUMs: 
-// ONEVENT                  Trigger on event, i.e. fill memory area once, but 
-//                          wait for an event from the selected sample 
-//                          source. 
-// PERIODIC                 Periodic mode, i.e. fill memory area periodically, 
-//                          continuing at the start address after reaching 
-//                          the stop address, upon a manual trigger. 
-// ONESHOT                  One shot mode, i.e. fill memory area once, from 
-//                          start to stop address, upon a manual trigger. 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ONEVENT                  Internal. Only to be used through TI provided API.
+// PERIODIC                 Internal. Only to be used through TI provided API.
+// ONESHOT                  Internal. Only to be used through TI provided API.
 #define LRFDS2R_CFG_TRIGMODE_W                                               2U
 #define LRFDS2R_CFG_TRIGMODE_M                                      0x00000018U
 #define LRFDS2R_CFG_TRIGMODE_S                                               3U
@@ -91,19 +85,14 @@
 #define LRFDS2R_CFG_TRIGMODE_PERIODIC                               0x00000008U
 #define LRFDS2R_CFG_TRIGMODE_ONESHOT                                0x00000000U
 
-// Field:   [2:1] SEL 
+// Field:   [2:1] SEL
 //
-// Select sample source 
-// ENUMs: 
-// DECSTAGE                 Samples from decode stage mux. The sample source 
-//                          is selected in LRFDMDM:DEMDEBUG.DECSTAGEDEBUG 
-//                          register. 
-// FRONTEND                 Samples from frontend mux. The sample source is 
-//                          selected in LRFDMDM:DEMDEBUG.FRONTENDDEBUG 
-//                          register. 
-// ADCDIG                   Samples from ADCDIG. 
-// SYNTH                    Samples from frequency synthesizer's DTST 
-//                          interface. 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// DECSTAGE                 Internal. Only to be used through TI provided API.
+// FRONTEND                 Internal. Only to be used through TI provided API.
+// ADCDIG                   Internal. Only to be used through TI provided API.
+// SYNTH                    Internal. Only to be used through TI provided API.
 #define LRFDS2R_CFG_SEL_W                                                    2U
 #define LRFDS2R_CFG_SEL_M                                           0x00000006U
 #define LRFDS2R_CFG_SEL_S                                                    1U
@@ -112,12 +101,12 @@
 #define LRFDS2R_CFG_SEL_ADCDIG                                      0x00000002U
 #define LRFDS2R_CFG_SEL_SYNTH                                       0x00000000U
 
-// Field:     [0] CTL 
+// Field:     [0] CTL
 //
-// Sample2RAM module enable 
-// ENUMs: 
-// EN                       Enabled 
-// DIS                      Not enabled 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// EN                       Internal. Only to be used through TI provided API.
+// DIS                      Internal. Only to be used through TI provided API.
 #define LRFDS2R_CFG_CTL                                             0x00000001U
 #define LRFDS2R_CFG_CTL_M                                           0x00000001U
 #define LRFDS2R_CFG_CTL_S                                                    0U
@@ -129,23 +118,12 @@
 // Register: LRFDS2R_O_START
 //
 //*****************************************************************************
-// Field:  [12:0] ADDR 
+// Field:  [12:0] ADDR
 //
-// Memory start address for where to dump the samples. The address is word 
-// oriented starting from the start of the MCERAM, then RFERAM, then PBERAM, 
-// then S2RRAM and then BUFRAM. Also note that S2R has write priority to the 
-// RAMs, so any attempt at simultaneously accessing the RAMs used by S2R while 
-// it is running may be unreliable (no arbitration/stall implemented), and 
-// should be avoided. 
-//
-// 0 -> 1023 : MCERAM 
-// 1024 -> 2047 : RFERAM 
-// 2048 -> 3071 : PBERAM 
-// 3072 -> 4095 : S2RRAM 
-// 4096 -> 4479 : BUFRAM 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDS2R_START_ADDR_W                                                13U
 #define LRFDS2R_START_ADDR_M                                        0x00001FFFU
 #define LRFDS2R_START_ADDR_S                                                 0U
@@ -157,23 +135,12 @@
 // Register: LRFDS2R_O_STOP
 //
 //*****************************************************************************
-// Field:  [12:0] ADDR 
+// Field:  [12:0] ADDR
 //
-// Memory start address for where to dump the samples. The address is word 
-// oriented starting from the start of the MCERAM, then RFERAM, then PBERAM, 
-// then S2RRAM and then BUFRAM. Also note that S2R has write priority to the 
-// RAMs, so any attempt at simultaneously accessing the RAMs used by S2R while 
-// it is running may be unreliable (no arbitration/stall implemented), and 
-// should be avoided. 
-//
-// 0 -> 1023 : MCERAM 
-// 1024 -> 2047 : RFERAM 
-// 2048 -> 3071 : PBERAM 
-// 3072 -> 4095 : S2RRAM 
-// 4096 -> 4479 : BUFRAM 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDS2R_STOP_ADDR_W                                                 13U
 #define LRFDS2R_STOP_ADDR_M                                         0x00001FFFU
 #define LRFDS2R_STOP_ADDR_S                                                  0U
@@ -185,24 +152,24 @@
 // Register: LRFDS2R_O_STAT
 //
 //*****************************************************************************
-// Field: [27:16] ADDRCNT 
+// Field: [27:16] ADDRCNT
 //
-// Current address counter value 
-// ENUMs: 
-// ALLONES                  All the bits are 1 
-// ALLZEROS                 All the bits are 0 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ALLONES                  Internal. Only to be used through TI provided API.
+// ALLZEROS                 Internal. Only to be used through TI provided API.
 #define LRFDS2R_STAT_ADDRCNT_W                                              12U
 #define LRFDS2R_STAT_ADDRCNT_M                                      0x0FFF0000U
 #define LRFDS2R_STAT_ADDRCNT_S                                              16U
 #define LRFDS2R_STAT_ADDRCNT_ALLONES                                0x0FFF0000U
 #define LRFDS2R_STAT_ADDRCNT_ALLZEROS                               0x00000000U
 
-// Field:     [0] RUNNING 
+// Field:     [0] RUNNING
 //
-// S2R running status 
-// ENUMs: 
-// TRUE                     Running 
-// FALSE                    Not running 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// TRUE                     Internal. Only to be used through TI provided API.
+// FALSE                    Internal. Only to be used through TI provided API.
 #define LRFDS2R_STAT_RUNNING                                        0x00000001U
 #define LRFDS2R_STAT_RUNNING_M                                      0x00000001U
 #define LRFDS2R_STAT_RUNNING_S                                               0U
@@ -214,13 +181,12 @@
 // Register: LRFDS2R_O_TRIG
 //
 //*****************************************************************************
-// Field:     [0] TRIG 
+// Field:     [0] TRIG
 //
-// Trigger a new sample capture (or arm it if the trigger mode is trigger on 
-// event) 
-// ENUMs: 
-// ARM                      Trigger capture or arm module 
-// NO_EFFECT                No effect 
+// Internal. Only to be used through TI provided API.
+// ENUMs:
+// ARM                      Internal. Only to be used through TI provided API.
+// NO_EFFECT                Internal. Only to be used through TI provided API.
 #define LRFDS2R_TRIG_TRIG                                           0x00000001U
 #define LRFDS2R_TRIG_TRIG_M                                         0x00000001U
 #define LRFDS2R_TRIG_TRIG_S                                                  0U

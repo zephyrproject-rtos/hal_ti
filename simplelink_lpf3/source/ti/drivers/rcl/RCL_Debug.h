@@ -30,8 +30,8 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ti_drivers_RCL_Debug_h__include
-#define ti_drivers_RCL_Debug_h__include
+#ifndef ti_drivers_rcl_RCL_Debug__include
+#define ti_drivers_rcl_RCL_Debug__include
 
 
 
@@ -42,4 +42,4 @@
 extern void __attribute__((weak)) RCL_Debug_assertProxy(const char *expr, const char *file, int line);
 
 
-#endif /* ti_drivers_RCL_Debug_h__include */
+#endif /* ti_drivers_rcl_RCL_Debug__include */

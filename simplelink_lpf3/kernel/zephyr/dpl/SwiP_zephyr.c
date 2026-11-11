@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Texas Instruments Incorporated
+ * Copyright (c) 2024-2025, Texas Instruments Incorporated
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -8,13 +8,16 @@
 
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/dpl/SwiP.h>
+#include <inc/hw_ints.h>
+#include <ti/devices/DeviceFamily.h>
 
 #include "QueueP.h"
 
-/* Lowest priority interrupt for CC23X0 */
-#define INT_PRI_LEVEL7 0x000000C0
-
-#define NUMPRI 4
+#if DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX
+    #define INT_PRI_LEVEL_LOWEST INT_PRI_LEVEL15
+#elif DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X0
+    #define INT_PRI_LEVEL_LOWEST INT_PRI_LEVEL3
+#endif
 
 typedef enum
 {
@@ -59,13 +62,13 @@ static volatile uint32_t SwiP_currentTrigger;
 static volatile bool SwiP_schedulerRunning;
 static volatile bool SwiP_initialized = false;
 static HwiP_Struct SwiP_hwiStruct;
-static QueueP_Obj SwiP_readyList[NUMPRI];
+static QueueP_Obj SwiP_readyList[NUM_PRIORITY];
 
 /* don't call with n == 0 */
 static int maxbit(int n)
 {
-    int mask = 1 << (NUMPRI - 1);
-    int max  = NUMPRI - 1;
+    int mask = 1 << (NUM_PRIORITY - 1);
+    int max  = NUM_PRIORITY - 1;
 
     while (mask)
     {
@@ -106,7 +109,7 @@ SwiP_Handle SwiP_construct(SwiP_Struct *handle, SwiP_Fxn swiFxn, SwiP_Params *pa
 
         if (SwiP_initialized == false)
         {
-            for (i = 0; i < NUMPRI; i++)
+            for (i = 0; i < NUM_PRIORITY; i++)
             {
                 QueueP_init(&SwiP_readyList[i]);
             }
@@ -116,7 +119,7 @@ SwiP_Handle SwiP_construct(SwiP_Struct *handle, SwiP_Fxn swiFxn, SwiP_Params *pa
             SwiP_schedulerRunning = false;
 
             HwiP_Params_init(&hwiParams);
-            hwiParams.priority = INT_PRI_LEVEL7; // use the lowest priority
+            hwiParams.priority = INT_PRI_LEVEL_LOWEST; // use the lowest priority
             HwiP_construct(&SwiP_hwiStruct, HwiP_swiPIntNum, SwiP_handleHwi, &hwiParams);
 
             SwiP_initialized = true;
@@ -131,14 +134,14 @@ SwiP_Handle SwiP_construct(SwiP_Struct *handle, SwiP_Fxn swiFxn, SwiP_Params *pa
 
         if (params->priority == (~0))
         {
-            priority = NUMPRI - 1;
+            priority = NUM_PRIORITY - 1;
         }
         else
         {
             priority = params->priority;
         }
 
-        if (priority >= NUMPRI)
+        if (priority >= NUM_PRIORITY)
         {
             return NULL;
         }

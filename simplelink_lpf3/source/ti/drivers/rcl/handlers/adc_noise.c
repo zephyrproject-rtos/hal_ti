@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024, Texas Instruments Incorporated
+ * Copyright (c) 2023-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,9 +58,9 @@
 #define ADC_NOISE_SAMPLE_PTR ((uint32_t *)ADC_NOISE_SAMPLE_MEM)
 /* Start-address of PBE RAM in S2R address-space */
 #ifdef DeviceFamily_CC23X0R2
-#define ADC_NOISE_SAMPLE_MEM_S2R_START 1024
+#define ADC_NOISE_SAMPLE_MEM_S2R_START 1024U
 #else
-#define ADC_NOISE_SAMPLE_MEM_S2R_START 2048
+#define ADC_NOISE_SAMPLE_MEM_S2R_START 2048U
 #endif
 
 struct
@@ -82,7 +82,7 @@ RCL_Events RCL_Handler_ADC_Noise_getNoise(RCL_Command *cmd, LRF_Events lrfEvents
     RCL_CmdAdcNoiseGet *adcCmd = (RCL_CmdAdcNoiseGet *)cmd;
     RCL_Events rclEvents = {.value = 0};
 
-    if (rclEventsIn.setup != 0)
+    if (rclEventsIn.setup != 0U)
     {
         uint32_t earliestStartTime;
         RCL_CommandStatus startTimeStatus;
@@ -90,7 +90,7 @@ RCL_Events RCL_Handler_ADC_Noise_getNoise(RCL_Command *cmd, LRF_Events lrfEvents
         /* Verify that length is greater than 0, and does not exceed maximum.
          * A length of 0 is not handled by the S2R module, so abort here.
          */
-        if ((adcCmd->numWords == 0) || (adcCmd->numWords > RCL_ADC_NOISE_MAX_NUM_WORDS))
+        if ((adcCmd->numWords == 0U) || (adcCmd->numWords > RCL_ADC_NOISE_MAX_NUM_WORDS))
         {
             cmd->status = RCL_CommandStatus_Error_Param;
             rclEvents.lastCmdDone = 1;
@@ -99,6 +99,8 @@ RCL_Events RCL_Handler_ADC_Noise_getNoise(RCL_Command *cmd, LRF_Events lrfEvents
 
         /* Start by enabling refsys */
         earliestStartTime = LRF_enableSynthRefsys();
+        /* Make sure SWTCXO does not adjust clock while radio is running */
+        RCL_Hal_powerSetSwTcxoUpdateConstraint();
 
         /* Schedule new command start-time to wait for refsys */
         startTimeStatus = RCL_Scheduler_setStartStopTimeEarliestStart(cmd, earliestStartTime);
@@ -108,6 +110,8 @@ RCL_Events RCL_Handler_ADC_Noise_getNoise(RCL_Command *cmd, LRF_Events lrfEvents
             cmd->status = startTimeStatus;
             rclEvents.lastCmdDone = 1;
             LRF_disableSynthRefsys();
+            /* Allow SWTCXO again */
+            RCL_Hal_powerReleaseSwTcxoUpdateConstraint();
         }
         else
         {
@@ -124,9 +128,9 @@ RCL_Events RCL_Handler_ADC_Noise_getNoise(RCL_Command *cmd, LRF_Events lrfEvents
 
     if (cmd->status == RCL_CommandStatus_Active)
     {
-        if (rclEventsIn.timerStart != 0)
+        if (rclEventsIn.timerStart != 0U)
         {
-            if (adcNoiseHandlerState.synthRefsys != 0)
+            if (adcNoiseHandlerState.synthRefsys != 0U)
             {
                 /* Power up hardware */
                 RCL_Handler_Adc_Noise_powerUp();
@@ -134,17 +138,17 @@ RCL_Events RCL_Handler_ADC_Noise_getNoise(RCL_Command *cmd, LRF_Events lrfEvents
                 /* Configure S2R */
                 RCL_Handler_Adc_Noise_configureS2R(adcCmd->numWords);
 
-                Log_printf(RclCore, Log_VERBOSE, "RFE powered up. Configured S2R for %d words, buffer: 0x%x", adcCmd->numWords, adcCmd->output);
+                Log_printf(LogModule_RCL, Log_VERBOSE, "RCL_Handler_ADC_Noise_getNoise: RFE powered up. Configured S2R for %d words, buffer: 0x%x", adcCmd->numWords, adcCmd->output);
 
                 adcNoiseHandlerState.synthRefsys = 0;
                 adcNoiseHandlerState.powerUp = 1;
                 rclEvents.cmdStarted = 1;
             }
 
-            if (adcNoiseHandlerState.s2rConversion != 0)
+            if (adcNoiseHandlerState.s2rConversion != 0U)
             {
                 /* Make sure S2R is complete */
-                while (HWREG_READ_LRF(LRFDS2R_BASE + LRFDS2R_O_STAT) & LRFDS2R_STAT_RUNNING_M);
+                while ((HWREG_READ_LRF(LRFDS2R_BASE + LRFDS2R_O_STAT) & LRFDS2R_STAT_RUNNING_M) != 0U);
 
                 /* Power down hardware */
                 RCL_Handler_Adc_Noise_powerDown();
@@ -157,9 +161,9 @@ RCL_Events RCL_Handler_ADC_Noise_getNoise(RCL_Command *cmd, LRF_Events lrfEvents
                 else
                 {
                     /* Copy data from ADC_NOISE_SAMPLE_MEM to output buffer */
-                    memcpy(adcCmd->output, ADC_NOISE_SAMPLE_PTR, adcCmd->numWords * sizeof(uint32_t));
+                    (void) memcpy(adcCmd->output, ADC_NOISE_SAMPLE_PTR, adcCmd->numWords * sizeof(uint32_t));
                     /* Clear data from LRF RAM */
-                    memset(ADC_NOISE_SAMPLE_PTR, 0, adcCmd->numWords * sizeof(uint32_t));
+                    (void) memset(ADC_NOISE_SAMPLE_PTR, 0, adcCmd->numWords * sizeof(uint32_t));
                 }
 
                 /* Command is complete */
@@ -169,10 +173,10 @@ RCL_Events RCL_Handler_ADC_Noise_getNoise(RCL_Command *cmd, LRF_Events lrfEvents
             }
         }
 
-        if (lrfEvents.rfedone != 0)
+        if (lrfEvents.rfedone != 0U)
         {
             /* Hardware is powered up - proceed to start collecting samples */
-            if (adcNoiseHandlerState.powerUp != 0)
+            if (adcNoiseHandlerState.powerUp != 0U)
             {
                 RCL_CommandStatus startTimeStatus;
 
@@ -181,7 +185,7 @@ RCL_Events RCL_Handler_ADC_Noise_getNoise(RCL_Command *cmd, LRF_Events lrfEvents
                 /* Start RX */
                 HWREG_WRITE_LRF(LRFDPBE_BASE + LRFDPBE_O_RFEAPI) = 3;
                 /* Wait until RX is up and running */
-                while ((HWREG_READ_LRF(LRFDMDM_BASE + LRFDMDM_O_RFECMDIN) & 0x08) == 0);
+                while ((HWREG_READ_LRF(LRFDMDM_BASE + LRFDMDM_O_RFECMDIN) & 0x08U) == 0U);
 
                 /* Disable LNA and mixer clocks to reduce impact of any signal received on the antenna */
                 HWREG_WRITE_LRF(LRFDRFE_BASE + LRFDRFE_O_LNA) = HWREG_READ_LRF(LRFDRFE_BASE + LRFDRFE_O_LNA) & (~LRFDRFE_LNA_EN_M);
@@ -199,7 +203,7 @@ RCL_Events RCL_Handler_ADC_Noise_getNoise(RCL_Command *cmd, LRF_Events lrfEvents
                  * We wait for (words / 3) * 250 ns, as there is no need to sleep for too long.
                  * The handler will poll for the last few us before reading out the samples
                  */
-                startTimeStatus = RCL_Scheduler_setNewStartAbsTime(RCL_Scheduler_getCurrentTime() + adcCmd->numWords / 3, true);
+                startTimeStatus = RCL_Scheduler_setNewStartAbsTime(RCL_Scheduler_getCurrentTime() + adcCmd->numWords / 3U, true);
 
                 if (startTimeStatus >= RCL_CommandStatus_Finished)
                 {
@@ -239,7 +243,7 @@ static void RCL_Handler_Adc_Noise_configureS2R(uint32_t numWords)
     /* Set start-address of where to store samples */
     HWREG_WRITE_LRF(LRFDS2R_BASE + LRFDS2R_O_START) = ADC_NOISE_SAMPLE_MEM_S2R_START;
     /* Set stop-address */
-    HWREG_WRITE_LRF(LRFDS2R_BASE + LRFDS2R_O_STOP) = ADC_NOISE_SAMPLE_MEM_S2R_START + numWords - 1;
+    HWREG_WRITE_LRF(LRFDS2R_BASE + LRFDS2R_O_STOP) = ADC_NOISE_SAMPLE_MEM_S2R_START + numWords - 1U;
 }
 
 /*
@@ -259,7 +263,7 @@ static void RCL_Handler_Adc_Noise_powerUp(void)
     HWREG_WRITE_LRF(LRFDRFE_BASE + LRFDRFE_O_ENABLE) = (1 << LRFDRFE_ENABLE_TOPSM_S);
 
     /* Wait for boot done */
-    while(HWREG_READ_LRF(LRFDRFE_BASE + LRFDRFE_O_MSGBOX) != 4);
+    while(HWREG_READ_LRF(LRFDRFE_BASE + LRFDRFE_O_MSGBOX) != 4U);
 
     /* Clear message box */
     HWREG_WRITE_LRF(LRFDRFE_BASE + LRFDRFE_O_MSGBOX) = 0;
@@ -284,7 +288,7 @@ static void RCL_Handler_Adc_Noise_powerDown(void)
     HWREG_WRITE_LRF(LRFDPBE_BASE + LRFDPBE_O_RFEAPI) = 1;
 
     /* Wait until radio stops */
-    while (HWREG_READ_LRF(LRFDPBE_BASE + LRFDPBE_O_RFEMSGBOX) == 0);
+    while (HWREG_READ_LRF(LRFDPBE_BASE + LRFDPBE_O_RFEMSGBOX) == 0U);
 
     /* Clear message box */
     HWREG_WRITE_LRF(LRFDRFE_BASE + LRFDRFE_O_MSGBOX) = 0;
@@ -292,7 +296,7 @@ static void RCL_Handler_Adc_Noise_powerDown(void)
     HWREG_WRITE_LRF(LRFDPBE_BASE + LRFDPBE_O_RFEAPI) = 5;
 
     /* Wait until radio stops */
-    while (HWREG_READ_LRF(LRFDPBE_BASE + LRFDPBE_O_RFEMSGBOX) == 0);
+    while (HWREG_READ_LRF(LRFDPBE_BASE + LRFDPBE_O_RFEMSGBOX) == 0U);
 
     /* Disable S2R module */
     HWREG_WRITE_LRF(LRFDS2R_BASE + LRFDS2R_O_CFG) = 0;
@@ -313,4 +317,6 @@ static void RCL_Handler_Adc_Noise_powerDown(void)
 
     /* Disable refsys */
     LRF_disableSynthRefsys();
+    /* Allow SWTCXO again */
+    RCL_Hal_powerReleaseSwTcxoUpdateConstraint();
 }
