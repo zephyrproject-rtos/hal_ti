@@ -1,0 +1,1 @@
+../../cc13x2_cc26x2/inc/hw_aux_timer2.h
