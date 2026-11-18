@@ -1,0 +1,501 @@
+diff -Naur openssl-1.0.0c/Makefile openssl_hagai/Makefile
+--- openssl-1.0.0c/Makefile	2010-12-02 20:39:03.000000000 +0200
++++ openssl_hagai/Makefile	2011-04-30 23:39:00.000000000 +0300
+@@ -59,16 +59,17 @@
+ # equal 4.
+ # PKCS1_CHECK - pkcs1 tests.
+ 
+-CC= cc
++CROSS_COMPILE=arm-none-linux-gnueabi-
++CC= $(CROSS_COMPILE)gcc
+ CFLAG= -O
+ DEPFLAG= -DOPENSSL_NO_GMP -DOPENSSL_NO_JPAKE -DOPENSSL_NO_MD2 -DOPENSSL_NO_RC5 -DOPENSSL_NO_RFC3779 -DOPENSSL_NO_STORE
+ PEX_LIBS= 
+ EX_LIBS= 
+ EXE_EXT= 
+ ARFLAGS= 
+-AR= ar $(ARFLAGS) r
+-RANLIB= /usr/bin/ranlib
+-NM= nm
++AR= $(CROSS_COMPILE)ar $(ARFLAGS) r
++RANLIB= $(CROSS_COMPILE)ranlib
++NM= $(CROSS_COMPILE)nm
+ PERL= /usr/bin/perl
+ TAR= tar
+ TARFLAGS= --no-recursion
+diff -Naur openssl-1.0.0c/include/openssl/ssl.h openssl_hagai/include/openssl/ssl.h
+--- openssl-1.0.0c/include/openssl/ssl.h	2010-01-06 19:37:38.000000000 +0200
++++ openssl_hagai/include/openssl/ssl.h	2011-05-01 17:35:25.000000000 +0300
+@@ -355,6 +355,7 @@
+  * 'struct ssl_st *' function parameters used to prototype callbacks
+  * in SSL_CTX. */
+ typedef struct ssl_st *ssl_crock_st;
++typedef struct tls_extension_st TLS_EXTENSION;
+ typedef struct tls_session_ticket_ext_st TLS_SESSION_TICKET_EXT;
+ 
+ /* used to hold info on the particular ciphers used */
+@@ -1128,6 +1129,16 @@
+ 	int client_version;	/* what was passed, used for
+ 				 * SSLv3/TLS rollback check */
+ 	unsigned int max_send_fragment;
++	
++	/* TLS externsions */
++ 	TLS_EXTENSION *tls_extension;
++ 	int (*tls_extension_cb)(SSL *s, TLS_EXTENSION *tls_ext, void *arg);
++ 	void *tls_extension_cb_arg;
++ 
++ 	/* TLS pre-shared secret session resumption */
++ 	tls_session_secret_cb_fn tls_session_secret_cb;
++ 	void *tls_session_secret_cb_arg;
++	
+ #ifndef OPENSSL_NO_TLSEXT
+ 	/* TLS extension debug callback */
+ 	void (*tlsext_debug_cb)(SSL *s, int client_server, int type,
+@@ -1172,10 +1183,11 @@
+ 	tls_session_ticket_ext_cb_fn tls_session_ticket_ext_cb;
+ 	void *tls_session_ticket_ext_cb_arg;
+ 
++#if 0
+ 	/* TLS pre-shared secret session resumption */
+ 	tls_session_secret_cb_fn tls_session_secret_cb;
+ 	void *tls_session_secret_cb_arg;
+-
++#endif
+ 	SSL_CTX * initial_ctx; /* initial ctx, used to store sessions */
+ #define session_ctx initial_ctx
+ #else
+@@ -1798,6 +1810,8 @@
+ #endif
+ 
+ /* TLS extensions functions */
++int SSL_set_hello_extension(SSL *s, int ext_type, void *ext_data, int ext_len);
++int SSL_set_hello_extension_cb(SSL *s, int (*cb)(SSL *, TLS_EXTENSION *, void *), void *arg);
+ int SSL_set_session_ticket_ext(SSL *s, void *ext_data, int ext_len);
+ 
+ int SSL_set_session_ticket_ext_cb(SSL *s, tls_session_ticket_ext_cb_fn cb,
+@@ -2019,6 +2033,7 @@
+ #define SSL_F_TLS1_PRF					 284
+ #define SSL_F_TLS1_SETUP_KEY_BLOCK			 211
+ #define SSL_F_WRITE_PENDING				 212
++#define SSL_F_SSL_SET_HELLO_EXTENSION	 213
+ 
+ /* Reason codes. */
+ #define SSL_R_APP_DATA_IN_HANDSHAKE			 100
+diff -Naur openssl-1.0.0c/include/openssl/tls1.h openssl_hagai/include/openssl/tls1.h
+--- openssl-1.0.0c/include/openssl/tls1.h	2009-11-11 16:51:29.000000000 +0200
++++ openssl_hagai/include/openssl/tls1.h	2011-05-01 17:18:22.000000000 +0300
+@@ -519,6 +519,14 @@
+ #define TLS_MD_MASTER_SECRET_CONST    "\x6d\x61\x73\x74\x65\x72\x20\x73\x65\x63\x72\x65\x74"  /*master secret*/
+ #endif
+ 
++/* TLS extension struct */
++struct tls_extension_st
++{
++	unsigned short type;
++	unsigned short length;
++	void *data;
++};
++
+ /* TLS Session Ticket extension struct */
+ struct tls_session_ticket_ext_st
+ 	{
+diff -Naur openssl-1.0.0c/ssl/Makefile openssl_hagai/ssl/Makefile
+--- openssl-1.0.0c/ssl/Makefile	2010-12-02 20:26:12.000000000 +0200
++++ openssl_hagai/ssl/Makefile	2011-05-01 17:20:48.000000000 +0300
+@@ -24,7 +24,7 @@
+ 	s2_meth.c   s2_srvr.c s2_clnt.c  s2_lib.c  s2_enc.c s2_pkt.c \
+ 	s3_meth.c   s3_srvr.c s3_clnt.c  s3_lib.c  s3_enc.c s3_pkt.c s3_both.c \
+ 	s23_meth.c s23_srvr.c s23_clnt.c s23_lib.c          s23_pkt.c \
+-	t1_meth.c   t1_srvr.c t1_clnt.c  t1_lib.c  t1_enc.c \
++	t1_meth.c   t1_srvr.c t1_clnt.c  t1_lib.c  t1_enc.c  t1_ext.c \
+ 	d1_meth.c   d1_srvr.c d1_clnt.c  d1_lib.c  d1_pkt.c \
+ 	d1_both.c d1_enc.c \
+ 	ssl_lib.c ssl_err2.c ssl_cert.c ssl_sess.c \
+@@ -35,7 +35,7 @@
+ 	s2_meth.o  s2_srvr.o  s2_clnt.o  s2_lib.o  s2_enc.o s2_pkt.o \
+ 	s3_meth.o  s3_srvr.o  s3_clnt.o  s3_lib.o  s3_enc.o s3_pkt.o s3_both.o \
+ 	s23_meth.o s23_srvr.o s23_clnt.o s23_lib.o          s23_pkt.o \
+-	t1_meth.o   t1_srvr.o t1_clnt.o  t1_lib.o  t1_enc.o \
++	t1_meth.o   t1_srvr.o t1_clnt.o  t1_lib.o  t1_enc.o  t1_ext.o \
+ 	d1_meth.o   d1_srvr.o d1_clnt.o  d1_lib.o  d1_pkt.o \
+ 	d1_both.o d1_enc.o \
+ 	ssl_lib.o ssl_err2.o ssl_cert.o ssl_sess.o \
+@@ -973,3 +973,4 @@
+ t1_srvr.o: ../include/openssl/symhacks.h ../include/openssl/tls1.h
+ t1_srvr.o: ../include/openssl/x509.h ../include/openssl/x509_vfy.h ssl_locl.h
+ t1_srvr.o: t1_srvr.c
++t1_ext.o: t1_ext.c ssl_locl.h
+diff -Naur openssl-1.0.0c/ssl/s3_clnt.c openssl_hagai/ssl/s3_clnt.c
+--- openssl-1.0.0c/ssl/s3_clnt.c	2010-12-02 20:24:54.000000000 +0200
++++ openssl_hagai/ssl/s3_clnt.c	2011-05-01 17:24:58.000000000 +0300
+@@ -689,7 +689,22 @@
+ #endif
+ 		*(p++)=0; /* Add the NULL method */
+ 
+-#ifndef OPENSSL_NO_TLSEXT
++		/* send client hello extensions if any */
++		if (s->version >= TLS1_VERSION && s->tls_extension)
++		{
++			// set the total extensions length
++			s2n(s->tls_extension->length + 4, p);
++
++			// put the extensions with type and length
++			s2n(s->tls_extension->type, p);
++			s2n(s->tls_extension->length, p);
++			
++			memcpy(p, s->tls_extension->data, s->tls_extension->length);
++			p+=s->tls_extension->length;
++		}
++
++#if 0
++#	ifndef OPENSSL_NO_TLSEXT
+ 		/* TLS extensions*/
+ 		if (ssl_prepare_clienthello_tlsext(s) <= 0)
+ 			{
+@@ -701,6 +716,7 @@
+ 			SSLerr(SSL_F_SSL3_CLIENT_HELLO,ERR_R_INTERNAL_ERROR);
+ 			goto err;
+ 			}
++#	endif
+ #endif
+ 		
+ 		l=(p-d);
+@@ -725,7 +741,7 @@
+ 	STACK_OF(SSL_CIPHER) *sk;
+ 	const SSL_CIPHER *c;
+ 	unsigned char *p,*d;
+-	int i,al,ok;
++	int i,al,ok,pre_shared;
+ 	unsigned int j;
+ 	long n;
+ #ifndef OPENSSL_NO_COMP
+@@ -792,7 +808,25 @@
+ 		goto f_err;
+ 		}
+ 
+-#ifndef OPENSSL_NO_TLSEXT
++	/* check if we want to resume the session based on external pre-shared secret */
++	pre_shared = 0;
++	if (s->version >= TLS1_VERSION && s->tls_session_secret_cb)
++	{
++		SSL_CIPHER *pref_cipher=NULL;
++		s->session->master_key_length=sizeof(s->session->master_key);
++		if (s->tls_session_secret_cb(s, s->session->master_key, &s->session->master_key_length,
++			NULL, &pref_cipher, s->tls_session_secret_cb_arg))
++		{
++			s->hit=1;
++			s->session->cipher=pref_cipher ? pref_cipher : ssl_get_cipher_by_char(s,p+j);
++			s->session->session_id_length = j;
++			memcpy(s->session->session_id, p, j);
++			pre_shared = 1;
++		}
++	}
++	
++#if 0
++#	ifndef OPENSSL_NO_TLSEXT
+ 	/* check if we want to resume the session based on external pre-shared secret */
+ 	if (s->version >= TLS1_VERSION && s->tls_session_secret_cb)
+ 		{
+@@ -807,9 +841,10 @@
+ 				pref_cipher : ssl_get_cipher_by_char(s, p+j);
+ 			}
+ 		}
+-#endif /* OPENSSL_NO_TLSEXT */
++#	endif /* OPENSSL_NO_TLSEXT */
++#endif
+ 
+-	if (j != 0 && j == s->session->session_id_length
++	if ((pre_shared || j != 0) && j == s->session->session_id_length
+ 	    && memcmp(p,s->session->session_id,j) == 0)
+ 	    {
+ 	    if(s->sid_ctx_length != s->session->sid_ctx_length
+diff -Naur openssl-1.0.0c/ssl/s3_srvr.c openssl_hagai/ssl/s3_srvr.c
+--- openssl-1.0.0c/ssl/s3_srvr.c	2010-12-02 20:24:55.000000000 +0200
++++ openssl_hagai/ssl/s3_srvr.c	2011-05-01 17:26:57.000000000 +0300
+@@ -1038,7 +1038,78 @@
+ 		goto f_err;
+ 		}
+ 
+-#ifndef OPENSSL_NO_TLSEXT
++	/* Check for TLS client hello extension here */
++	if (p < (d+n) && s->version >= TLS1_VERSION)
++	{
++		if (s->tls_extension_cb)
++		{
++			TLS_EXTENSION tls_ext;
++			unsigned short ext_total_len;
++			
++			n2s(p, ext_total_len);
++			n2s(p, tls_ext.type);
++			n2s(p, tls_ext.length);
++
++			// sanity check in TLS extension len
++			if (tls_ext.length > (d+n) - p)
++			{
++				// just cut the lenth to packet border
++				tls_ext.length = (d+n) - p;
++			}
++
++			tls_ext.data = p;
++
++			// returns an alert code or 0
++			al = s->tls_extension_cb(s, &tls_ext, s->tls_extension_cb_arg);
++			if (al != 0)
++			{
++				SSLerr(SSL_F_SSL3_GET_CLIENT_HELLO,SSL_R_PEER_ERROR);
++				goto f_err;
++			}
++		}
++	}
++
++	/* Check if we want to use external pre-shared secret for this handshake */
++	/* for not reused session only */
++	if (!s->hit && s->version >= TLS1_VERSION && s->tls_session_secret_cb)
++	{
++		SSL_CIPHER *pref_cipher=NULL;
++
++		s->session->master_key_length=sizeof(s->session->master_key);
++		if(s->tls_session_secret_cb(s, s->session->master_key, &s->session->master_key_length, 
++			ciphers, &pref_cipher, s->tls_session_secret_cb_arg))
++		{
++			s->hit=1;
++			s->session->ciphers=ciphers;
++			s->session->verify_result=X509_V_OK;
++			
++			ciphers=NULL;
++			
++			/* check if some cipher was preferred by call back */
++			pref_cipher=pref_cipher ? pref_cipher : ssl3_choose_cipher(s, s->session->ciphers, SSL_get_ciphers(s));
++			if (pref_cipher == NULL)
++				{
++				al=SSL_AD_HANDSHAKE_FAILURE;
++				SSLerr(SSL_F_SSL3_GET_CLIENT_HELLO,SSL_R_NO_SHARED_CIPHER);
++				goto f_err;
++				}
++
++			s->session->cipher=pref_cipher;
++
++			if (s->cipher_list)
++				sk_SSL_CIPHER_free(s->cipher_list);
++
++			if (s->cipher_list_by_id)
++				sk_SSL_CIPHER_free(s->cipher_list_by_id);
++
++			s->cipher_list = sk_SSL_CIPHER_dup(s->session->ciphers);
++			s->cipher_list_by_id = sk_SSL_CIPHER_dup(s->session->ciphers);
++		}
++	}
++
++
++#if 0
++#	ifndef OPENSSL_NO_TLSEXT
+ 	/* TLS extensions*/
+ 	if (s->version >= SSL3_VERSION)
+ 		{
+@@ -1106,6 +1177,7 @@
+ 			s->cipher_list_by_id = sk_SSL_CIPHER_dup(s->session->ciphers);
+ 			}
+ 		}
++#	endif
+ #endif
+ 
+ 	/* Worst case, we will use the NULL compression, but if we have other
+diff -Naur openssl-1.0.0c/ssl/ssl.h openssl_hagai/ssl/ssl.h
+--- openssl-1.0.0c/ssl/ssl.h	2010-01-06 19:37:38.000000000 +0200
++++ openssl_hagai/ssl/ssl.h	2011-05-01 17:35:25.000000000 +0300
+@@ -355,6 +355,7 @@
+  * 'struct ssl_st *' function parameters used to prototype callbacks
+  * in SSL_CTX. */
+ typedef struct ssl_st *ssl_crock_st;
++typedef struct tls_extension_st TLS_EXTENSION;
+ typedef struct tls_session_ticket_ext_st TLS_SESSION_TICKET_EXT;
+ 
+ /* used to hold info on the particular ciphers used */
+@@ -1128,6 +1129,16 @@
+ 	int client_version;	/* what was passed, used for
+ 				 * SSLv3/TLS rollback check */
+ 	unsigned int max_send_fragment;
++	
++	/* TLS externsions */
++ 	TLS_EXTENSION *tls_extension;
++ 	int (*tls_extension_cb)(SSL *s, TLS_EXTENSION *tls_ext, void *arg);
++ 	void *tls_extension_cb_arg;
++ 
++ 	/* TLS pre-shared secret session resumption */
++ 	tls_session_secret_cb_fn tls_session_secret_cb;
++ 	void *tls_session_secret_cb_arg;
++	
+ #ifndef OPENSSL_NO_TLSEXT
+ 	/* TLS extension debug callback */
+ 	void (*tlsext_debug_cb)(SSL *s, int client_server, int type,
+@@ -1172,10 +1183,11 @@
+ 	tls_session_ticket_ext_cb_fn tls_session_ticket_ext_cb;
+ 	void *tls_session_ticket_ext_cb_arg;
+ 
++#if 0
+ 	/* TLS pre-shared secret session resumption */
+ 	tls_session_secret_cb_fn tls_session_secret_cb;
+ 	void *tls_session_secret_cb_arg;
+-
++#endif
+ 	SSL_CTX * initial_ctx; /* initial ctx, used to store sessions */
+ #define session_ctx initial_ctx
+ #else
+@@ -1798,6 +1810,8 @@
+ #endif
+ 
+ /* TLS extensions functions */
++int SSL_set_hello_extension(SSL *s, int ext_type, void *ext_data, int ext_len);
++int SSL_set_hello_extension_cb(SSL *s, int (*cb)(SSL *, TLS_EXTENSION *, void *), void *arg);
+ int SSL_set_session_ticket_ext(SSL *s, void *ext_data, int ext_len);
+ 
+ int SSL_set_session_ticket_ext_cb(SSL *s, tls_session_ticket_ext_cb_fn cb,
+@@ -2019,6 +2033,7 @@
+ #define SSL_F_TLS1_PRF					 284
+ #define SSL_F_TLS1_SETUP_KEY_BLOCK			 211
+ #define SSL_F_WRITE_PENDING				 212
++#define SSL_F_SSL_SET_HELLO_EXTENSION	 213
+ 
+ /* Reason codes. */
+ #define SSL_R_APP_DATA_IN_HANDSHAKE			 100
+diff -Naur openssl-1.0.0c/ssl/ssl_err.c openssl_hagai/ssl/ssl_err.c
+--- openssl-1.0.0c/ssl/ssl_err.c	2010-01-06 19:37:38.000000000 +0200
++++ openssl_hagai/ssl/ssl_err.c	2011-05-01 17:27:25.000000000 +0300
+@@ -274,6 +274,7 @@
+ {ERR_FUNC(SSL_F_TLS1_PRF),	"tls1_prf"},
+ {ERR_FUNC(SSL_F_TLS1_SETUP_KEY_BLOCK),	"TLS1_SETUP_KEY_BLOCK"},
+ {ERR_FUNC(SSL_F_WRITE_PENDING),	"WRITE_PENDING"},
++{ERR_FUNC(SSL_F_SSL_SET_HELLO_EXTENSION), "SSL_set_hello_extension"},
+ {0,NULL}
+ 	};
+ 
+diff -Naur openssl-1.0.0c/ssl/ssl_sess.c openssl_hagai/ssl/ssl_sess.c
+--- openssl-1.0.0c/ssl/ssl_sess.c	2010-02-01 18:49:42.000000000 +0200
++++ openssl_hagai/ssl/ssl_sess.c	2011-05-01 17:30:21.000000000 +0300
+@@ -839,7 +839,8 @@
+ 	return(s->session_timeout);
+ 	}
+ 
+-#ifndef OPENSSL_NO_TLSEXT
++#if 0
++#	ifndef OPENSSL_NO_TLSEXT
+ int SSL_set_session_secret_cb(SSL *s, int (*tls_session_secret_cb)(SSL *s, void *secret, int *secret_len,
+ 	STACK_OF(SSL_CIPHER) *peer_ciphers, SSL_CIPHER **cipher, void *arg), void *arg)
+ 	{
+@@ -892,8 +893,19 @@
+ 
+ 	return 0;
+ 	}
++#	endif
+ #endif /* OPENSSL_NO_TLSEXT */
+ 
++int SSL_set_session_secret_cb(SSL *s, int (*tls_session_secret_cb)(SSL *s, void *secret, int *secret_len, 
++	STACK_OF(SSL_CIPHER) *peer_ciphers, SSL_CIPHER **cipher, void *arg), void *arg)
++{
++	if (s == NULL) return(0);
++	s->tls_session_secret_cb = tls_session_secret_cb;
++	s->tls_session_secret_cb_arg = arg;
++	return(1);
++}
++
++
+ typedef struct timeout_param_st
+ 	{
+ 	SSL_CTX *ctx;
+diff -Naur openssl-1.0.0c/ssl/t1_ext.c openssl_hagai/ssl/t1_ext.c
+--- openssl-1.0.0c/ssl/t1_ext.c	1970-01-01 02:00:00.000000000 +0200
++++ openssl_hagai/ssl/t1_ext.c	2011-05-01 17:21:30.000000000 +0300
+@@ -0,0 +1,50 @@
++
++
++#include <stdio.h>
++#include "ssl_locl.h"
++
++
++int SSL_set_hello_extension(SSL *s, int ext_type, void *ext_data, int ext_len)
++{
++	if(s->version >= TLS1_VERSION)
++	{
++		if(s->tls_extension)
++		{
++			OPENSSL_free(s->tls_extension);
++			s->tls_extension = NULL;
++		}
++
++		if(NULL != ext_data)
++		{
++			s->tls_extension = OPENSSL_malloc(sizeof(TLS_EXTENSION) + ext_len);
++			if(!s->tls_extension)
++			{
++				SSLerr(SSL_F_SSL_SET_HELLO_EXTENSION, ERR_R_MALLOC_FAILURE);
++				return 0;
++			}
++
++			s->tls_extension->type = ext_type;
++			s->tls_extension->length = ext_len;
++			s->tls_extension->data = s->tls_extension + 1;
++			memcpy(s->tls_extension->data, ext_data, ext_len);
++	}
++
++		return 1;
++	}
++
++	return 0;
++}
++
++int SSL_set_hello_extension_cb(SSL *s, int (*cb)(SSL *, TLS_EXTENSION *, void *), void *arg)
++{
++	if(s->version >= TLS1_VERSION)
++	{
++		s->tls_extension_cb = cb;
++		s->tls_extension_cb_arg = arg;
++
++		return 1;
++	}
++
++	return 0;
++}
++
+diff -Naur openssl-1.0.0c/ssl/t1_lib.c openssl_hagai/ssl/t1_lib.c
+--- openssl-1.0.0c/ssl/t1_lib.c	2010-11-25 14:28:28.000000000 +0200
++++ openssl_hagai/ssl/t1_lib.c	2011-05-01 17:32:00.000000000 +0300
+@@ -154,12 +154,19 @@
+ 
+ void tls1_free(SSL *s)
+ 	{
+-#ifndef OPENSSL_NO_TLSEXT
++		
++	if(s->tls_extension)
++	{
++		OPENSSL_free(s->tls_extension);
++	}
++#if 0
++#	ifndef OPENSSL_NO_TLSEXT
+ 	if (s->tlsext_session_ticket)
+ 		{
+ 		OPENSSL_free(s->tlsext_session_ticket);
+ 		}
+-#endif /* OPENSSL_NO_TLSEXT */
++#	endif /* OPENSSL_NO_TLSEXT */
++#endif
+ 	ssl3_free(s);
+ 	}
+ 
+diff -Naur openssl-1.0.0c/ssl/tls1.h openssl_hagai/ssl/tls1.h
+--- openssl-1.0.0c/ssl/tls1.h	2009-11-11 16:51:29.000000000 +0200
++++ openssl_hagai/ssl/tls1.h	2011-05-01 17:18:22.000000000 +0300
+@@ -519,6 +519,14 @@
+ #define TLS_MD_MASTER_SECRET_CONST    "\x6d\x61\x73\x74\x65\x72\x20\x73\x65\x63\x72\x65\x74"  /*master secret*/
+ #endif
+ 
++/* TLS extension struct */
++struct tls_extension_st
++{
++	unsigned short type;
++	unsigned short length;
++	void *data;
++};
++
+ /* TLS Session Ticket extension struct */
+ struct tls_session_ticket_ext_st
+ 	{
