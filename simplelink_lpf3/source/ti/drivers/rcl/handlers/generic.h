@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, Texas Instruments Incorporated
+ * Copyright (c) 2021-2026, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,8 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ti_drivers_RCL_handlers_generic_h__include
-#define ti_drivers_RCL_handlers_generic_h__include
+#ifndef ti_drivers_rcl_handlers_generic__include
+#define ti_drivers_rcl_handlers_generic__include
 
 #include <stdint.h>
 #include <ti/drivers/rcl/RCL_Command.h>
@@ -43,8 +43,8 @@ RCL_Events RCL_Handler_Generic_Tx(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Ev
 RCL_Events RCL_Handler_Generic_TxRepeat(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
 RCL_Events RCL_Handler_Generic_TxTest(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
 RCL_Events RCL_Handler_Generic_Rx(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
-RCL_Events RCL_Handler_Generic_PbeOperation(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
+RCL_Events RCL_Handler_Generic_LrfOperation(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
 RCL_Events RCL_Handler_Nesb_Ptx(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
 RCL_Events RCL_Handler_Nesb_Prx(RCL_Command *cmd, LRF_Events lrfEvents, RCL_Events rclEventsIn);
 
-#endif // ti_drivers_RCL_handlers_ble5_h__include
+#endif /* ti_drivers_rcl_handlers_generic__include */

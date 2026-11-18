@@ -1,5 +1,5 @@
 /******************************************************************************
-*  Copyright (c) 2021-2023 Texas Instruments Incorporated. All rights reserved.
+*  Copyright (c) 2021-2025 Texas Instruments Incorporated. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions are met:
@@ -31,10 +31,8 @@
 *
 *  \brief      Customer Configuration (CCFG) header file.
 ******************************************************************************/
-
 #ifndef __HW_CCFG_H__
 #define __HW_CCFG_H__
-
 #include <stdint.h>
 #include "hw_device.h"
 
@@ -47,15 +45,15 @@ typedef struct {
     // Bootloader/application configuration
     struct {    // [0]: length 16B
         // Pointer to user bootloader vector table
-        void* pBldrVtor;
-            #define CCFG_BC_PBLDR_USE_FCFG ((void*)0xFFFFFFF0)
-            #define XCFG_BC_PBLDR_FORBID   ((void*)0xFFFFFFFC)
-            #define XCFG_BC_PBLDR_UNDEF    ((void*)0xFFFFFFFF)
+        void *pBldrVtor;
+            #define CCFG_BC_PBLDR_USE_FCFG ((void*)((uint32_t*)0xFFFFFFF0U))
+            #define XCFG_BC_PBLDR_FORBID   ((void*)((uint32_t*)0xFFFFFFFCU))
+            #define XCFG_BC_PBLDR_UNDEF    ((void*)((uint32_t*)0xFFFFFFFFU))
             #define CCFG_BC_PBLDR_VALID(x) ((x) < CCFG_BC_PBLDR_USE_FCFG)
         // Parameter passed to bootloader
         union {
             uint32_t val32;
-                #define CCFG_BC_BLDRCFG_UNDEF   0xFFFFFFFF
+                #define CCFG_BC_BLDRCFG_UNDEF   0xFFFFFFFFU
             // Serial ROM bootloader parameters (also used in FCFG.h)
             struct serialRomBldrParam_struct {
                 uint32_t bldrEnabled        : 1;
@@ -65,7 +63,7 @@ typedef struct {
                     #define XCFG_BC_PINTRIG_DIS  0
                     #define XCFG_BC_PINTRIG_EN   1
                 uint32_t pinTriggerLevel   : 1;
-                    #define XCFG_BC_PINTRIG_LEVEL_LO  0
+                    #define XCFG_BC_PINTRIG_LEVEL_LO  0U
                     #define XCFG_BC_PINTRIG_LEVEL_HI  1
                 uint32_t res0 : 13;
                 uint32_t pinTriggerDio : 6;
@@ -76,24 +74,18 @@ typedef struct {
             } serialRomBldrParamStruct;
         } bldrParam;
         // Pointer to application VTOR table
-        void* pAppVtor;
-            #define CCFG_BC_PAPP_NONE  ((void*)0xFFFFFFFF)
+        void *pAppVtor;
+            #define CCFG_BC_PAPP_NONE  ((void*)((uint32_t*)0xFFFFFFFFU))
         uint32_t crc32;
     } bootCfg;
 
-
-    // Paperspin options     [16]: length 8 B
-    // Defines peripheral/feature availability and accessible memory. Allows
-    // customer to target a paperspin device features on a superset device
-    // AND-combined with FCFG.hwOpts.
-    uint32_t hwOpts[2];
-
+    uint32_t res0[2];
 
     // Device permissions   [24]: length 4 B
     // This is maximally-restrictive combined with similar field in FCFG
     struct {
-        #define CCFG_PERMISSION_ALLOW  0xA
-        #define CCFG_PERMISSION_FORBID 0x0
+        #define CCFG_PERMISSION_ALLOW  0xAU
+        #define CCFG_PERMISSION_FORBID 0x0U
         // (all other value other than ALLOW are interpreted as FORBID)
         uint32_t allowReturnToFactory : 4;
         uint32_t allowFakeStby        : 4;
@@ -104,7 +96,6 @@ typedef struct {
         uint32_t allowEnergyTrace     : 4;
         uint32_t allowDebugPort       : 4;
     } permissions;
-
 
     // Miscellaneous fields         [28]: length 4B
     struct {
@@ -117,7 +108,6 @@ typedef struct {
         uint32_t saciTimeoutOverride : 1;
         uint32_t res0                : 28;
     } misc;
-
 
     // Flash protection     [32]: length 32 B
     // This is maximally-restrictive combined with similar field in FCFG
@@ -149,12 +139,11 @@ typedef struct {
         uint32_t res0[2];
     } flashProt;
 
-
     // Optional HW initialization copy-list   [64]: length x B
     // Copy list applied before user application is entered. May be used by customer/SYSCFG to
     // initialize hardware right before application is entered.
     // Also used to pad out CCFG to correct size
-    uint32_t hwInitCopyList[(FLASH_1T_SECTOR_SIZE / 4) - 61];
+    uint32_t hwInitCopyList[(FLASH_1T_SECTOR_SIZE / 4U) - 61U];
         // Simple macros to assist in initializing copy lists
         // NOTE: Addresses to CPYLIST_CPY must fulfill ((a&0x0FF00003)==0).
         //       The memory map ensures this for SRAM and peripherals.
@@ -167,11 +156,9 @@ typedef struct {
         #define CPYLST_JUMP(a)           (((uint32_t)(a)) + 2)
         #define CPYLST_CALL(a)           (((uint32_t)(a)) + 3)
 
-
-    // CRC across hwOpts through hwInitCopyList
+    // CRC of content after bootCfg through hwInitCopyList
     // [End-180]: length 4B
     uint32_t crc32;
-
 
     // User record (programmable also through separate SACI command), no dependencies in boot code
     // User record size is fixed at 128 B. Last word assumed to be CRC over first 124 B (optional)
@@ -193,14 +180,14 @@ typedef struct {
     struct {    // [End-48]: length 48B
         // Debug authorization requirements
         uint8_t authorization;
-            #define CCFG_DBGAUTH_REQPWD    0xA5
-            #define CCFG_DBGAUTH_DBGOPEN   0x5A
-            #define CCFG_DBGAUTH_DBGFORBID 0x00
+            #define CCFG_DBGAUTH_REQPWD     0xA5
+            #define CCFG_DBGAUTH_DBGOPEN    0x5A
+            #define CCFG_DBGAUTH_DBGFORBID  0x00
             // (and any other value)
         // Allow debugging of bootloader
         uint8_t allowBldr;
-            #define CCFG_DBGBLDR_ALLOW     0xA5
-            #define CCFG_DBGBLDR_FORBID    0x00
+            #define CCFG_DBGBLDR_ALLOW  0xA5
+            #define CCFG_DBGBLDR_FORBID 0x00
             // (and any other value)
         uint8_t res0[2];
         // 64b password ID value (may be used to calculate or look up debug password)
@@ -210,7 +197,6 @@ typedef struct {
         // CRC32 of previous fields in debugCfg
         uint32_t crc32;
     } debugCfg;
-
 } ccfg_t;
 
 

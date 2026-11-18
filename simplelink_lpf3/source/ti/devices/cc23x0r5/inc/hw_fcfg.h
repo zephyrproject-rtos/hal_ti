@@ -1,5 +1,5 @@
 /******************************************************************************
-*  Copyright (c) 2021-2023 Texas Instruments Incorporated. All rights reserved.
+*  Copyright (c) 2021-2025 Texas Instruments Incorporated. All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
 *  modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,6 @@
 ******************************************************************************/
 #ifndef __HW_FCFG_H__
 #define __HW_FCFG_H__
-
 #include <stdint.h>
 #include "hw_device.h"
 #include "hw_ccfg.h"
@@ -61,8 +60,7 @@ typedef struct {
                 struct {
                     uint16_t coarse : 5;
                     uint16_t cap : 4;
-                    uint16_t bias : 5;
-                    uint16_t res0 : 2;
+                    uint16_t res0 : 7;
                 };
             } initial;
             union {
@@ -70,8 +68,7 @@ typedef struct {
                 struct {
                     uint16_t coarse : 5;
                     uint16_t cap : 4;
-                    uint16_t bias : 5;
-                    uint16_t res0 : 2;
+                    uint16_t res0 : 7;
                 };
             } final;
         } hfoscTrim;
@@ -113,15 +110,15 @@ typedef struct {
             union {
                 uint32_t val32;
                 struct {
-                    uint32_t vddr   : 5;
-                    uint32_t vddrsl : 5;
-                    uint32_t iptat  : 2;
-                    uint32_t bod    : 4;
-                    uint32_t udig   : 4;
-                    uint32_t dig    : 4;
-                    uint32_t coarse : 4;
-                    uint32_t delta  : 3;
-                    uint32_t res0   : 1;
+                    uint32_t vddr               : 5;
+                    uint32_t vddrsl             : 5;
+                    uint32_t iptat              : 2;
+                    uint32_t bod                : 4;
+                    uint32_t udig               : 4;
+                    uint32_t dig                : 4;
+                    uint32_t coarse             : 4;
+                    uint32_t delta              : 3;
+                    uint32_t res0               : 1;
                 };
             } timmute1;
         } pmuTrim;
@@ -141,16 +138,14 @@ typedef struct {
         uint32_t crc32;
     } criticalTrim;
 
-    // Paperspin options    [64]: length 8 B
-    // Defines peripheral/feature availability and accessible memory
-    uint32_t hwOpts[2];
+    uint32_t res0[2];
 
 
     // Device permissions   [72]: length 4 B
     // This is maximally-restrictive combined with similar field in CCFG
     struct {
-        #define FCFG_PERMISSION_ALLOW  0xA
-        #define FCFG_PERMISSION_FORBID 0x0
+        #define FCFG_PERMISSION_ALLOW  0xAU
+        #define FCFG_PERMISSION_FORBID 0x0U
         // (all other value other than ALLOW are interpreted as FORBID)
         uint32_t allowReturnToFactory : 4;
         uint32_t allowFakeStby        : 4;
@@ -162,19 +157,17 @@ typedef struct {
         uint32_t allowDebugPort       : 4;
     } permissions;
 
-
     // Miscellaneous fields
     // [76]: length 4B
     struct {
         // SACI timeout is infinite when 0, else (2^saciTimeoutExp)*64 ms
         // Ccfg timeout applied instead if CCfg.saciTimeoutOverride==1
-        uint32_t saciTimeoutExp  : 3;
+        uint32_t saciTimeoutExp     : 3;
             #define XCFG_MISC_SACITOEXP_8SEC        7
             #define XCFG_MISC_SACITOEXP_1SEC        4
             #define XCFG_MISC_SACITOEXP_INFINITE    0
-        uint32_t res0            : 29;
+        uint32_t res0               : 29;
     } misc;
-
 
     // Device information
     struct {    // [80]: length 48B
@@ -207,7 +200,6 @@ typedef struct {
             };
         } partId;
     } deviceInfo;
-
 
     // Flash protection     [128]: length 16 B
     // This is maximally-restrictive combined with similar field in CCFG
@@ -247,7 +239,6 @@ typedef struct {
         #define CPYLST_CPYFULLADDR(a)    (((uint32_t)(a)) + 1)
         #define CPYLST_JUMP(a)           (((uint32_t)(a)) + 2)
         #define CPYLST_CALL(a)           (((uint32_t)(a)) + 3)
-
 
     // *******************************************************
     // ***        Extended Application Trims               ***
@@ -303,15 +294,13 @@ typedef struct {
         } cc23x0r5;
     } appTrimsExt;
 
-
     // *******************************************************
     // ***            Application Trims                    ***
     // *******************************************************
     // Application trims (individual fields are not referenced
     // by ROM). Note that the Application Trims section is
     // copied to SRAM by the SACI command SC_MODE_REQ_TOOLS_CLIENT.
-    // [End-208]: length 128B for non BLE High devices
-    // [End-256]: length 128B for BLE High devices
+    // [End-208]: length 128B
     struct appTrims_struct {
         // Revision of appTrims (defines layout)
         uint8_t revision;
@@ -559,13 +548,13 @@ typedef struct {
                 uint16_t auxDiodeGnd;
                 uint16_t auxDiodeVoltage;
             } auxDiodeCal125C;
-            // Values for LFOSC performance
+            // Misc values
             struct {    // length: 4B
-                uint32_t ppmRtn         : 8;
-                uint32_t ppmTempMid     : 8;
-                uint32_t ppmTempExt     : 8;
-                uint32_t res            : 8;
-            } lfOscParams;
+                uint32_t lfoscPpmRtn         : 8;
+                uint32_t lfoscPpmTempMid     : 8;
+                uint32_t lfoscPpmTempExt     : 8;
+                uint32_t batMonTempSenseDelta125 : 8;
+            } misc0;
             // Unused space
             uint8_t res2[16];
             // ADC offset for four modes
@@ -610,23 +599,21 @@ typedef struct {
     // Bootloader configuration
     struct {    // [End-80]: length 8B
         // Pointer to default bootloader VTOR table
-        void *pBldrVtor;
-            #define XCFG_BC_PBLDR_FORBID   ((void*)0xFFFFFFFC)
-            #define XCFG_BC_PBLDR_UNDEF    ((void*)0xFFFFFFFF)
+        const void *pBldrVtor;
+            #define XCFG_BC_PBLDR_FORBID   ((void*)((uint32_t*)0xFFFFFFFCU))
+            #define XCFG_BC_PBLDR_UNDEF    ((void*)((uint32_t*)0xFFFFFFFFU))
             #define FCFG_BC_PBLDR_VALID(x) ((x) < XCFG_BC_PBLDR_FORBID)
         // Parameter passed to bootloader
         union {
             uint32_t val32;
             // Serial ROM bootloader parameters (defined in CCFG.h)
-            serialRomBldrParam_t params;
+            serialRomBldrParam_t bldrParam;
         } bldrParam;
     } bootCfg;
-
 
     // Reserved/padding to get 16 B alignment
     // [End-72] length: 4B
     uint32_t res1;
-
 
     // CRC across hwOpts through res1 (after criticalTrim to here)
     // [End-68]: length 4B

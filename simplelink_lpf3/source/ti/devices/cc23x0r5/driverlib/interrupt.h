@@ -3,7 +3,7 @@
  *
  *  Description:    Defines and prototypes for the NVIC Interrupt Controller
  *
- *  Copyright (c) 2022-2023 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2025 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -201,10 +201,10 @@ extern void IntUnregister(uint32_t intNum);
 //!   - INT_LGPT3_COMB
 //!
 //! \param priority specifies the priority of the interrupt.
-//! - \ref INT_PRI_LEVEL0 : Highest priority.
-//! - \ref INT_PRI_LEVEL1
-//! - \ref INT_PRI_LEVEL2
-//! - \ref INT_PRI_LEVEL3 : Lowest priority.
+//! - INT_PRI_LEVEL0 : Highest priority.
+//! - INT_PRI_LEVEL1
+//! - INT_PRI_LEVEL2
+//! - INT_PRI_LEVEL3 : Lowest priority.
 //!
 //! \return None
 //
@@ -227,10 +227,10 @@ extern void IntSetPriority(uint32_t intNum, uint8_t priority);
 //! - See \ref IntSetPriority() for list of valid arguments.
 //!
 //! \return Returns the interrupt priority:
-//! - \ref INT_PRI_LEVEL0 : Highest priority.
-//! - \ref INT_PRI_LEVEL1
-//! - \ref INT_PRI_LEVEL2
-//! - \ref INT_PRI_LEVEL3 : Lowest priority.
+//! - INT_PRI_LEVEL0 : Highest priority.
+//! - INT_PRI_LEVEL1
+//! - INT_PRI_LEVEL2
+//! - INT_PRI_LEVEL3 : Lowest priority.
 //
 //*****************************************************************************
 extern int32_t IntGetPriority(uint32_t intNum);

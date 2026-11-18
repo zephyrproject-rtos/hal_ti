@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, Texas Instruments Incorporated
+ * Copyright (c) 2020-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,12 +30,11 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ti_drivers_RCL_Buffers_h__include
-#define ti_drivers_RCL_Buffers_h__include
+#ifndef ti_drivers_rcl_RCL_Buffer__include
+#define ti_drivers_rcl_RCL_Buffer__include
 
 #include <stdint.h>
 #include <ti/drivers/utils/List.h>
-
 
 /**
  *  @brief Buffer state
@@ -108,13 +107,13 @@ struct RCL_MultiBuffer_ListInfo_s {
 /**
  *  @brief Number of 32-bit words needed to hold a given number of bytes (rounded up)
  */
-#define RCL_Buffer_bytesToWords(byteLen) (((byteLen) + sizeof(uint32_t) - 1) / sizeof(uint32_t))
+#define RCL_Buffer_bytesToWords(byteLen) (((uint32_t)(byteLen) + sizeof(uint32_t) - 1U) / sizeof(uint32_t))
 
 /**
  *  @brief Total length of a data entry in bytes based on length field of the entry
  */
 /* Include the data entry's length field and padding to uint32_t boundary */
-#define RCL_Buffer_DataEntry_paddedLen(len) (RCL_Buffer_bytesToWords((len) + sizeof(uint16_t)) * sizeof(uint32_t))
+#define RCL_Buffer_DataEntry_paddedLen(len) (RCL_Buffer_bytesToWords((uint32_t)(len) + sizeof(uint16_t)) * sizeof(uint32_t))
 
 /** @defgroup bufferApiFunctions Buffer APIs
  *  These functions are useful as part of the API to RCL
@@ -401,6 +400,24 @@ extern bool RCL_MultiBuffer_RxEntry_isLast(RCL_MultiBuffer_ListInfo *listInfo);
  *  @param  elem Multi buffer to place onto the end of the linked list
  */
 extern void RCL_MultiBuffer_put(List_List *list, RCL_MultiBuffer *elem);
+
+/**
+ *  @brief  Read partially received packet into buffer
+ *
+ * If a packet is under reception, bytes received so far may be copied to a data entry for
+ * inspection. Once the packet reception is finished, this function will not return any data, and
+ * the packet must be read from the receive buffer of the running command. The length field of the
+ * data entry will show the number of bytes currently available, which is usually less than the
+ * final value after packet reception is finished.
+ *
+ *  @param    dataEntry      Entry for storing data
+ *
+ *  @param    entrySize      Number of bytes available in entry, including header fields (should be a multiple of 4)
+ *
+ * @return                   Number of bytes read into entry, including header fields
+ *
+ */
+ size_t RCL_Buffer_readPartialRxBuffer(RCL_Buffer_DataEntry *dataEntry, size_t entrySize);
 /** @}
  */
 
@@ -483,9 +500,9 @@ static inline uint8_t *RCL_MultiBuffer_getNextWritableByte(RCL_MultiBuffer *curB
  */
 static inline void RCL_MultiBuffer_commitBytes(RCL_MultiBuffer *curBuffer, uint32_t numBytes)
 {
-    curBuffer->tailIndex += numBytes;
+    curBuffer->tailIndex += (uint16_t) numBytes;
 }
 /** @}
  */
 
-#endif
+#endif /* ti_drivers_rcl_RCL_Buffer__include */

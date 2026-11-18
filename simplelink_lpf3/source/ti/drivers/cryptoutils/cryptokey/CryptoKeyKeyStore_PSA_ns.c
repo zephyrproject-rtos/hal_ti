@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Texas Instruments Incorporated - http://www.ti.com
+ * Copyright (c) 2022-2025, Texas Instruments Incorporated - http://www.ti.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 #include <stdint.h>
 
-#include <ti/drivers/crypto/CryptoCC26X4_ns.h>
+#include <ti/drivers/crypto/CryptoTFM_ns.h>
 
 /* CryptoKey headers */
 #include <ti/drivers/cryptoutils/cryptokey/CryptoKeyKeyStore_PSA.h>
@@ -74,7 +74,7 @@ static int_fast16_t KeyStore_PSA_exportCommon(KeyStore_PSA_KeyFileId key,
      * if statement returns from secure driver can be ignored by the non-secure driver,
      * the secure KeyStore driver returns are handled by the application using outvecs (ret)
      */
-    (void)CryptoPSACC26X4_call(type, invecs, outvecs);
+    (void)CryptoTFM_ns_call(type, invecs, outvecs);
 
     return ret;
 }
@@ -120,7 +120,7 @@ static int_fast16_t KeyStore_PSA_destroyCommon(KeyStore_PSA_KeyFileId key, int32
      * Return value can be ignored since ret (in outvecs) is initialized to KEYSTORE_PSA_STATUS_GENERIC_ERROR and
      * will only be updated if the PSA call is successful.
      */
-    (void)CryptoPSACC26X4_call(type, invecs, outvecs);
+    (void)CryptoTFM_ns_call(type, invecs, outvecs);
 
     return ret;
 }
@@ -161,7 +161,7 @@ int_fast16_t KeyStore_PSA_importKey(KeyStore_PSA_KeyAttributes *attributes,
      * Return value can be ignored since ret (in outvecs) is initialized to KEYSTORE_PSA_STATUS_GENERIC_ERROR and
      * will only be updated if the PSA call is successful.
      */
-    (void)CryptoPSACC26X4_call(KEYSTORE_PSA_S_MSG_TYPE_IMPORT_KEY, invecs, outvecs);
+    (void)CryptoTFM_ns_call(KEYSTORE_PSA_S_MSG_TYPE_IMPORT_KEY, invecs, outvecs);
 
     return ret;
 }
@@ -197,7 +197,7 @@ int_fast16_t KeyStore_PSA_getKeyAttributes(KeyStore_PSA_KeyFileId key, KeyStore_
      * Return value can be ignored since ret (in outvecs) is initialized to KEYSTORE_PSA_STATUS_GENERIC_ERROR and
      * will only be updated if the PSA call is successful.
      */
-    (void)CryptoPSACC26X4_call(KEYSTORE_PSA_S_MSG_TYPE_GET_KEY_ATTRIBUTES, invecs, outvecs);
+    (void)CryptoTFM_ns_call(KEYSTORE_PSA_S_MSG_TYPE_GET_KEY_ATTRIBUTES, invecs, outvecs);
 
     return ret;
 }
@@ -220,5 +220,5 @@ void KeyStore_PSA_resetKeyAttributes(KeyStore_PSA_KeyAttributes *attributes)
      * Return value can be ignored since ret (in outvecs) is initialized to KEYSTORE_PSA_STATUS_GENERIC_ERROR and
      * will only be updated if the PSA call is successful.
      */
-    (void)CryptoPSACC26X4_call(KEYSTORE_PSA_S_MSG_TYPE_RESET_KEY_ATTRIBUTES, invecs, outvecs);
+    (void)CryptoTFM_ns_call(KEYSTORE_PSA_S_MSG_TYPE_RESET_KEY_ATTRIBUTES, invecs, outvecs);
 }

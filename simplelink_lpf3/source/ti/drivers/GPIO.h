@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2024, Texas Instruments Incorporated
+ * Copyright (c) 2015-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -163,7 +163,7 @@
  *  //
  *  // Array of Pin configurations
  *  //
- * GPIO_PinConfig gpioPinConfigs[31] = {
+ * GPIO_PinConfig gpioPinConfigs[GPIO_NUMBER_OF_CONFIGS] = {
  *     GPIO_CFG_INPUT, // DIO_0
  *     GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_NONE, // CONFIG_GPIO_LP19
  *     GPIO_CFG_INPUT, // DIO_2
@@ -199,7 +199,7 @@
  *  //
  *  // Array of callback function pointers
  *  //
- *  GPIO_CallbackFxn gpioCallbackFunctions[31] = {
+ *  GPIO_CallbackFxn gpioCallbackFunctions[GPIO_NUMBER_OF_CONFIGS] = {
  *      NULL, // DIO_0
  *      NULL, // DIO_1
  *      myGpioCallback, // CONFIG_GPIO_LP19
@@ -266,10 +266,15 @@
      DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2 || \
      DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4)
     #include <ti/drivers/gpio/GPIOCC26XX.h>
-#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X0 || DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X0 || DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1 || \
+       DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
     #include <ti/drivers/gpio/GPIOLPF3.h>
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC283X)
+    #include <ti/drivers/gpio/GPIOLPF4.h>
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
     #include <ti/drivers/gpio/GPIOWFF3.h>
+#else
+    #error The GPIO driver does not support the selected device family
 #endif
 
 /* Generic functions for converting pin indexes to and from masks. Internal use

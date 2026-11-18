@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Texas Instruments Incorporated
+ * Copyright (c) 2020-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@
 /*
  *  ======== Temperature_getThresholdHigh ========
  */
-int16_t Temperature_getThresholdHigh(Temperature_NotifyObj *notifyObject)
+int16_t Temperature_getThresholdHigh(const Temperature_NotifyObj *notifyObject)
 {
     return notifyObject->thresholdHigh;
 }
@@ -51,7 +51,7 @@ int16_t Temperature_getThresholdHigh(Temperature_NotifyObj *notifyObject)
 /*
  *  ======== Temperature_getThresholdLow ========
  */
-int16_t Temperature_getThresholdLow(Temperature_NotifyObj *notifyObject)
+int16_t Temperature_getThresholdLow(const Temperature_NotifyObj *notifyObject)
 {
     return notifyObject->thresholdLow;
 }
@@ -59,7 +59,9 @@ int16_t Temperature_getThresholdLow(Temperature_NotifyObj *notifyObject)
 /*
  *  ======== Temperature_getThresholdRange ========
  */
-void Temperature_getThresholdRange(Temperature_NotifyObj *notifyObject, int16_t *thresholdHigh, int16_t *thresholdLow)
+void Temperature_getThresholdRange(const Temperature_NotifyObj *notifyObject,
+                                   int16_t *thresholdHigh,
+                                   int16_t *thresholdLow)
 {
     *thresholdHigh = notifyObject->thresholdHigh;
     *thresholdLow  = notifyObject->thresholdLow;
@@ -68,7 +70,7 @@ void Temperature_getThresholdRange(Temperature_NotifyObj *notifyObject, int16_t 
 /*
  *  ======== Temperature_getClientArg ========
  */
-uintptr_t Temperature_getClientArg(Temperature_NotifyObj *notifyObject)
+uintptr_t Temperature_getClientArg(const Temperature_NotifyObj *notifyObject)
 {
     return notifyObject->clientArg;
 }
@@ -76,7 +78,7 @@ uintptr_t Temperature_getClientArg(Temperature_NotifyObj *notifyObject)
 /*
  *  ======== Temperature_getNotifyFxn ========
  */
-Temperature_NotifyFxn Temperature_getNotifyFxn(Temperature_NotifyObj *notifyObject)
+Temperature_NotifyFxn Temperature_getNotifyFxn(const Temperature_NotifyObj *notifyObject)
 {
     return notifyObject->notifyFxn;
 }
