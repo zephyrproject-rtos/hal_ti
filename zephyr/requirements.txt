@@ -1,0 +1,2 @@
+# Script used to build valid firmware images for LPF3 devices
+ti-simplelink-crc-tool >= 1.2.6
