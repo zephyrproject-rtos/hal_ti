@@ -1,2 +1,6 @@
 build:
   cmake: .
+package-managers:
+  pip:
+    requirement-files:
+      - zephyr/requirements.txt
