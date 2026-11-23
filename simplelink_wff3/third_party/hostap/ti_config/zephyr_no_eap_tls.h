@@ -1,0 +1,11 @@
+#undef EAP_TLS
+#undef EAP_TTLS
+#undef EAP_PEAP
+#undef EAP_FAST
+#undef EAP_TEAP
+#undef EAP_SERVER_TLS
+#undef EAP_SERVER_UNAUTH_TLS
+#undef EAP_SERVER_PEAP
+#undef EAP_SERVER_TTLS
+#undef EAP_SERVER_FAST
+#undef EAP_SERVER_TEAP

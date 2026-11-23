@@ -1,0 +1,140 @@
+/*
+ *  Copyright The Mbed TLS Contributors
+ *  Copyright (c) 2026 Texas Instruments Incorporated
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *  Modified by Texas Instruments to support SimpleLink device crypto hardware
+ *  drivers.
+ */
+
+/**
+ * @file ti_psa_crypto_mac_types.h
+ * @brief Type definitions for the TI PSA MAC driver context.
+ *
+ * Separated from ti_psa_crypto_mac.h to break circular include dependency
+ * with mbedTLS psa/crypto.h. See ti_psa_crypto_cipher_types.h for details.
+ */
+
+#ifndef TI_PSA_CRYPTO_MAC_TYPES_H
+#define TI_PSA_CRYPTO_MAC_TYPES_H
+
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#include <psa/crypto_types.h>
+#include <psa/crypto_sizes.h>
+#include <ti/drivers/cryptoutils/cryptokey/CryptoKey.h>
+#include <ti/devices/DeviceFamily.h>
+#if ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX) || \
+     (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1))
+    #include <ti/drivers/sha2/SHA2XXF3HSM.h>
+    #include <ti/drivers/aescmac/AESCMACXXF3.h>
+#elif ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2) || \
+       (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4))
+    #include <ti/drivers/sha2/SHA2CC26X2.h>
+    #include <ti/drivers/aescmac/AESCMACCC26XX.h>
+#else
+    #error "Device family not currently supported"
+#endif
+
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
+    #include <ti/drivers/SHA3.h>
+    #include <ti/drivers/sha3/SHA3XXF3HSM.h>
+#endif
+
+struct ti_psa_mac_operation_s
+{
+    union
+    {
+        struct
+        {
+            SHA2_Config sha2Config;
+#if ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX) || \
+     (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1))
+            SHA2XXF3HSM_Object sha2Object;
+#elif ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2) || \
+       (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4))
+            SHA2CC26X2_Object sha2Object;
+#endif
+        } sha2;
+        struct
+        {
+            AESCMAC_Config aescmacConfig;
+#if ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX) || \
+     (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1))
+            AESCMACXXF3_Object aescmacObject;
+#elif ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2) || \
+       (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4))
+            AESCMACCC26XX_Object aescmacObject;
+#endif
+        } aescmac;
+        struct
+        {
+            AESCMAC_Config aescbcmacConfig;
+#if ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX) || \
+     (DeviceFamily_PARENT == DeviceFamily_PARENT_CC23X1))
+            AESCMACXXF3_Object aescbcmacObject;
+#elif ((DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2) || \
+       (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4))
+            AESCMACCC26XX_Object aescbcmacObject;
+#endif
+        } aescbcmac;
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
+        struct
+        {
+            SHA3_Config sha3Config;
+            SHA3XXF3HSM_Object sha3Object;
+        } sha3;
+#endif
+    } driver;
+    /** Unique ID indicating which driver got assigned to do the
+     * operation. Since driver contexts are driver-specific, swapping
+     * drivers halfway through the operation is not supported.
+     * ID values are auto-generated in psa_driver_wrappers.h
+     * ID value zero means the context is not valid or not assigned to
+     * any driver (i.e. none of the driver contexts are active). */
+    unsigned int id;
+    size_t mac_size;
+    psa_algorithm_t alg;
+    size_t unprocessed_len;
+
+    /* Buffer for data that has not been processed yet. Word-aligned for max
+     * performance and in case any drivers require aligned input buffer.
+     * Double-buffer is used when PSA crypto is built into the TFM to prevent
+     * corruption before the data can be consumed since the underlying crypto
+     * drivers are used in callback mode. */
+#ifdef TFM_BUILD
+    uint8_t unprocessedData[PSA_BLOCK_CIPHER_BLOCK_MAX_SIZE * 2] __attribute__((aligned(4)));
+#else
+    uint8_t unprocessedData[PSA_BLOCK_CIPHER_BLOCK_MAX_SIZE] __attribute__((aligned(4)));
+#endif /* TFM_BUILD */
+
+    /* Pointer to the current unprocessed data */
+    uint8_t *curr_unprocessed_data;
+
+    CryptoKey cryptoKey;
+    bool is_sign;
+};
+
+typedef struct ti_psa_mac_operation_s ti_psa_mac_operation_t;
+
+#define TI_PSA_MAC_OPERATION_INIT \
+    (ti_psa_mac_operation_t)      \
+    {                             \
+        0                         \
+    }
+
+#endif /* TI_PSA_CRYPTO_MAC_TYPES_H */
