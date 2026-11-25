@@ -1,5 +1,5 @@
 /******************************************************************************
- *  Copyright (c) 2021-2023 Texas Instruments Incorporated. All rights reserved.
+ *  Copyright (c) 2021-2025 Texas Instruments Incorporated. All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -39,16 +39,18 @@
 //*****************************************************************************
 // --- ROM definitions ---
 /// Address of ROM FW revision structure
-#define ROM_FWREV_ADDR (ROM_BASE + 0x0048)
+#define ROM_FWREV_ADDR                          (ROM_BASE+0x0048)
 /// Base address of HAPI table in ROM
-#define ROM_HAPI_BASE  (ROM_BASE + 0x004C)
+#define ROM_HAPI_BASE                           (ROM_BASE+0x004C)
 /// Address of CRC32 calculated over entire ROM
-#define ROM_CRC_ADDR   (ROM_BASE + ROM_SIZE - 4)
+#define ROM_CRC_ADDR                            (ROM_BASE+ROM_SIZE-4)
 
 // --- SRAM definitions ---
 /// Magic value used in Fcfg.criticalTrim.sramRepair.magicWord to
 /// indicate that SRAM repair information is valid
-#define SRAMREP_MAGICWORD 0x40008100
+#define SRAMREP_MAGICWORD                       0x40008100
+
+
 
 //*****************************************************************************
 //
@@ -56,6 +58,8 @@
 // the defines listed in hw_pmctl.h
 //
 //*****************************************************************************
+/// Mode mask
+#define PMCTL_BOOTSTA_FLAG_MODE_M     (PMCTL_BOOTSTA_FLAG_MODE_APP)
 /// Boot sequence completed
 #define PMCTL_BOOTSTA_BOOT_COMPLETE   (PMCTL_BOOTSTA_FLAG_MODE_BLDR)
 /// Bootloader start initiated
@@ -68,21 +72,20 @@
 #if !(defined(__ASM_INCLUDE__))
 // Only included in C files
 
-/// Data type for passing flags to bootloader/application entry function
-typedef union
-{
-    uint32_t val32; ///< 32b value of word
-    struct
-    {
-        uint32_t bCcfgValid:1;        ///< Is CCFG valid?
-        uint32_t bAppCanBoot:1;       ///< Does a bootable application exist?
-        uint32_t bChipEraseAllowed:1; ///< Is ChipErase operation allowed?
-        uint32_t bParamsFromCcfg:1;   ///< Entry function params argument is CCFG(1) or FCFG(0)
-        uint32_t bBldrAllowDbg:1;     ///< Is debugging of bootloader allowed?
-        uint32_t res0:27;             ///< (Reserved for future use)
-    } bldr;
-} bldrEntryFlags_t;
+    /// Data type for passing flags to bootloader/application entry function
+    typedef union {
+        uint32_t val32;                         ///< 32b value of word
+        struct {
+            uint32_t bBldrCcfgValid         : 1;    ///< Is CCFG valid?
+            uint32_t bBldrAppCanBoot        : 1;    ///< Does a bootable application exist?
+            uint32_t bChipEraseAllowed  : 1;    ///< Is ChipErase operation allowed?
+            uint32_t bParamsFromCcfg    : 1;    ///< Entry function params argument is CCFG(1) or FCFG(0)
+            uint32_t bBldrAllowDbg      : 1;    ///< Is debugging of bootloader allowed?
+            uint32_t res0               : 27;   ///< (Reserved for future use)
+        } bldr;
+    } bldrEntryFlags_t;
 
 #endif //!(defined(__ASM_INCLUDE__)
+
 
 #endif // __HW_PLATFORM_H__

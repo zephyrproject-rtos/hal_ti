@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Texas Instruments Incorporated
+ * Copyright (c) 2022-2025, Texas Instruments Incorporated
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,6 +62,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*! @cond NODOC*/
+/*! The maximum temperature BATMON can represent. Only to be used internally in
+ *  the Temperature driver.
+ */
+#define BATMON_TEMPERATURE_MAX (255)
+
+/*! The minimum temperature BATMON can represent. Only to be used internally in
+ *  the Temperature driver.
+ */
+#define BATMON_TEMPERATURE_MIN (0 - 256)
+
+/*! Used internally by the Temperature driver. */
+#define INVALID_TEMPERATURE_MAX (BATMON_TEMPERATURE_MAX)
+
+/*! Used internally by the Temperature driver. */
+#define INVALID_TEMPERATURE_MIN (BATMON_TEMPERATURE_MIN)
+/*! @endcond */
 
 /*!
  *  @brief Temperature driver configuration struct for Low Power F3 devices

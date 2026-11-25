@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Texas Instruments Incorporated
+# SPDX-License-Identifier: Apache-2.0
+
+config TI_SIMPLELINK_CONFIG_DIR
+	string "Directory with SimpleLink SysConfig generated files"
+	depends on HAS_CC23X0_SDK
+	help
+	  Directory containing the SysConfig generated files ti_drivers_config.c,
+	  ti_drivers_config.h, ti_utils_build_linker.cmd.genmap and, when
+	  RCL_RF_SETTING_PREGEN is enabled, ti_radio_config.c and
+	  ti_radio_config.h.
+
+	  A relative path is resolved against the application source directory.
+
+	  Leave empty to use the files shipped in hal_ti for the selected TI
+	  board, at simplelink_lpf3/source/ti/boards/generated/<board>. This
+	  must be set when using a board that is not provided by TI.
+
+rsource "../simplelink_lpf3/source/ti/drivers/rcl/Kconfig"

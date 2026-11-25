@@ -1,5 +1,6 @@
 build:
   cmake: .
+  kconfig: zephyr/Kconfig
 package-managers:
   pip:
     requirement-files:

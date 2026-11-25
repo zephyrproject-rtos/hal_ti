@@ -3,7 +3,7 @@
  *
  *  Description:    Driver for the ADC.
  *
- *  Copyright (c) 2022 Texas Instruments Incorporated
+ *  Copyright (c) 2022-2024 Texas Instruments Incorporated
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,7 @@
  ******************************************************************************/
 
 #include "adc.h"
+#include "debug.h"
 
 //*****************************************************************************
 //
@@ -44,6 +45,9 @@ void ADCSetSampleDuration(uint32_t clkDiv, uint16_t clkCycles)
 {
     uint32_t tempCtl;
 
+    ASSERT((ADC_CTL0_SCLKDIV_M & clkDiv) == clkDiv);
+    ASSERT((ADC_SCOMP0_VAL_M & clkCycles) == clkCycles);
+
     // Read current control register
     tempCtl = HWREG(ADC_BASE + ADC_O_CTL0);
 
@@ -51,13 +55,13 @@ void ADCSetSampleDuration(uint32_t clkDiv, uint16_t clkCycles)
     tempCtl &= ~(ADC_CTL0_SCLKDIV_M);
 
     /* Set clk-div bits from argument */
-    tempCtl |= (clkDiv & ADC_CTL0_SCLKDIV_M);
+    tempCtl |= clkDiv;
 
     /* Write back control register */
     HWREG(ADC_BASE + ADC_O_CTL0) = tempCtl;
 
     /* write sample-duration */
-    HWREG(ADC_BASE + ADC_O_SCOMP0) = (clkCycles & ADC_SCOMP0_VAL_M);
+    HWREG(ADC_BASE + ADC_O_SCOMP0) = clkCycles;
 }
 
 //*****************************************************************************
@@ -69,6 +73,8 @@ void ADCSetResolution(uint32_t resolution)
 {
     uint32_t tempCtl;
 
+    ASSERT((ADC_CTL2_RES_M & resolution) == resolution);
+
     // Read current control register
     tempCtl = HWREG(ADC_BASE + ADC_O_CTL2);
 
@@ -76,7 +82,7 @@ void ADCSetResolution(uint32_t resolution)
     tempCtl &= ~(ADC_CTL2_RES_M);
 
     /* Set resolution bits from argument */
-    tempCtl |= (resolution & ADC_CTL2_RES_M);
+    tempCtl |= resolution;
 
     /* Write back control register */
     HWREG(ADC_BASE + ADC_O_CTL2) = tempCtl;
@@ -93,6 +99,10 @@ void ADCSetInput(uint32_t reference, uint8_t channel, uint32_t index)
     /* Set internal reference to disabled by default */
     uint32_t refCfg = ADC_REFCFG_REFEN_DIS;
 
+    ASSERT(reference == ADC_FIXED_REFERENCE_1V4 || reference == ADC_FIXED_REFERENCE_2V5 ||
+           reference == ADC_EXTERNAL_REFERENCE || reference == ADC_VDDS_REFERENCE);
+    ASSERT(channel < (ADC_MEMCTL0_CHANSEL_M >> ADC_MEMCTL0_CHANSEL_S));
+
     /* Read current control register */
     tempCtl = HWREG(ADC_BASE + ADC_O_MEMCTL0 + (4 * index));
 
@@ -100,7 +110,7 @@ void ADCSetInput(uint32_t reference, uint8_t channel, uint32_t index)
     tempCtl &= ~(ADC_MEMCTL0_VRSEL_M | ADC_MEMCTL0_CHANSEL_M);
 
     /* Set channel */
-    tempCtl |= (channel & ADC_MEMCTL0_CHANSEL_M);
+    tempCtl |= channel << ADC_MEMCTL0_CHANSEL_S;
 
     /* Set internal reference, if selected */
     if ((reference == ADC_FIXED_REFERENCE_1V4) || (reference == ADC_FIXED_REFERENCE_2V5))
@@ -139,30 +149,74 @@ void ADCSetInput(uint32_t reference, uint8_t channel, uint32_t index)
 
 //*****************************************************************************
 //
-// Triggers an ADC conversion
+// Set the ADC sampling mode
 //
 //*****************************************************************************
-void ADCManualTrigger(void)
+void ADCSetSamplingMode(uint32_t samplingMode)
 {
     uint32_t tempCtl;
 
-    /* Enable conversion. This arms the peripheral and can now be triggered */
-    HWREG(ADC_BASE + ADC_O_CTL0) |= ADC_CTL0_ENC_ON;
+    ASSERT((ADC_CTL1_SAMPMODE_M & samplingMode) == samplingMode);
+
+    /* Read current control register */
+    tempCtl = HWREG(ADC_BASE + ADC_O_CTL1);
+
+    /* Clear sampling mode related fields */
+    tempCtl &= ~(ADC_CTL1_SAMPMODE_M);
+
+    /* Set sampling mode */
+    tempCtl |= samplingMode;
+
+    /* Write back control register */
+    HWREG(ADC_BASE + ADC_O_CTL1) = tempCtl;
+}
+
+//*****************************************************************************
+//
+// Set the ADC trigger source
+//
+//*****************************************************************************
+void ADCSetTriggerSource(uint32_t triggerSource)
+{
+    uint32_t tempCtl;
+
+    ASSERT((ADC_CTL1_TRIGSRC_M & triggerSource) == triggerSource);
 
     /* Read current control register */
     tempCtl = HWREG(ADC_BASE + ADC_O_CTL1);
 
     /* Clear trigger-related fields */
-    tempCtl &= ~(ADC_CTL1_SAMPMODE_M | ADC_CTL1_SC_M | ADC_CTL1_TRIGSRC_M);
+    tempCtl &= ~(ADC_CTL1_SC_M | ADC_CTL1_TRIGSRC_M);
 
-    /* Set sampling-mode to automatic, and trigger source to software */
-    tempCtl |= ADC_CTL1_SAMPMODE_AUTO | ADC_CTL1_TRIGSRC_SOFTWARE;
+    /* Set trigger source */
+    tempCtl |= triggerSource;
 
     /* Write back control register */
     HWREG(ADC_BASE + ADC_O_CTL1) = tempCtl;
+}
 
-    /* Trigger a conversion */
-    HWREG(ADC_BASE + ADC_O_CTL1) |= ADC_CTL1_SC_START;
+//*****************************************************************************
+//
+// Set the ADC trigger policy
+//
+//*****************************************************************************
+void ADCSetTriggerPolicy(uint32_t triggerPolicy, uint32_t index)
+{
+    uint32_t tempCtl;
+
+    ASSERT((ADC_MEMCTL0_TRG_M & triggerPolicy) == triggerPolicy);
+
+    /* Read current memory control register */
+    tempCtl = HWREG(ADC_BASE + ADC_O_MEMCTL0 + (4 * index));
+
+    /* Clear trigger policy related fields */
+    tempCtl &= ~ADC_MEMCTL0_TRG_M;
+
+    /* Set trigger policy */
+    tempCtl |= triggerPolicy;
+
+    /* Write back memory control register */
+    HWREG(ADC_BASE + ADC_O_MEMCTL0 + (4 * index)) = tempCtl;
 }
 
 //*****************************************************************************
@@ -190,12 +244,38 @@ void ADCSetMemctlRange(uint32_t start, uint32_t stop)
 
 //*****************************************************************************
 //
+// Set power down policy
+//
+//*****************************************************************************
+void ADCSetPowerDownPolicy(uint32_t powerDownPolicy)
+{
+    uint32_t tempCtl;
+
+    ASSERT((ADC_CTL0_PWRDN_M & powerDownPolicy) == powerDownPolicy);
+
+    /* Read current control register */
+    tempCtl = HWREG(ADC_BASE + ADC_O_CTL0);
+
+    /* Clear power down policy bits */
+    tempCtl &= ~(ADC_CTL0_PWRDN_M);
+
+    /* Set power down policy bits */
+    tempCtl |= powerDownPolicy;
+
+    /* Write back control register */
+    HWREG(ADC_BASE + ADC_O_CTL0) = tempCtl;
+}
+
+//*****************************************************************************
+//
 // Set conversion sequence
 //
 //*****************************************************************************
 void ADCSetSequence(uint32_t sequence)
 {
     uint32_t tempCtl;
+
+    ASSERT((ADC_CTL1_CONSEQ_M & sequence) == sequence);
 
     /* Read current control register */
     tempCtl = HWREG(ADC_BASE + ADC_O_CTL1);
@@ -204,7 +284,7 @@ void ADCSetSequence(uint32_t sequence)
     tempCtl &= ~(ADC_CTL1_CONSEQ_M);
 
     /* Set sequence bits */
-    tempCtl |= sequence & ADC_CTL1_CONSEQ_M;
+    tempCtl |= sequence;
 
     /* Write back control register */
     HWREG(ADC_BASE + ADC_O_CTL1) = tempCtl;
@@ -223,18 +303,18 @@ uint32_t ADCAdjustValueForGain(uint32_t adcValue, uint32_t bitResolution, uint16
     /* Adjust value for gain and offset. Actual gain ratio is (gain/0x8000) */
     adjustedValue = ((adcValue * gain) + 0x4000) / 0x8000;
 
-    /* Get threshold based on resolution */
-    if (bitResolution == ADC_RESOLUTION_8_BIT)
+    switch (bitResolution)
     {
-        adcMaxCode = 0xFF;
-    }
-    else if (bitResolution == ADC_RESOLUTION_10_BIT)
-    {
-        adcMaxCode = 0x3FF;
-    }
-    else /* Default to 12-bit */
-    {
-        adcMaxCode = 0xFFF;
+        case ADC_RESOLUTION_8_BIT:
+            adcMaxCode = 0xFF;
+            break;
+        case ADC_RESOLUTION_10_BIT:
+            adcMaxCode = 0x3FF;
+            break;
+        case ADC_RESOLUTION_12_BIT: /* Default to 12-bit */
+        default:
+            adcMaxCode = 0xFFF;
+            break;
     }
 
     /* Make sure no overflow occurs */
@@ -257,20 +337,21 @@ uint32_t ADCValueToMicrovolts(uint32_t adcCode, uint32_t bitResolution, uint32_t
     uint32_t shift;
     uint32_t microVolts;
 
-    if (bitResolution == ADC_RESOLUTION_8_BIT)
+    switch (bitResolution)
     {
-        adcMaxCode = 0xFF;
-        shift      = 0;
-    }
-    else if (bitResolution == ADC_RESOLUTION_10_BIT)
-    {
-        adcMaxCode = 0x3FF;
-        shift      = 2;
-    }
-    else /* Default to 12-bit */
-    {
-        adcMaxCode = 0xFFF;
-        shift      = 4;
+        case ADC_RESOLUTION_8_BIT:
+            adcMaxCode = 0xFF;
+            shift      = 0;
+            break;
+        case ADC_RESOLUTION_10_BIT:
+            adcMaxCode = 0x3FF;
+            shift      = 2;
+            break;
+        case ADC_RESOLUTION_12_BIT: /* Default to 12-bit */
+        default:
+            adcMaxCode = 0xFFF;
+            shift      = 4;
+            break;
     }
 
     /* shift down voltage to avoid 32bit overflow */
@@ -293,6 +374,9 @@ uint32_t ADCValueToMicrovolts(uint32_t adcCode, uint32_t bitResolution, uint32_t
 uint16_t ADCGetAdjustmentGain(uint32_t reference)
 {
     uint16_t gain;
+
+    ASSERT(reference == ADC_FIXED_REFERENCE_1V4 || reference == ADC_FIXED_REFERENCE_2V5 ||
+           reference == ADC_EXTERNAL_REFERENCE || reference == ADC_VDDS_REFERENCE);
 
     switch (reference)
     {
@@ -346,6 +430,9 @@ void ADCSetAdjustmentOffset(uint32_t reference)
 {
     int8_t offset;
     uint32_t tmute2_temp;
+
+    ASSERT(reference == ADC_FIXED_REFERENCE_1V4 || reference == ADC_FIXED_REFERENCE_2V5 ||
+           reference == ADC_EXTERNAL_REFERENCE || reference == ADC_VDDS_REFERENCE);
 
     switch (reference)
     {

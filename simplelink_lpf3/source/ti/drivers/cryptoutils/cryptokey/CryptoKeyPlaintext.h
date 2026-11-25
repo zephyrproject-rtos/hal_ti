@@ -165,13 +165,14 @@ int_fast16_t CryptoKeyPlaintext_getKeyLength(CryptoKey *keyHandle, size_t *lengt
  */
 int_fast16_t CryptoKeyPlaintext_setKeyLength(CryptoKey *keyHandle, size_t length);
 
-#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX)
+#if (DeviceFamily_PARENT == DeviceFamily_PARENT_CC27XX) || (DeviceFamily_PARENT == DeviceFamily_PARENT_CC35XX)
 /*!
- *  @brief Initializes a CryptoKey type
+ *  @brief Initializes a CryptoKey type with HSM
  *
  *  @param [in]     keyHandle   Pointer to a CryptoKey which will be initialized
  *                              to type CryptoKey_PLAINTEXT_HSM
  *                              and ready for use
+ *
  *  @param [in]     key         Pointer to keying material
  *
  *  @param [in]     keyLength   Length of keying material in bytes
@@ -179,6 +180,21 @@ int_fast16_t CryptoKeyPlaintext_setKeyLength(CryptoKey *keyHandle, size_t length
  *  @return Returns a status code from CryptoKey.h
  */
 int_fast16_t CryptoKeyPlaintextHSM_initKey(CryptoKey *keyHandle, uint8_t *key, size_t keyLength);
+
+/*!
+ *  @brief Initializes an empty plaintext CryptoKey type with HSM
+ *
+ *  @param [in]     keyHandle   Pointer to a CryptoKey which will be initialized
+ *                              to type CryptoKey_BLANK_PLAINTEXT_HSM
+ *                              and ready for use
+ *
+ *  @param [in]     key         Pointer to keying material
+ *
+ *  @param [in]     keyLength   Length of keying material in bytes
+ *
+ *  @return Returns a status code from CryptoKey.h
+ */
+int_fast16_t CryptoKeyPlaintextHSM_initBlankKey(CryptoKey *keyHandle, uint8_t *key, size_t keyLength);
 #endif
 
 #ifdef __cplusplus
